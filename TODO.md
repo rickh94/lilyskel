@@ -7,7 +7,7 @@
     * ~~collect from user~~ 
 * ~~Create a function to get language from user and output language
   statement~~DONE!
-* Create a function to get includes and output include statement 
+* ~~Create a function to get includes and output include statement~~DONE!
 * Create a function to get names of instruments, output array
     function for normalizing ary.map{ |x| x.to_s.tr(' A-Z', '_a-z')
     also need to map numbers and numerals to number words for variables and

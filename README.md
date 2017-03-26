@@ -7,12 +7,13 @@ workflow.
 
 * Get Lilypond version automatically or from user.
 * Get language from user and check against Lilypond supported languages.
+* Get files to include from user.
 
 ## Feature Goals
 * Take input from user about
     * ~~Lilypond version (if it can't be found automatically)~~
     * ~~Language~~
-    * Files to include
+    * ~~Files to include~~
     * Names of different instruments
     * Number of movements
     * Title composer etc?
