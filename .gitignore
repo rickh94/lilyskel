@@ -1,0 +1,9 @@
+# generally useful .gitignore
+
+# vim files
+*~
+*.un~
+*.sw*
+
+# backup files
+*.bak
