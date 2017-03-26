@@ -12,7 +12,7 @@ def getversion()
     version = gets.chomp.to_s
   end
   if version == ''
-    puts "Lilypond ran but could not find a version in output. Please enter it now"
+    puts "Lilypond ran but could not find a version in output. Please enter it now:"
     version = gets.chomp.to_s
   end
   '\\version "' + version + '"'
