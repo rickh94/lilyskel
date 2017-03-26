@@ -1,9 +1,7 @@
 #!/usr/bin/env ruby
 # get_includes.rb - Get the instruments the user wants in their Lilypond
-# project.
-#
-# Large Chunks of this code will be revised by introduction of the Instrument
-# Class.
+# project. Return array of Instrument objects that can generate needed
+# information.
 
 class Instrument
   @@array = Array.new
@@ -51,18 +49,16 @@ end
 
 
 def get_instruments()
+
+  # Get instruments from user
   puts 'Please enter EACH instrument in the project separated by commas: '
   puts '(e.g. violin 1, violin 2, viola, etc.)'
   parts = gets.chomp.split(', ').map { |ins| ins.to_s.tr(' A-Z', '_a-z') }
+
   # normalize instruments list to instrument_name_[number]
   # supports up to ins_9, but have to be entered individually.
-  # if you want more, enter them properly (preferably with leading zeros on
-  # single digit numbers so they sort well.
-  # NOTE: I wish this weren't so messy. I feel like there should be a more
-  # efficient way to handle this but I can't seem to figure it out. sigh.
-  # It does need to be VERY specific to avoid replacing random letters or
-  # truncating whole words from instrument names. 
-  # The new class does make it quite a bit cleaner though.
+  # if you want more, you have to edit several scripts. It's probably faster
+  # to copy existing files and edit stuff manually.
   parts.each do |ins| 
     # this replaces roman numberals
     ins.gsub!(/_[ivx]*$/,  
@@ -87,8 +83,10 @@ def get_instruments()
     ins.gsub!(/_eight$/, '_8')
     ins.gsub!(/_nine$/, '_9')
     file_name = ins
+    # Create new Instrument object for each instrument.
     file_name = Instrument.new(file_name.to_s)
   end
+  #  Return array of all instruments (tracked internally by Instrument class.
   return Instrument.all_instances
 end
 

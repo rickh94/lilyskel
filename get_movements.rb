@@ -3,6 +3,7 @@
 # movement numbers for use in note variables. Supports up to twelve movements.
 
 def get_movements()
+  # Array of ordinal_mov for use in instrument note variables
   ordinal_movements = ['first_mov', 'second_mov', 'third_mov', 'fourth_mov', 
                        'fifth_mov', 'sixth_mov', 'seventh_mov', 'eighth_mov',
                        'ninth_mov', 'tenth_mov', 'eleventh_mov', 'twelfth_mov']

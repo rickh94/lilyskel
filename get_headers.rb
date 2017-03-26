@@ -3,6 +3,7 @@
 # containing appropriate key value pairs.
 
 def get_headers()
+  # Get normal header information from user.
   header = Hash.new
   puts "Please enter the composer of the piece: "
   header['composer'] = gets.chomp.to_s
@@ -16,6 +17,8 @@ def get_headers()
   header['opus'] = gets.chomp.to_s
   puts "Please enter the copyright information of the piece: (blank for none)"
   header['copyright'] = gets.chomp.to_s
+
+  # Get Mutopia headers if applicable.
   print "Will this piece be submitted to the Mutopia Project? [y/N]"
   if gets.chomp.to_s.downcase.split('').first == "y"
     puts "Enter mutopia title if different: "
@@ -44,7 +47,11 @@ def get_headers()
     puts "Enter your email (optional): "
     header['maintainerEmail'] = gets.chomp
   end
-  header.reject!{|k, v| v == '' }
+
+  #  Return array of only the populated header fields. This way empty header
+  #  fields won't be explicit and can be changed, overwritten, or overridden
+  #  easily.
+  header.reject{|k, v| v == '' }
 end
 
 #print get_headers()
