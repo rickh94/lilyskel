@@ -11,7 +11,7 @@
 * ~~Create a function to get names of instruments, output array~~DONE!(but
   messy)
       
-**CHANGE TO CLASS**
+__CHANGE TO CLASS__
 * Create instrument class that holds three versions of its name: (file, variable, pretty)
 * ~~Create a function to get number of movements, output array of number
   words~~DONE!
