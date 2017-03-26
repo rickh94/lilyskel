@@ -1,6 +1,20 @@
 #!/usr/bin/env ruby
 # get_includes.rb - Get the instruments the user wants in their Lilypond
 # project.
+#
+# Large Chunks of this code will be revised by introduction of the Instrument
+# Class.
+
+class Instrument
+  attr_reader :pretty, :file, :variable
+  def initialize(input_name)
+    @file = input
+    # TODO: move some much of the name cleaning into the class.
+    # TODO: figure out how to initialize classes and return to larger program later.
+    # TODO: figure out how to programatically generate classes.
+  end
+end
+
 
 def get_instruments()
   puts 'Please enter EACH instrument in the project separated by commas: '
