@@ -8,19 +8,19 @@ workflow.
 none yet...
 
 ## Feature Goals
-* Take input from user about
-..* Lilypond version (if it can't be found automatically)
+1. Take input from user about
+  * Lilypond version (if it can't be found automatically)
   * language
   * files to include
   * names of different instruments
   * number of movements
   * title composer etc?
-* output
+2. output
   * one part per instrument
   * defs file?
   * one score
   * directory structure?
-* output files should have
+3. output files should have
   * version and language statmen
   * include for a defs file and others if needed
   * variables for each part/movement
