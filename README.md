@@ -9,7 +9,7 @@ none yet...
 
 ## Feature Goals
 * Take input from user about
-  * Lilypond version (if it can't be found automatically)
+.* Lilypond version (if it can't be found automatically)
   * language
   * files to include
   * names of different instruments
