@@ -29,7 +29,7 @@ def generate_filenames(headers, instruments)
     tmp << '_' + ins.file.to_s
     tmp << '.ly'
     filenames << tmp.join('')
-  end
+  end # of instrument filename creator
 
   # return filenames in array
   filenames

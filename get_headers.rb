@@ -40,13 +40,13 @@ def get_headers()
       header['license'] = "Creative Commons Attribution 4.0"
     else
       header['license'] = "Public Domain"
-    end
+    end # of license selector
     puts "Enter your name for the maintainer field: "
     maintainer = gets.chomp.to_s
     maintainer == '' ? header['maintainer'] = 'Anonymous' : header['maintainer'] = maintainer
     puts "Enter your email (optional): "
     header['maintainerEmail'] = gets.chomp
-  end
+  end # of mutopia headers
 
   #  Return array of only the populated header fields. This way empty header
   #  fields won't be explicit and can be changed, overwritten, or overridden

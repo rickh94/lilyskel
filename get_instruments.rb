@@ -3,6 +3,7 @@
 # project. Return array of Instrument objects that can generate needed
 # information.
 
+# Instrument Class for storing/generating all needed information
 class Instrument
   @@array = Array.new
   attr_reader :file
