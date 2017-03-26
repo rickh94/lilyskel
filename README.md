@@ -3,7 +3,7 @@
 A ruby program to generate basic score/part skeletons for my Lilypond
 workflow. 
 
-## Feature Implemented
+## Features Implemented
 
 * Get Lilypond version automatically or from user.
 * Get language from user and check against Lilypond supported languages.
@@ -11,20 +11,20 @@ workflow.
 ## Feature Goals
 * Take input from user about
     * ~~Lilypond version (if it can't be found automatically)~~
-    * ~~language~~
-    * files to include
-    * names of different instruments
-    * number of movements
-    * title composer etc?
-* output
-    * one part per instrument
-    * defs file
-    * has usual header fields and Mutopia header fields if needed.
-    * one score
-    * directory structure?
-* output files should have
-    * version and language statement
-    * include for a defs file and others if needed
-    * variables for each part/movement
-    * compile (mostly) cleanly (I don't expect to get all edge cases)
+    * ~~Language~~
+    * Files to include
+    * Names of different instruments
+    * Number of movements
+    * Title composer etc?
+* Output
+    * One part per instrument
+    * Defs file
+    * Has usual header fields and Mutopia header fields if needed.
+    * One score
+    * Directory structure?
+* Output files should have
+    * Version and language statement
+    * Include for a defs file and others if needed
+    * Variables for each part/movement
+    * Compile (mostly) cleanly (I don't expect to get all edge cases)
 
