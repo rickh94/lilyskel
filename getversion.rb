@@ -11,12 +11,11 @@ def getversion()
       "it is installed correctly"
     version = gets.chomp.to_s
   end
-  unless version == ''
-    version
-  else
+  if version == ''
     puts "Lilypond ran but could not find a version in output. Please enter it now"
     version = gets.chomp.to_s
   end
+  '\\version "' + version + '"'
 end
 
-puts getversion()
+#puts getversion()
