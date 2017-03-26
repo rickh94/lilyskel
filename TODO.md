@@ -10,9 +10,7 @@
 * ~~Create a function to get includes and output include statement~~DONE!
 * ~~Create a function to get names of instruments, output array~~DONE!(but
   messy)
-      
-__CHANGE TO CLASS__
-* Create instrument class that holds three versions of its name: (file, variable, pretty)
+* __CHANGE TO CLASS__ Create instrument class that holds three versions of its name: (file, variable, pretty)
 * ~~Create a function to get number of movements, output array of number
   words~~DONE!
 * ~~Create a function to get title, composer, opus, etc. and Mutopia fields for defs.ily~~DONE!
