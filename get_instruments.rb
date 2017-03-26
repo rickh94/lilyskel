@@ -1,0 +1,44 @@
+#!/usr/bin/env ruby
+# get_includes.rb - Get the instruments the user wants in their Lilypond
+# project.
+
+def get_instruments()
+  puts 'Please enter EACH instrument in the project separated by commas: (e.g. violin 1, violin 2, viola, etc.)'
+  instruments = gets.chomp.split(', ').map { |ins| ins.to_s.tr(' A-Z', '_a-z') }
+  # normalize instruments list to instrument_name_[number]
+  # supports up to ins_9, but have to be entered individually.
+  # if you want more, enter them properly (preferably with leading zeros on
+  # single digit numbers so they sort well.
+  # NOTE: I wish this weren't so messy. I feel like there should be a more
+  # efficient way to handle this but I can't seem to figure it out. sigh.
+  # It does need to be VERY specific to avoid replacing random letters or
+  # truncating whole words from instrument names. 
+  instruments.each do |ins| 
+    # this replaces roman numberals
+    ins.gsub!(/_[ivx]*$/,  
+              '_i'    => '_1',
+              '_ii'   => '_2',
+              '_iii'  => '_3',
+              '_iv'   => '_4',
+              '_v'    => '_5',
+              '_vi'   => '_6',
+              '_vii'  => '_7',
+              '_viii' => '_8',
+              '_ix'   => '_9',
+             )
+    # this replaces number words with numbers
+    ins.gsub!(/_one$/, '_1')
+    ins.gsub!(/_two$/, '_2')
+    ins.gsub!(/_three$/, '_3')
+    ins.gsub!(/_four$/, '_4')
+    ins.gsub!(/_five$/, '_5')
+    ins.gsub!(/_six$/, '_6')
+    ins.gsub!(/_seven$/, '_7')
+    ins.gsub!(/_eight$/, '_8')
+    ins.gsub!(/_nine$/, '_9')
+  end
+  instruments
+end
+
+#things = get_instruments()
+#things.each { |x| print x + "\n" }
