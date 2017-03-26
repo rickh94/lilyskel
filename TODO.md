@@ -10,13 +10,9 @@
 * ~~Create a function to get includes and output include statement~~DONE!
 * ~~Create a function to get names of instruments, output array~~DONE!(but
   messy)
-    ~~function for normalizing ary.map{ |x| x.to_s.tr(' A-Z', '_a-z')~~
-    ~~also need to map numbers and numerals to number words for variables and
-      numerals to numbers for part names~~
       
 **CHANGE TO CLASS**
-* Create instrument class that holds three versions of its name.
-  (file, variable, pretty)
+* Create instrument class that holds three versions of its name: (file, variable, pretty)
 * ~~Create a function to get number of movements, output array of number
   words~~DONE!
 * ~~Create a function to get title, composer, opus, etc. and Mutopia fields for defs.ily~~DONE!
