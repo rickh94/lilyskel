@@ -13,7 +13,8 @@
     ~~function for normalizing ary.map{ |x| x.to_s.tr(' A-Z', '_a-z')~~
     ~~also need to map numbers and numerals to number words for variables and~~
       ~~numerals to numbers for part names~~
-* Create a function to get number of movements, output array of number words
+* ~~Create a function to get number of movements, output array of number
+  words~~
 * Create a function to get title, composer, opus, etc. and Mutopia files for defs.ily
 
 ## Writing Files

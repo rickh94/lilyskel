@@ -9,6 +9,7 @@ workflow.
 * Get language from user and check against Lilypond supported languages.
 * Get files to include from user.
 * Get instrument names from used (works, has some limitations).
+* Get number of movements.
 
 ## Feature Goals
 * Take input from user about
@@ -16,7 +17,7 @@ workflow.
     * ~~Language~~
     * ~~Files to include~~
     * ~~Names of different instruments~~
-    * Number of movements
+    * ~~Number of movements~~
     * Title composer etc?
 * Output
     * One part per instrument
