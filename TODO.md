@@ -15,7 +15,9 @@
       ~~numerals to numbers for part names~~
 * ~~Create a function to get number of movements, output array of number
   words~~
-* Create a function to get title, composer, opus, etc. and Mutopia files for defs.ily
+* ~~Create a function to get title, composer, opus, etc. and Mutopia fields for defs.ily~~
+* Create instrument class that holds three versions of its name.
+  (file, variable, pretty)
 
 ## Writing Files
 * Combine instruments and movement number to get variables needed arrays or

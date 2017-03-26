@@ -10,6 +10,7 @@ workflow.
 * Get files to include from user.
 * Get instrument names from used (works, has some limitations).
 * Get number of movements.
+* Get header information.
 
 ## Feature Goals
 * Take input from user about
@@ -18,7 +19,7 @@ workflow.
     * ~~Files to include~~
     * ~~Names of different instruments~~
     * ~~Number of movements~~
-    * Title composer etc?
+    * ~~Title composer etc?~~
 * Output
     * One part per instrument
     * Defs file
