@@ -19,11 +19,11 @@ workflow.
 * output
     * one part per instrument
     * defs file
-    * has usual header fields and mutopia header fields if needed.
+    * has usual header fields and Mutopia header fields if needed.
     * one score
     * directory structure?
 * output files should have
-    * version and language statmen
+    * version and language statement
     * include for a defs file and others if needed
     * variables for each part/movement
     * compile (mostly) cleanly (I don't expect to get all edge cases)
