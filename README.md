@@ -5,11 +5,11 @@ workflow.
 
 ## Feature Implemented
 
-none yet...
+* Get Lilypond version automatically or from user.
 
 ## Feature Goals
 * Take input from user about
-    * Lilypond version (if it can't be found automatically)
+    * ~~~Lilypond version (if it can't be found automatically)~~~
     * language
     * files to include
     * names of different instruments
