@@ -1,8 +1,8 @@
 # TODO:
-* Create a function to get lilypond version and output version statement
+* ~~Create a function to get lilypond version and output version statement
     * find where lilypond version info is on a system generally and look there.
     * run lilypond --version and collect output?
-    * collect from user
+    * collect from user ~~ DONE!
 * Create a function to get language from user and output language statement
 * Create a funciton to get includes and output include statement 
 * Create a function to get names of instruments, output array
