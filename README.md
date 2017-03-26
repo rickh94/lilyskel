@@ -9,6 +9,7 @@ workflow.
 * Get language from user and check against Lilypond supported languages.
 * Get files to include from user.
 * Get instrument names from used (works, has some limitations).
+* Implement instrument class to generate various names needed.
 * Get number of movements.
 * Get header information.
 

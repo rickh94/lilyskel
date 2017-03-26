@@ -6,12 +6,46 @@
 # Class.
 
 class Instrument
-  attr_reader :pretty, :file, :variable
+  @@array = Array.new
+  attr_reader :file
+
+  # array to keep track of all Instruments internally
+  def self.all_instances
+    @@array
+  end
+
   def initialize(input_name)
-    @file = input
-    # TODO: move some much of the name cleaning into the class.
-    # TODO: figure out how to initialize classes and return to larger program later.
-    # TODO: figure out how to programatically generate classes.
+    @file = input_name.to_s
+    @@array << self
+  end
+
+  # method to generate word version of name for use in instrument variables
+  def variable()
+    @file.to_s.gsub(/_[0-9]*$/,
+                 '_1' => '_one',
+                 '_2' => '_two',
+                 '_3' => '_three',
+                 '_4' => '_four',
+                 '_5' => '_five',
+                 '_6' => '_six',
+                 '_7' => '_seven',
+                 '_8' => '_eight',
+                 '_9' => '_nine'
+                )
+  end
+
+  # Method to generate pretty version of instrument name for printing
+  def pretty()
+    @file.split('_').map(&:capitalize).join(' ').gsub(/ [0-9]*$/, 
+                                                         ' 1' => ' I', 
+                                                         ' 2' => ' II',
+                                                         ' 3' => ' III',
+                                                         ' 4' => ' IV',
+                                                         ' 5' => ' V',
+                                                         ' 6' => ' VI',
+                                                         ' 7' => ' VII',
+                                                         ' 8' => ' VIII',
+                                                         ' 9' => ' IX' )
   end
 end
 
@@ -28,6 +62,7 @@ def get_instruments()
   # efficient way to handle this but I can't seem to figure it out. sigh.
   # It does need to be VERY specific to avoid replacing random letters or
   # truncating whole words from instrument names. 
+  # The new class does make it quite a bit cleaner though.
   parts.each do |ins| 
     # this replaces roman numberals
     ins.gsub!(/_[ivx]*$/,  
@@ -51,22 +86,14 @@ def get_instruments()
     ins.gsub!(/_seven$/, '_7')
     ins.gsub!(/_eight$/, '_8')
     ins.gsub!(/_nine$/, '_9')
+    file_name = ins
+    file_name = Instrument.new(file_name.to_s)
   end
-  instrument_vars = parts.map { |ins| ins.gsub(/_[0-9]*$/,
-                                               '_1' => '_one',
-                                               '_2' => '_two',
-                                               '_3' => '_three',
-                                               '_4' => '_four',
-                                               '_5' => '_five',
-                                               '_6' => '_six',
-                                               '_7' => '_seven',
-                                               '_8' => '_eight',
-                                               '_9' => '_nine'
-                                              ) }
-  return parts, instrument_vars
+  return Instrument.all_instances
 end
 
 #things = get_instruments()
-#print things.first
+#things.each do |x|
+#  print x.file.to_s + ' ' + x.pretty.to_s + ' ' + x.variable.to_s  + "\n"
+#end
 #print things.last
-
