@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
-# getversion.rb - gets the version of lilypond currently installed and returns
+# get_version.rb - gets the version of lilypond currently installed and returns
 # it.
 
-def getversion()
+def get_version()
   begin
     version = `lilypond --version`.scan(/\d\.\d+\.\d+/).first.to_s
   rescue

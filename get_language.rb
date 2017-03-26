@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
-# getlanguage.rb - Get the language the user intends to input notes with and 
+# get_language.rb - Get the language the user intends to input notes with and 
 # output a langauge statement for lilypond.
 
-def getlanguage()
+def get_language()
   supported_languages = [
     "nederlands",
     "catalan",
