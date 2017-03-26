@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
-# get_includes.rb - Get the language the user intends to input notes with and 
-# output a langauge statement for lilypond.
+# get_includes.rb - Get the dependency files the user wants to include with
+# their lilypond project.
 
 def get_includes()
   puts 'Please enter the file names you would like to include '\
