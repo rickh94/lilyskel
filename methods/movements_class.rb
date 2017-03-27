@@ -13,9 +13,15 @@ class Movements
   end
 
   def movement_number(num)
-    @@ordinal_movements[num - 1]
+    if num <= @count
+      @@ordinal_movements[num - 1]
+    else
+      # This should not really be needed but is useful for debugging purposes.
+      # Plus it's good practice not to allow things that shouldn't exist.
+      abort("Exception: Out of Range: Tried to generate move movements than are in the piece.")
+    end
   end
 end
 
-#test = Movements.new
-#puts test.movement_number(3)
+test = Movements.new
+puts test.movement_number(5)
