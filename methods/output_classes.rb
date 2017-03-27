@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
-# generate_filenames.rb - combines the headers and instrument to return a
-# filenames that need to be created.
+#  output_classes.rb - classes for creation of files: Output and subclasses
+#  Score and Part. Generate and write files given inputs.
 
 require './get_instruments.rb'
 # Creating new classes
