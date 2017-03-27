@@ -15,7 +15,7 @@
   words~~DONE!
 * ~~Create a function to get title, composer, opus, etc. and Mutopia fields for defs.ily~~DONE!
 * __CHANGE FUCKING EVERTHING__ In order for it to work properly, everything
-  needs to use clases. Current theory:
+  needs to use classes. Current theory:
     * Create Output class with methods create_file, write_top, write middle, write_bottom, and maybe
       some others.
     * Create Defs, Score and Part subclasses with write_score and write_part methods
