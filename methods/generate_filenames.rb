@@ -1,13 +1,26 @@
 #!/usr/bin/env ruby
-# generate_filenames.rb - combines the headers and instruments to return an
-# array of filenames that need to be created.
+# generate_filenames.rb - combines the headers and instrument to return a
+# filenames that need to be created.
 
-#require './get_headers.rb'
-#require './get_instruments.rb'
+# Creating new classes
+class Output
+  def initialize(version, language, headers, instruments)
+  def filename(headers)
+    # Use opus or title for prefix. Prefer opus.
+    headers.has_key?("opus") ? 
+      prefix = headers['opus'].gsub('Op. ', 'O').tr(' ', '_').upcase :
+      prefix = headers['title'].downcase.tr(' ', '_').gsub('.', '')
 
-def generate_filenames(headers, instruments)
-  #  Array to hold all needed filenames.
-  filenames = Array.new
+    #  Make the score filename
+    score_name = Array.new
+    score_name << prefix
+    score_name << 'score.ly'
+    score_name.join('_').to_s
+  end
+
+
+def part_filename(headers, instrument)
+  filename = String.new
 
   #  If there is an opus, use that for the filename prefix, otherwise use the
   #  title.
@@ -15,11 +28,6 @@ def generate_filenames(headers, instruments)
     prefix = headers['opus'].gsub('Op. ', 'O').tr(' ', '_').upcase :
     prefix = headers['title'].downcase.tr(' ', '_').gsub('.', '')
 
-  #  Make the score filename
-  score_name = Array.new
-  score_name << prefix
-  score_name << '_score'
-  score_name << '.ly'
   filenames << score_name.join('')
 
   #  Make filenames for each instrument.
