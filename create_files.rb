@@ -21,6 +21,8 @@ def write_files(file_names, version, language)
     new_file = File.new(file_name, "w")
     new_file.puts version
     new_file.puts language
+    new_file.puts "\n#(ly:set-option 'relative-includes #t)"
+    new_file.puts '\include "defs.ily"'
   end
 end
 
