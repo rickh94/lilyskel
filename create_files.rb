@@ -23,16 +23,6 @@ def write_defs_file(version, language, headers, includes)
   includes.each { |a| defs.puts a }
 end
 
-def write_top(file, version, language, instrument)
-  file.puts version
-  file.puts language
-  file.puts "\n#(ly:set-option 'relative-includes #t)"
-  file.puts '\include "defs.ily"' + "\n\n"
-  file.puts '\header {'
-  file.puts 'instrument = ' + instrument + '"'
-  file.puts "}\n\n"
-  file.puts '\book {'
-end
 
 def write_score(version, language, headers, instruments)
   # Create score file
