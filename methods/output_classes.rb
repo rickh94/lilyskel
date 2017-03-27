@@ -5,16 +5,16 @@
 require './get_instruments.rb'
 # Creating new classes
 class Output
-  
-  def initialize(version, language, headers, instruments)
-    @vers = version
-    @lang = language
-    @heads = headers
-    @instrs = instruments
+  def initialize(info)
+    @vers = info.version
+    @lang = info.language
+    @heads = info.headers
+    @instrs = info.instruments
   end
 
   def name()
-    'superceded'
+    # always superceded by subclass. for debugging purposes only.
+    'Something in missing in the sublcass name() method'
   end
 
   def filename_prefix()
@@ -37,8 +37,8 @@ class Output
 
   # Write the top of the file
   def write_top()
-    @file.puts @vers
-    @file.puts @lang
+    @file.puts '\version "' + @vers + '"'
+    @file.puts '\language "' + @lang + '"'
     @file.puts "% " + filename() + " - part of " + @heads['title'] + '.'
   end
   

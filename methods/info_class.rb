@@ -2,12 +2,14 @@
 # info_class.rb - class for gathering and storing all the needed info about a
 # lilypond project (except includes which are handled elsewhere).
 
-require 'instrument_class.rb'
+# Require statements for testing purposes only
+require './instrument_class.rb'
+require './headers_class.rb'
+require './version_class.rb'
 
 class Info
-  attr_reader :instruments
+  attr_reader :instruments, :headers, :version, :language
   def get_instruments()
-
     # Get instruments from user
     puts 'Please enter each instrument in the project separated by commas: '
     puts '(e.g. violin 1, violin 2, viola, etc.)'
@@ -48,6 +50,16 @@ class Info
   end
 
   def initialize()
+    @version = Version.new.self
+    @language = Language.new.self
     @instruments = get_instruments()
+    @headers = Headers.new
   end
 end
+
+# TESTS for info
+info = Info.new
+puts info.version
+puts info.language
+puts info.headers.all()
+info.instruments.each{ |i| puts i.pretty() }
