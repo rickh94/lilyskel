@@ -2,7 +2,7 @@
 # get_headers.rb - Gets all header info from user and outputs a hash
 # containing appropriate key value pairs.
 
-def get_headers()
+def get_headers(instruments)
   # Get normal header information from user.
   header = Hash.new
   puts "Please enter the composer of the piece: "
@@ -46,6 +46,10 @@ def get_headers()
     maintainer == '' ? header['maintainer'] = 'Anonymous' : header['maintainer'] = maintainer
     puts "Enter your email (optional): "
     header['maintainerEmail'] = gets.chomp
+    # generate instruments based on instruments entered
+    tmp = Array.new
+    instruments.each { |ins| tmp << ins.pretty }
+    header['mutopiainstrument'] = tmp.join(', ').gsub(/(Violon)?[cC]ello/, "'Cello")
   end # of mutopia headers
 
   #  Return array of only the populated header fields. This way empty header

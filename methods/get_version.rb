@@ -23,4 +23,4 @@ def get_version()
   '\\version "' + version + '"'
 end
 
-#puts getversion()
+#puts get_version()

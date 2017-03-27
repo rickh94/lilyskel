@@ -18,7 +18,7 @@
 ## Writing Files
 * Combine instruments and movement number to get variables needed arrays or
   array of arrays. Maybe hash of arrays.
-* Figure out what files need to be created (array of instruments)
+* ~~Figure out what files need to be created (array of instruments)~~DONE!
 * Create parts for each instrument with correct variable (array.each will help
   a lot) and score
     * Write in version language includes (defs.ily)

@@ -7,3 +7,6 @@
 
 # backup files
 *.bak
+
+# testing directory
+testdir

@@ -2,8 +2,8 @@
 # generate_filenames.rb - combines the headers and instruments to return an
 # array of filenames that need to be created.
 
-require './get_headers.rb'
-require './get_instruments.rb'
+#require './get_headers.rb'
+#require './get_instruments.rb'
 
 def generate_filenames(headers, instruments)
   #  Array to hold all needed filenames.
