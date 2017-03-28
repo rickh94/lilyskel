@@ -2,7 +2,7 @@
 #  all_instruments_class.rb - a class for getting instruments from 
 #  user, normalizing their names and making an Instrument object for each.
 
-#require './instrument_class.rb'
+require './instrument_class.rb'
 
 class AllInstruments
   @@input = Array.new
@@ -12,7 +12,7 @@ class AllInstruments
     # Get instruments from user
     puts 'Please enter each instrument in the project separated by commas: '
     puts '(e.g. violin 1, violin 2, viola, etc.)'
-    @@input = gets.chomp.split(',').map{|i| i.to_s.gsub(/^ /, '')}
+    @@input = gets.chomp.split(',').map(&:lstrip)
   end
 
   def remove_spaces_and_caps()
@@ -68,11 +68,10 @@ class AllInstruments
   end
 end
 
-#puts AllInstruments.new.all()
 # TESTS
-#test = All_Instruments.new
+#test = AllInstruments.new
 #puts Instrument.all_instances
 #puts test.all()
 #test.all().each do |i|
-#  puts i.pretty()
+  #puts i.file()
 #end

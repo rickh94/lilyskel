@@ -16,7 +16,7 @@ class Info
     @version = Version.new.self
     @language = Language.new.self
     @instruments = AllInstruments.new.all()
-    @headers = Headers.new
+    @headers = Headers.new.all()
   end
 end
 

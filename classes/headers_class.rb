@@ -3,7 +3,6 @@
 # hash.
 
 class Headers
-  attr_reader :all
   @@all = Hash.new
   def get_composer()
     # force input of composer
@@ -49,8 +48,12 @@ class Headers
   end
 
   def mutopia_composer()
-    puts "Enter mutopiacomposer in the form surnameINITIALS (e.g. BachJS):"
-    @@all['mutopiacomposer'] = gets.chomp.to_s
+    # Required filed
+    loop do
+      puts "Enter mutopiacomposer in the form surnameINITIALS (e.g. BachJS):"
+      @@all['mutopiacomposer'] = gets.chomp.to_s
+      break if @@all['mutopiacomposer'] != ''
+    end
   end
 
   def mutopia_opus()
@@ -126,10 +129,3 @@ end
 #puts "\ncurrent headers"
 #heads.all().each { |k, v| puts k.to_s + ' = ' + v.to_s }
 
-# TODO: get this later for defs or info class. Complicate it to implement
-# it here.
-=begin
-      tmp = Array.new
-      instruments.each { |ins| tmp << ins.pretty }
-      header['mutopiainstrument'] = tmp.join(', ').gsub(/(Violon)?[cC]ello/, "'Cello")
-=end
