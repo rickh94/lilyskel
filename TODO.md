@@ -32,12 +32,12 @@ __All that's left is the hard part__
   array of arrays. Maybe hash of arrays.~~ Changed my mind.
 * ~~Figure out what files need to be created (array of instruments)~~ Changed
   my mind.
-* Create parts for each instrument with correct variable (array.each will help
-  a lot) and score
+* ~~Create parts for each instrument with correct variable (array.each will help
+  a lot)~~ and score
     * ~~Write in version language includes (defs.ily)~~ DONE!
     * ~~Enable relative includes~~ DONE!
-    * Write in static part-level lines (\book, \paper, etc.)
+    * Write in static part-level lines (\book, \paper, etc.) - Done for Part
     * Write in static lines for each variable and variable (some kind of each
-    loop will be needed.
+    loop will be needed.)
 * ~~Write in necessary static lines~~ DONE!
 
