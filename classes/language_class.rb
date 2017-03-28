@@ -23,9 +23,9 @@ class Language
     }
     # Force choice of language.
     loop do
-      puts "Please enter the number of the language you would like to use in lilypond"
       puts "=== Languages Supported by Lilypond ==="
       supported_languages.each { |k, v| puts k + '. ' + v }
+      print "Please enter the number of the language you would like to use in Lilypond: "
       input = gets.chomp.to_s
       # Filter out mistaken or out of range input
       if input.to_i <= 13 && input.to_i > 0 && input.to_s != '' 

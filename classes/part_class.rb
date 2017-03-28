@@ -2,6 +2,7 @@
 #  output_classes.rb - classes for creation of files: Output and subclasses
 #  Score and Part. Generate and write files given inputs.
 
+require './output_class.rb'
 
 class Part < Output
   # change initialize
@@ -10,22 +11,51 @@ class Part < Output
     @lang = info.language
     @heads = info.headers
     @instr = instrument # this is an instrument object, not just a name.
+    @movs = info.movements
   end
 
   def filename()
     filename_prefix() + '_' + @instr.file() + '.ly'
   end
 
+  def write_above()
+    @file.puts '  \score {'
+    @file.puts '    \new Staff {'
+    @file.puts '      \new Voice {'
+  end
+
+  def write_mov(num)
+    @file.puts "      \\" + @instr.var + '_' + @movs.movement_number(num)
+  end
+
+  def write_below()
+    @file.puts '      }'
+    @file.puts '    }'
+    @file.puts '  }'
+  end
+
+  def write_middle()
+    i = 1
+    while i <= @movs.count 
+      write_above()
+      write_mov(i)
+      write_below()
+      i += 1
+    end
+  end
+
   def name()
-    @instr.pretty()
+    @instr.pretty
   end
 end
 
-# TESTS for the Part Class
-#tests = { "opus" => "Op. 15", "title" => "Test Title"}
-#tests_2 = { "title" => "Test Title" }
-#vio = Instrument.new("violin_1")
-#part = Part.new("vers", "lang", tests, vio)
-#part.create()
-#part.write()
-#part.done()
+# TEST for the Part Class
+=begin
+info = Info.new
+info.instruments.each do |ins|
+  part = Part.new(info, ins)
+  part.create()
+  part.write()
+  part.done()
+end
+=end

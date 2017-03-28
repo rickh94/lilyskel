@@ -23,5 +23,6 @@ class Movements
   end
 end
 
-test = Movements.new
-puts test.movement_number(5)
+#TESTS
+#test = Movements.new
+#puts test.movement_number(5)

@@ -2,6 +2,8 @@
 #  output_classes.rb - classes for creation of files: Output and subclasses
 #  Score and Part. Generate and write files given inputs.
 
+require './info_class.rb'
+
 # Creating new classes
 class Output
   def initialize(info)
@@ -9,6 +11,7 @@ class Output
     @lang = info.language
     @heads = info.headers
     @instrs = info.instruments
+    @movs = info.movements
   end
 
   def name()
@@ -38,7 +41,8 @@ class Output
   def write_top()
     @file.puts '\version "' + @vers + '"'
     @file.puts '\language "' + @lang + '"'
-    @file.puts "% " + filename() + " - part of " + @heads['title'] + '.'
+    @file.puts "% " + filename() + " - part of " + @heads['title'] + \
+      'by ' + @heads['composer'] + '.'
   end
   
   def write_supporting()
