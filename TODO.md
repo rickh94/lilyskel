@@ -20,24 +20,24 @@ __UPDATE README__
 * __CHANGE FUCKING EVERTHING__ In order for it to work properly, everything
   needs to use classes. Current theory:
     * ~~Create Output class with methods create_file, write_top, write middle, write_bottom, and maybe
-      some others.~~DONE!
+      some others.~~ DONE!
     * ~~Create Defs, Score and Part subclasses~~DONE! with write_score and write_part methods
       (respectively) for more specific things
-    * ~~Possibly consolidate info into class.~~DONE!
+    * ~~Possibly consolidate info into class.~~ DONE!
 
 __All that's left is the hard part__
 
 ## Writing Files
 * ~~Combine instruments and movement number to get variables needed arrays or
-  array of arrays. Maybe hash of arrays.~~Changed my mind.
-* ~~Figure out what files need to be created (array of instruments)~~Changed
+  array of arrays. Maybe hash of arrays.~~ Changed my mind.
+* ~~Figure out what files need to be created (array of instruments)~~ Changed
   my mind.
 * Create parts for each instrument with correct variable (array.each will help
   a lot) and score
-    * ~~Write in version language includes (defs.ily)~~DONE!
-    * ~~Enable relative includes~~DONE!
+    * ~~Write in version language includes (defs.ily)~~ DONE!
+    * ~~Enable relative includes~~ DONE!
     * Write in static part-level lines (\book, \paper, etc.)
     * Write in static lines for each variable and variable (some kind of each
     loop will be needed.
-* ~~Write in necessary static lines~~DONE!
+* ~~Write in necessary static lines~~ DONE!
 
