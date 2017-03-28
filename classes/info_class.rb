@@ -9,14 +9,16 @@
 #require './language_class.rb'
 #require './version_class.rb'
 #require './all_instruments_class.rb'
+#require './movements_class.rb'
 
 class Info
-  attr_reader :instruments, :headers, :version, :language
+  attr_reader :instruments, :headers, :version, :language, :movements
   def initialize()
     @version = Version.new.self
     @language = Language.new.self
     @instruments = AllInstruments.new.all()
     @headers = Headers.new.all()
+    @movements = Movements.new
   end
 end
 
