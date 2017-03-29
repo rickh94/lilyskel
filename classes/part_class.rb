@@ -18,7 +18,8 @@ class Part < Output
     filename_prefix() + '_' + @instr.file() + '.ly'
   end
 
-  def write_above()
+  def write_above(num)
+    @file.puts '  % ' + @movs.comment(num)
     @file.puts '  \score {'
     @file.puts '    \new Staff {'
     @file.puts '      \new Voice {'
@@ -37,7 +38,7 @@ class Part < Output
   def write_middle()
     i = 1
     while i <= @movs.count 
-      write_above()
+      write_above(i)
       write_mov(i)
       write_below()
       i += 1

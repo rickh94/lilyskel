@@ -11,7 +11,8 @@ class Score < Output
     filename_prefix() + '_score.ly'
   end
 
-  def write_above()
+  def write_above(num)
+    @file.puts '  % ' + @movs.comment(num)
     @file.puts '  \score {'
     @file.puts '   <<'
   end
@@ -34,7 +35,7 @@ class Score < Output
   def write_middle()
     i = 1
     while i <= @movs.count 
-      write_above()
+      write_above(i)
       write_mov(i)
       write_below()
       i += 1
@@ -47,8 +48,8 @@ class Score < Output
 end
 
 # TESTS for the Score Class
-info = Info.new
-score = Score.new(info)
-score.create()
-score.write()
-score.done()
+#info = Info.new
+#score = Score.new(info)
+#score.create()
+#score.write()
+#score.done()
