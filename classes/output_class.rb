@@ -42,7 +42,7 @@ class Output
     @file.puts '\version "' + @vers + '"'
     @file.puts '\language "' + @lang + '"'
     @file.puts "% " + filename() + " - part of " + @heads['title'] + \
-      'by ' + @heads['composer'] + '.'
+      ' by ' + @heads['composer'] + '.'
   end
   
   def write_supporting()
