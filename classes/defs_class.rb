@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 #  defs_class.rb - classes for creation of defs.ily file.
 
+require File.dirname(__FILE__) + '/output_class.rb'
 # Defs sublcass of output
 class Defs < Output
   # change initialize
@@ -8,7 +9,7 @@ class Defs < Output
     @vers = info.version
     @lang = info.language
     @heads = info.headers
-    puts 'Please enter the file names you would like to include'\
+    puts 'Please enter the file names you would like to include '\
       'in your Lilypond project, separated by commas:'
     @includes = gets.chomp.to_s.split(',').map(&:lstrip)
     @insts = info.instruments

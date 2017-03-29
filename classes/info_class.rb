@@ -3,13 +3,13 @@
 # lilypond project (except includes which are handled elsewhere).
 
 # Require statements for testing purposes only
-require './instrument_class.rb'
-require './headers_class.rb'
-require './version_class.rb'
-require './language_class.rb'
-require './version_class.rb'
-require './all_instruments_class.rb'
-require './movements_class.rb'
+#require './instrument_class.rb'
+#require './headers_class.rb'
+#require './version_class.rb'
+#require './language_class.rb'
+#require './version_class.rb'
+#require './all_instruments_class.rb'
+#require './movements_class.rb'
 
 class Info
   attr_reader :instruments, :headers, :version, :language, :movements

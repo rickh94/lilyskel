@@ -2,7 +2,7 @@
 #  output_classes.rb - classes for creation of files: Output and subclasses
 #  Score and Part. Generate and write files given inputs.
 
-require './info_class.rb'
+#require './info_class.rb'
 
 # Creating new classes
 class Output

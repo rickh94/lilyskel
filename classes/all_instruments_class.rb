@@ -2,7 +2,8 @@
 #  all_instruments_class.rb - a class for getting instruments from 
 #  user, normalizing their names and making an Instrument object for each.
 
-require './instrument_class.rb'
+#require './instrument_class.rb'
+require File.dirname(__FILE__) + '/instrument_class.rb'
 
 class AllInstruments
   @@input = Array.new
