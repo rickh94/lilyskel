@@ -1,6 +1,9 @@
 # TODO:
 
 * Generate one directory per instrument
+* Generate one globals directory
+* Add global lines to parts/ score (one per movement only. Nested loops should
+  help)
 * Generate template file, wait for user to edit it
 * Use lymakeparts to generate one file per instrument per movement
 * Generate include files (either using lymakeincludes or rewrite in ruby)
