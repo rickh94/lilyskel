@@ -24,13 +24,17 @@ class Part < Output
     @file.puts '  \score {'
     @file.puts '    \new Staff {'
     @file.puts '      \new Voice {'
+    @file.puts '       <<'
   end
 
   def write_mov(num)
-    @file.puts "      \\" + @instr.var + '_' + @movs.movement_number(num)
+    mov = @movs.movement_number(num)
+    @file.puts "      \global_" + mov
+    @file.puts "      \\" + @instr.var + '_' + mov
   end
 
   def write_below()
+    @file.puts '       >>'
     @file.puts '      }'
     @file.puts '    }'
     @file.puts '  }'
