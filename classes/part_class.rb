@@ -29,7 +29,7 @@ class Part < Output
 
   def write_mov(num)
     mov = @movs.movement_number(num)
-    @file.puts "      \global_" + mov
+    @file.puts "      \\global_" + mov
     @file.puts "      \\" + @instr.var + '_' + mov
   end
 

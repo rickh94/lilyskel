@@ -13,6 +13,11 @@ class Score < Output
 
   def write_above(num)
     @file.puts '  % ' + @movs.comment(num)
+    if num != 1
+      @file.puts '\header {'
+      @file.puts '  opus = ##f'
+      @file.puts '}'
+    end
     @file.puts '  \score {'
     @file.puts '   <<'
   end
@@ -20,7 +25,7 @@ class Score < Output
   def write_mov(num)
     @instrs.each_with_index do |ins, i| 
       mov = @movs.movement_number(num)
-      @file.puts '    \new Staff = "' + i.file + '" {'
+      @file.puts '    \new Staff = "' + ins.file + '" {'
       @file.puts '      \new Voice {'
       if i == 0
         @file.puts '      <<'
