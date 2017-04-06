@@ -19,3 +19,5 @@ for instrument in info.instruments
   part.write()
   part.done()
 end
+structure = Directories.new(info)
+structure.make_all()
