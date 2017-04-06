@@ -16,7 +16,7 @@ class Directories
       tmp = File.new(file_prefix + '_' + i.to_s + '.ily', "w")
       tmp.puts '\version "' + @version + '"'
       tmp.puts '\language "' + @language + '"'
-      tmp.puts "\n\n\n" + '\global_' + @movements.movement_number(i) + ' = {'
+      tmp.puts "\n\n\n" + 'global_' + @movements.movement_number(i) + ' = {'
       tmp.puts '}'
       tmp.close()
       i += 1
@@ -30,7 +30,7 @@ class Directories
       tmp = File.new(file_prefix + '_' + i.to_s + '.ily', "w")
       tmp.puts '\version "' + @version + '"'
       tmp.puts '\language "' + @language + '"'
-      tmp.puts "\n\n\n\\" + instrument.var + '_' + @movements.movement_number(i) \
+      tmp.puts "\n\n\n" + instrument.var + '_' + @movements.movement_number(i) \
         + ' = \relative {'
       tmp.puts '}'
       tmp.close()
