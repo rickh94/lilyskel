@@ -27,13 +27,27 @@ class Directories
     i = 1
     while i <= @movements.count
       file_prefix = @cd + '/' + instrument.file + '/' + instrument.file
-      tmp = File.new(file_prefix + '_' + i.to_s + '.ily', "w")
-      tmp.puts '\version "' + @version + '"'
-      tmp.puts '\language "' + @language + '"'
-      tmp.puts "\n\n\n" + instrument.var + '_' + @movements.movement_number(i) \
+      ins_file = File.new(file_prefix + '_' + i.to_s + '.ily', "w")
+      ins_file.puts '\version "' + @version + '"'
+      ins_file.puts '\language "' + @language + '"'
+      puts "Please enter additional text for the top secion of " + instrument.pretty + " notes files:"
+      puts "(empty line to exit)"
+      loop do
+        tmp = gets.chomp.to_s
+        break if tmp == ''
+        ins_file.puts tmp
+      end
+      ins_file.puts "\n\n\n" + instrument.var + '_' + @movements.movement_number(i) \
         + ' = \relative {'
-      tmp.puts '}'
-      tmp.close()
+      puts "Please enter additional text for the variable secion of " + instrument.pretty + " notes files:"
+      puts "(empty line to exit)"
+      loop do
+        tmp = gets.chomp.to_s
+        break if tmp == ''
+        ins_file.puts tmp
+      end
+      ins_file.puts '}'
+      ins_file.close()
       i += 1
     end
   end
