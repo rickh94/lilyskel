@@ -30,7 +30,7 @@ class Directories
       ins_file = File.new(file_prefix + '_' + i.to_s + '.ily', "w")
       ins_file.puts '\version "' + @version + '"'
       ins_file.puts '\language "' + @language + '"'
-      puts "Please enter additional text for the top secion of " + instrument.pretty + " notes files:"
+      puts "Please enter additional text for the top secion of " + instrument.pretty + " mov " + i.to_s + " notes file:"
       puts "(empty line to exit)"
       loop do
         tmp = gets.chomp.to_s
@@ -39,7 +39,7 @@ class Directories
       end
       ins_file.puts "\n\n\n" + instrument.var + '_' + @movements.movement_number(i) \
         + ' = \relative {'
-      puts "Please enter additional text for the variable secion of " + instrument.pretty + " notes files:"
+      puts "Please enter additional text for the variable secion of " + instrument.pretty + " mov " + i.to_s + " notes file:"
       puts "(empty line to exit)"
       loop do
         tmp = gets.chomp.to_s
