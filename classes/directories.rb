@@ -23,31 +23,37 @@ class Directories
     end
   end
 
+  def file_top(file)
+    file.puts '\version "' + @version + '"'
+    file.puts '\language "' + @language + '"'
+    file.puts ''
+  end
+
+  def put_var(file)
+    file.puts "\n\n" + instrument.var + '_' + @movements.movement_number(i) \
+      + ' = \relative {'
+    puts "Please enter additional text for the variable secion of " + instrument.pretty + " mov " + i.to_s + " notes file:"
+    puts "(empty line to exit)"
+    loop do
+      tmp = gets.chomp.to_s
+      break if tmp == ''
+      file.puts tmp
+    end
+    file.puts '}'
+  end
+
   def make_files(instrument)
     i = 1
+    includes = File.new(@cd + '/' + instument.file + "_include.ily", "w")
+    file_top(includes)
+    includes.puts "#(ly:set-option 'relative-includes #t)"
     while i <= @movements.count
-      file_prefix = @cd + '/' + instrument.file + '/' + instrument.file
-      ins_file = File.new(file_prefix + '_' + i.to_s + '.ily', "w")
-      ins_file.puts '\version "' + @version + '"'
-      ins_file.puts '\language "' + @language + '"'
-      puts "Please enter additional text for the top secion of " + instrument.pretty + " mov " + i.to_s + " notes file:"
-      puts "(empty line to exit)"
-      loop do
-        tmp = gets.chomp.to_s
-        break if tmp == ''
-        ins_file.puts tmp
-      end
-      ins_file.puts "\n\n\n" + instrument.var + '_' + @movements.movement_number(i) \
-        + ' = \relative {'
-      puts "Please enter additional text for the variable secion of " + instrument.pretty + " mov " + i.to_s + " notes file:"
-      puts "(empty line to exit)"
-      loop do
-        tmp = gets.chomp.to_s
-        break if tmp == ''
-        ins_file.puts tmp
-      end
-      ins_file.puts '}'
+      file_name = instrument.file + '/' + instrument.file + '_' + i.to_s + '.ily'
+      ins_file = File.new(@cd + '/' + file_name, "w")
+      file_top(ins_file)
+      put_var(ins_file)
       ins_file.close()
+      includes.puts '\include "' + file_name + '"'
       i += 1
     end
   end
