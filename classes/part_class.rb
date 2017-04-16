@@ -29,8 +29,9 @@ class Part < Output
 
   def write_mov(num)
     mov = @movs.movement_number(num)
-    @file.puts "      \\global_" + mov
-    @file.puts "      \\" + @instr.var + '_' + mov
+    @file.puts "        \\global_" + mov
+    @file.puts "        \\compressFullBarRests" 
+    @file.puts "        \\" + @instr.var + '_' + mov
   end
 
   def write_below()
