@@ -22,8 +22,8 @@ class Output
   def filename_prefix()
     # Generate filename prefix from opus or title. Prefer opus.
     @heads.has_key?("opus") ? 
-      prefix = @heads['opus'].gsub(/Op\.\s*/, 'O').tr(' ', '_').upcase :
-      prefix = @heads['title'].downcase.tr(' ', '_').gsub('.', '')
+      prefix = @heads['opus'].tr(' ,.po', '').upcase :
+      prefix = @heads['title'].downcase.tr(',.', '').tr(' ', '_').gsub('.', '')
     return prefix
   end
 

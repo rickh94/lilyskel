@@ -25,7 +25,7 @@ class Defs < Output
     if @heads.has_key?('mutopiacomposer')
       tmp = Array.new
       @insts.each{ |i| tmp << i.pretty }
-      @file.puts 'mutopiainstrument = "' + \
+      @file.puts '  mutopiainstrument = "' + \
         tmp.join(', ').gsub(/(Violon)?[cC]ello/, "'Cello") + '"'
     end
     @file.puts '}'
