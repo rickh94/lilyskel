@@ -22,6 +22,11 @@ class Part < Output
   def write_above(num)
     @file.puts '  % ' + @movs.comment(num)
     @file.puts '  \score {'
+    if num != 1
+      @file.puts '    \header {'
+      @file.puts '      opus = " "'
+      @file.puts '     }'
+    end
     @file.puts '    \new Staff {'
     @file.puts '      \new Voice {'
     @file.puts '       <<'
