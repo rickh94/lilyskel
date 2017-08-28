@@ -1,9 +1,12 @@
-# Lilypond File Generator
+Lilypond Skeletons
+==================
 
-A ruby program to generate basic score/part skeletons for my Lilypond
-workflow. 
+Generate a file/directory skeleton for lilypond projects.
 
-## Features
+
+Features
+========
+(In progress)
 
 Generates a score, all parts, and a defs file based on information provided by
 the user:
@@ -21,10 +24,3 @@ the user:
 * Number of movements
 * Files to include
 
-## Future Features
-
-* Generate directory structure
-* Create files for note input to variables based on templates 
-    * Generate template file
-    * Allow user to edit it
-    * then generate one file per movement per instrument
