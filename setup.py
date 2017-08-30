@@ -18,7 +18,9 @@ setup(
     python_requires='>=3.4',
     install_requires=[
         'num2words',
+        'tinydb',
     ],
+    test_requires=['pytest', 'pytest-cov']
     package=find_packages(),
 
     )
