@@ -35,7 +35,7 @@ def _roman_numeral(num):
         num: a number to convert. Must be between 1 and 89 (inclusive)
     """
     if not isinstance(num, int):
-        raise TypeError('num must be an int')
+        raise TypeError("'num' must be an int")
     if num > 89 or num < 1:
         raise ValueError('Only supports numbers between 1 and 89')
     numeral_dict = {
@@ -131,8 +131,12 @@ class Instrument(LyName):
     keyboard = attr.ib(default=False)
     midi = attr.ib(default=None)
 
-    def part_name(self):
-        """Returns the name for printing on a part."""
+    def part_name(self, key=False):
+        """
+        Returns the name for printing on a part.
+        Arguments:
+            key: (bool) Specifies whether to include key/transposition in name.
+        """
         # pylint: disable=no-member
         name = titlecase(' '.join(self.name.split('_')))
         # _roman is only needed if self was initialized with a number.
@@ -140,6 +144,9 @@ class Instrument(LyName):
             name += ' ' + self._roman
         except (AttributeError, TypeError):
             pass
+        if not key:
+            if ' in ' in name:
+                name = re.sub(' in .*', '', name)
         return name
 
     @classmethod
