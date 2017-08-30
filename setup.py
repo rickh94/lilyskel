@@ -20,7 +20,7 @@ setup(
         'num2words',
         'tinydb',
     ],
-    test_requires=['pytest', 'pytest-cov']
+    test_requires=['pytest', 'pytest-cov'],
     package=find_packages(),
 
     )
