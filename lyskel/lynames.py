@@ -37,7 +37,7 @@ def _roman_numeral(num):
     if not isinstance(num, int):
         raise TypeError('num must be an int')
     if num > 89 or num < 1:
-        raise NotImplementedError('Only supports numbers between 1 and 89')
+        raise ValueError('Only supports numbers between 1 and 89')
     numeral_dict = {
         1: 'I',
         2: 'II',
@@ -112,6 +112,7 @@ class LyName():
 
 @attr.s
 class Instrument(LyName):
+    # pylint: disable=protected-access
     """
     Class for Instruments.
     Inherits from LyName
@@ -132,14 +133,13 @@ class Instrument(LyName):
 
     def part_name(self):
         """Returns the name for printing on a part."""
+        # pylint: disable=no-member
         name = titlecase(' '.join(self.name.split('_')))
         # _roman is only needed if self was initialized with a number.
         try:
             name += ' ' + self._roman
         except (AttributeError, TypeError):
             pass
-        if 'In' in name:
-            name.replace('In', 'in')
         return name
 
     @classmethod
@@ -163,7 +163,6 @@ class Instrument(LyName):
         new_obj._roman = _form_num(number, form='roman')
         return new_obj
 
-    # TODO: needs test
     @classmethod
     def load_from_db(cls, name, db, number=None):
         """
@@ -193,11 +192,12 @@ class Instrument(LyName):
             setattr(new_obj, key, val)
         return new_obj
 
-    # TODO: needs test
     def add_to_db(self, db):
         """
         Serializes the Instrument and adds it to the supplied database in the
         'instruments' table.
+        This should only be called after load_from_db fails or the databse is
+        otherwise checked so duplicates aren't added to the database.
 
         Arguments:
             db: a tinydb instance to insert into.

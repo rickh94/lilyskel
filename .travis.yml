@@ -1,0 +1,18 @@
+language: python
+cache: pip
+python:
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "pypy3"
+
+before_install:
+  - pip install codecov
+  - pip install pytest
+  - pip install pytest-cov
+install:
+  - pip install .
+script: pytest --cov=lyskel
+
+after_success:
+  - codecov

@@ -1,0 +1,2 @@
+include lyskel/default_db.json
+include doc/*

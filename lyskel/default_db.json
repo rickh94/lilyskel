@@ -1,0 +1,45 @@
+{
+    "_default": {},
+    "instruments": {
+        "1": {
+            "name": "violin",
+            "abbr": "Vln.",
+            "clef": "treble",
+            "transposition": null,
+            "keyboard": false,
+            "midi": "violin"
+        },
+        "2": {
+            "name": "viola",
+            "abbr": "Vla.",
+            "clef": "alto",
+            "transposition": null,
+            "keyboard": false,
+            "midi": "viola"
+        },
+        "3": {
+            "name": "violoncello",
+            "abbr": "Vc.",
+            "clef": "bass",
+            "transposition": null,
+            "keyboard": false,
+            "midi": "cello"
+        },
+        "4": {
+            "name": "double_bass",
+            "abbr": "Cb.",
+            "clef": "bass",
+            "transposition": null,
+            "keyboard": false,
+            "midi": "contrabass"
+        },
+        "5": {
+            "name": "contrabass",
+            "abbr": "Cb.",
+            "clef": "bass",
+            "transposition": null,
+            "keyboard": false,
+            "midi": "contrabass"
+        }
+    }
+}

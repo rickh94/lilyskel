@@ -1,9 +1,10 @@
 """Tests for LyName and it's child classes."""
 import unittest
-from tinydb import TinyDB, Query
 from unittest import mock
+from tinydb import TinyDB
 from lyskel import lynames
 from lyskel import exceptions
+# pylint: disable=protected-access
 
 
 class TestRomanNumeral(unittest.TestCase):
@@ -56,8 +57,29 @@ class TestRomanNumeral(unittest.TestCase):
         self.assertEqual(lynames._roman_numeral(78), 'LXXVIII')
         self.assertEqual(lynames._roman_numeral(89), 'LXXXIX')
 
+    def test_errors(self):
+        self.assertRaisesRegex(
+            TypeError,
+            'num.*int',
+            lynames._roman_numeral,
+            'hi'
+        )
+        self.assertRaisesRegex(
+            ValueError,
+            '.*1 and 89',
+            lynames._roman_numeral,
+            90
+        )
+        self.assertRaisesRegex(
+            ValueError,
+            '.*1 and 89',
+            lynames._roman_numeral,
+            0
+        )
+
 
 class TestLyName(unittest.TestCase):
+    """Test the LyName class methods."""
 
     def test_init(self):
         """Test normalization of name input."""
@@ -78,6 +100,7 @@ class TestLyName(unittest.TestCase):
         testlyname = lynames.LyName('global')
         testlyname2 = lynames.LyName('test')
         testlyname2.number = 2
+        testlyname2._numword = 'two'
         self.assertEqual(
             testlyname.file_name(1),
             'global_1'
@@ -101,6 +124,11 @@ class TestLyName(unittest.TestCase):
         self.assertEqual(
             testlyname.var_name(31),
             'global_thirty_first_mov'
+        )
+
+        self.assertEqual(
+            testlyname2.var_name(2),
+            'test_two_second_mov'
         )
 
         # test exceptions
