@@ -19,7 +19,8 @@ setup(
     install_requires=[
         'num2words',
         'tinydb',
-        'attrs'
+        'attrs',
+        'titlecase',
     ],
     test_requires=['pytest', 'pytest-cov'],
     package=find_packages(),
