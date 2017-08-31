@@ -1,11 +1,10 @@
 """Tests for LyName and it's child classes."""
-import unittest
 from unittest import mock
 import pytest
 from tinydb import TinyDB
 from lyskel import lynames
 from lyskel import exceptions
-# pylint: disable=protected-access
+# pylint: disable=protected-access,no-self-use
 
 
 class TestRomanNumeral(object):
@@ -59,6 +58,7 @@ class TestRomanNumeral(object):
         assert lynames._roman_numeral(89) == 'LXXXIX'
 
     def test_errors(self):
+        """Test that invalid input raises an exception."""
         with pytest.raises(TypeError,
                            message="Expecting TypeError for non-int value",
                            match=r"num.*int"):
@@ -78,12 +78,12 @@ class TestLyName():
     def test_init(self):
         """Test normalization of name input."""
         test1 = lynames.LyName('TEST name ')
-        assert test1.name == 'test_name'
-        assert test1.number is None
+        assert test1.name == 'test_name', "name should be normalized"
+        assert test1.number is None, "Number should be None if not specified"
 
         test2 = lynames.LyName('  another_test-name')
-        assert test2.name == 'another_test_name'
-        assert test2.number is None
+        assert test2.name == 'another_test_name', "name should be normalized"
+        assert test2.number is None, "Number should be None if not specified"
 
     def test_movement(self):
         """Tests file_name and var_name methods and related exceptions."""
@@ -93,20 +93,23 @@ class TestLyName():
         testlyname2._numword = 'two'
 
         # test file_name
-        assert testlyname1.file_name(1) == 'global_1'
-        assert testlyname1.file_name(2) == 'global_2'
-        assert testlyname2.file_name(1) == 'test2_1'
+        assert testlyname1.file_name(1) == 'global_1', "should append number"
+        assert testlyname1.file_name(2) == 'global_2', "should append number"
+        assert testlyname2.file_name(1) == 'test2_1', "should append number"
 
         # test var_name
-        assert testlyname1.var_name(2) == 'global_second_mov'
-        assert testlyname1.var_name(31) == 'global_thirty_first_mov'
-        assert testlyname2.var_name(2) == 'test_two_second_mov'
+        assert testlyname1.var_name(2) == 'global_second_mov',\
+            "should append number words"
+        assert testlyname1.var_name(31) == 'global_thirty_first_mov',\
+            "should append number words"
+        assert testlyname2.var_name(2) == 'test_two_second_mov',\
+            "should append number words"
 
         # test exceptions
         with pytest.raises(TypeError,
                            message="Expect TypeError if form no specified.",
                            match=".*'form'.*"):
-            testlyname1._movement(1)
+            testlyname1._movement(1)  # pylint: disable=missing-kwoa
 
         with pytest.raises(TypeError,
                            message=("Expect TypeError "
@@ -131,7 +134,8 @@ def test_ins():
 def test_ins2():
     """Another test instrument."""
     return lynames.Instrument.numbered_name('violoncello', 2, abbr='Vc.',
-                                            clef='bass', midi='violoncello')
+                                            clef='bass', midi='violoncello',
+                                            family='strings')
 
 
 @pytest.fixture(scope='module')
@@ -139,11 +143,12 @@ def test_ins3():
     """A third test instrument."""
     return lynames.Instrument('Clarinet in Bb', abbr='Cl.', clef='treble',
                               transposition='Bb', keyboard=False,
-                              midi='clarinet')
+                              midi='clarinet', family='woodwinds')
 
 
 @pytest.fixture
 def mockdb():
+    """A mocked database."""
     mock_db = mock.MagicMock(spec=TinyDB)
     mock_table = mock.MagicMock()
     mock_db.table.return_value = mock_table
@@ -153,7 +158,8 @@ def mockdb():
         'clef': 'treble',
         'transposition': None,
         'keyboard': False,
-        'midi': 'flute'
+        'midi': 'flute',
+        'family': 'woodwinds'
     }
     return mock_db
 
@@ -163,52 +169,56 @@ class TestInstrument():
     Test the Instrument Class.
     Some of this is really more like integration tests.
     """
-    def test_numbered_name(self, test_ins, test_ins2, test_ins3):
+    # pylint: disable=redefined-outer-name
+    def test_numbered_name(self, test_ins, test_ins2):
         """Test the numbered name class method."""
-        assert test_ins.name == 'violin'
-        assert test_ins.number == 1
-        assert test_ins._numword == 'one'
-        assert test_ins._roman == 'I'
-        assert test_ins.abbr == ''
-        assert test_ins.clef == 'treble'
-        assert test_ins.transposition is None
-        assert test_ins.keyboard is False
-        assert test_ins.midi is None
+        assert test_ins.name == 'violin', "name should be normalized"
+        assert test_ins.number == 1, "number should be as specified"
+        assert test_ins._numword == 'one', "numword should be generated"
+        assert test_ins._roman == 'I', "roman numeral should be generated"
+        assert test_ins.abbr == '', "should be default"
+        assert test_ins.clef == 'treble', "should be default"
+        assert test_ins.transposition is None, "should be default"
+        assert test_ins.keyboard is False, "should be default"
+        assert test_ins.midi is None, "should be default"
+        assert test_ins.family is None, "should be default"
 
-        assert test_ins2.name == 'violoncello'
-        assert test_ins2.number == 2
-        assert test_ins2._numword == 'two'
-        assert test_ins2._roman == 'II'
-        assert test_ins2.abbr == 'Vc.'
-        assert test_ins2.clef == 'bass'
-        assert test_ins2.transposition is None
-        assert test_ins2.keyboard is False
-        assert test_ins2.midi == 'violoncello'
+        assert test_ins2.name == 'violoncello', "name should be normalized"
+        assert test_ins2.number == 2, "number should be as specified"
+        assert test_ins2._numword == 'two', "numword should be generated"
+        assert test_ins2._roman == 'II', "roman numeral should be generated"
+        assert test_ins2.abbr == 'Vc.', "should be as specified"
+        assert test_ins2.clef == 'bass', "should be as specified"
+        assert test_ins2.transposition is None, "should be default"
+        assert test_ins2.keyboard is False, "should be default"
+        assert test_ins2.midi == 'violoncello', "should be as specified"
+        assert test_ins2.family == 'strings', "should be as specified"
 
     def test_init_with_attribs(self, test_ins3):
         """
         Test direct initialization with transposition and normalization of the
         name.
         """
-        assert test_ins3.name == 'clarinet_in_bb'
-        assert test_ins3.number is None
-        assert test_ins3.abbr == 'Cl.'
-        assert test_ins3.clef == 'treble'
-        assert test_ins3.transposition == 'Bb'
-        assert test_ins3.keyboard is False
-        assert test_ins3.midi == 'clarinet'
+        as_specified = "should be as specified"
+        assert test_ins3.name == 'clarinet_in_bb', "name should be normalized"
+        assert test_ins3.number is None, "Should be none unless specified"
+        assert test_ins3.abbr == 'Cl.', as_specified
+        assert test_ins3.clef == 'treble', as_specified
+        assert test_ins3.transposition == 'Bb', as_specified
+        assert test_ins3.keyboard is False, as_specified
+        assert test_ins3.midi == 'clarinet', as_specified
+        assert test_ins3.family == 'woodwinds', as_specified
 
     def test_part_name(self, test_ins, test_ins2, test_ins3):
         """Tests the part_name method."""
-        assert test_ins.part_name() == 'Violin I'
-        assert test_ins2.part_name() == 'Violoncello II'
-        assert test_ins3.part_name() == 'Clarinet'
-        assert test_ins3.part_name(key=True) == 'Clarinet in Bb'
+        assert test_ins.part_name() == 'Violin I', "should be pretty"
+        assert test_ins2.part_name() == 'Violoncello II', "should be pretty"
+        assert test_ins3.part_name() == 'Clarinet', "should be pretty"
+        assert test_ins3.part_name(key=True) == 'Clarinet in Bb',\
+            "should have key in name"
 
-    def test_load_from_db(self, mockdb):
+    def test_load_from_db(self, mockdb, livedb):
         """Tests loading an object from tinydb."""
-        # mock the db and table objects
-
         assert lynames.Instrument.load_from_db('flute', mockdb) ==\
             lynames.Instrument(
                 'flute',
@@ -216,8 +226,9 @@ class TestInstrument():
                 clef='treble',
                 transposition=None,
                 keyboard=False,
-                midi='flute'
-            )
+                midi='flute',
+                family='woodwinds'
+            ), "should load all attributes from database"
 
         # make sure it still works with numbers
         assert lynames.Instrument.load_from_db('flute', mockdb, number=2) ==\
@@ -228,16 +239,28 @@ class TestInstrument():
                 clef='treble',
                 transposition=None,
                 keyboard=False,
-                midi='flute'
-            )
+                midi='flute',
+                family='woodwinds'
+            ), "should load all attributes from database and have numbers"
 
-        # if not found, it should raise InstrumentNotFoundError.
+        assert lynames.Instrument.load_from_db('violin', livedb) ==\
+            lynames.Instrument(
+                'violin',
+                abbr='Vln.',
+                clef='treble',
+                transposition=None,
+                keyboard=False,
+                midi='violin',
+                family='strings'
+            ), "Should load correctly from actual default database."
+
+        # if not found, it should raise DataNotFoundError.
         failtable = mock.MagicMock()
         mockdb.table.return_value = failtable
         failtable.get.return_value = None
         # if not found, 'get' from the table will return none.
-        with pytest.raises(exceptions.InstrumentNotFoundError,
-                           message=("expect InstrumentNotFoundError if "
+        with pytest.raises(exceptions.DataNotFoundError,
+                           message=("expect DataNotFoundError if "
                                     "supplied instrument is not in supplied "
                                     "table."),
                            match='.*not in.*table'):
@@ -256,7 +279,8 @@ class TestInstrument():
              'clef': 'treble',
              'transposition': None,
              'keyboard': False,
-             'midi': None
+             'midi': None,
+             'family': None
              }
         )
 
@@ -268,7 +292,8 @@ class TestInstrument():
              'clef': 'bass',
              'transposition': None,
              'keyboard': False,
-             'midi': 'violoncello'
+             'midi': 'violoncello',
+             'family': 'strings'
              }
         )
 
@@ -280,6 +305,79 @@ class TestInstrument():
              'clef': 'treble',
              'transposition': 'Bb',
              'keyboard': False,
-             'midi': 'clarinet'
+             'midi': 'clarinet',
+             'family': 'woodwinds'
              }
         )
+
+
+@pytest.fixture
+def violin1(livedb):
+    """A violin 1 object."""
+    return lynames.Instrument.load_from_db('violin', number=1, db=livedb)
+
+
+@pytest.fixture
+def violin2(livedb):
+    """A violin 2 object."""
+    return lynames.Instrument.load_from_db('violin', number=2, db=livedb)
+
+
+@pytest.fixture
+def viola(livedb):
+    """A violin 2 object."""
+    return lynames.Instrument.load_from_db('viola', db=livedb)
+
+
+@pytest.fixture
+def violoncello(livedb):
+    """A violin 2 object."""
+    return lynames.Instrument.load_from_db('violoncello', db=livedb)
+
+
+class TestEnsemble():
+    """Test the Ensemble Class."""
+    # pylint: disable=redefined-outer-name
+    def test_add_instrument(self, livedb, violin1):
+        """Test adding an instrument."""
+        test_ens = lynames.Ensemble('test_ensemble')
+        test_ens.add_instrument(ins_name='violin', number=1, db=livedb)
+        assert violin1 in test_ens.instruments, ("Should have loaded 'violin' "
+                                                 "object from the database")
+
+        test_ens.add_instrument(ins_name='glockenSPiel', number=1, abbr='Gl.',
+                                clef='treble', keyboard=False,
+                                midi='glockenspiel', family='PERCUSsion')
+        glock = lynames.Instrument.numbered_name(name='glockenspiel', number=1,
+                                                 abbr='Gl.', clef='treble',
+                                                 keyboard=False,
+                                                 midi='glockenspiel',
+                                                 family='percussion')
+        assert glock in test_ens.instruments, ("Should have created "
+                                               "'glockenspiel' object from "
+                                               "arguments and normalized it.")
+
+    def test_load_from_db(self, livedb, monkeypatch, violin1, violin2,
+                          viola, violoncello):
+        """Test loading an ensemble from the database."""
+        test_ens = lynames.Ensemble.load_from_db('STRING QUARTET', livedb)
+        assert test_ens.name == 'string_quartet', "Name should be normalized"
+        assert violin1 in test_ens.instruments, "should load violin 1"
+        assert violin2 in test_ens.instruments, "should load violin 2"
+        assert viola in test_ens.instruments, "should load viola"
+        assert violoncello in test_ens.instruments, "should load violoncello"
+
+        def raises_data_not_found(*args, **kwargs):
+            raise exceptions.DataNotFoundError('thing not found here')
+
+        monkeypatch.setattr("lyskel.lynames.Instrument.load_from_db",
+                            raises_data_not_found)
+
+        with pytest.raises(exceptions.MissingInstrumentError,
+                           message=("Expect MissingInstrumentError if "
+                                    "no instruments are found (i.e. "
+                                    "Instrument.load_from_db raises "
+                                    "DataNotFoundError)."),
+                           match=(".*instrument.*string_quartet.*database"
+                                  ".*thing not found here.*")):
+            lynames.Ensemble.load_from_db('string_quartet', livedb)

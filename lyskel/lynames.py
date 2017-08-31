@@ -3,13 +3,14 @@ import re
 import attr
 from num2words import num2words
 from titlecase import titlecase
-from tinydb import Query
 from . import exceptions
 from .db_interface import load_name_from_table, explore_table
 
 
 def _normalize(name):
     """Clean up the names."""
+    if name is None:
+        return None
     clean = re.sub(r'[-_\s]+', '_', name.strip())
     return clean.lower()
 
@@ -132,7 +133,7 @@ class Instrument(LyName):
     transposition = attr.ib(default=None)
     keyboard = attr.ib(default=False)
     midi = attr.ib(default=None)
-    family = attr.ib(default=None)
+    family = attr.ib(default=None, convert=_normalize)
 
     def part_name(self, key=False):
         """
@@ -272,8 +273,8 @@ class Ensemble():
         except exceptions.DataNotFoundError as err:
             raise exceptions.MissingInstrumentError(
                 "An instrument specified for {name} was not found in the "
-                "database. This is not allowed. Details follow: ".format(
-                    name=name), e)
+                "database. This is not allowed. Details follow: {e}".format(
+                    name=name, e=err))
         return new_ens
 
     def add_to_db(self, db):
