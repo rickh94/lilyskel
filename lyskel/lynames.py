@@ -5,6 +5,7 @@ from num2words import num2words
 from titlecase import titlecase
 from tinydb import Query
 from . import exceptions
+from .db_interface import load_name_from_table, explore_table
 
 
 def _normalize(name):
@@ -124,12 +125,14 @@ class Instrument(LyName):
         keyboard: (bool) specifies whether it is a keyboard instrument. (To
         know whether to create multiple staves.)
         midi: the corresponding midi instrument.
+        family: the family of the instrument (e.g. woodwinds, strings, etc.)
     """
     abbr = attr.ib(default='')
     clef = attr.ib(default='treble')
     transposition = attr.ib(default=None)
     keyboard = attr.ib(default=False)
     midi = attr.ib(default=None)
+    family = attr.ib(default=None)
 
     def part_name(self, key=False):
         """
@@ -151,7 +154,8 @@ class Instrument(LyName):
 
     @classmethod
     def numbered_name(cls, name, number, *, abbr='', clef='treble',
-                      transposition=None, keyboard=False, midi=None):
+                      transposition=None, keyboard=False, midi=None,
+                      family=None):
         """
         Returns a numbered Instrument class. (e.g. Violin 1, Violin 2)
 
@@ -164,7 +168,7 @@ class Instrument(LyName):
         """
         new_obj = cls(name, abbr=abbr, clef=clef,
                       transposition=transposition, keyboard=keyboard,
-                      midi=midi)
+                      midi=midi, family=family)
         new_obj.number = number
         new_obj._numword = _form_num(number, form='word')
         new_obj._roman = _form_num(number, form='roman')
@@ -182,14 +186,8 @@ class Instrument(LyName):
             number: (optional) The number of the instrument in the ensemble.
             (e.g. Violin 1)
         """
-        Ins = Query()
-        # get an object matching name from the db.
-        ins_table = db.table('instruments')
-        data = ins_table.get(Ins.name == name)
-        if data is None:
-            raise exceptions.InstrumentNotFoundError(
-                "'{name}' is not in the 'instruments' table.".format(name=name)
-            )
+        name = _normalize(name)
+        data = load_name_from_table(name, db, 'instruments')
         if number is not None:
             new_obj = cls.numbered_name(name, number)
         else:
@@ -217,3 +215,85 @@ class Instrument(LyName):
                                attr.fields(Instrument).number
                            ))
         ins_table.insert(data)
+
+
+@attr.s
+class Ensemble():
+    """A group of instruments."""
+    name = attr.ib(convert=_normalize)
+    instruments = attr.ib(default=None)
+
+    def add_instrument(self, ins_name, *, db=None, number=None, abbr='',
+                       clef='treble', keyboard=False, midi=None, family=None):
+        """
+        Add an instrument to the ensemble.
+
+        Arguments:
+            ins_name: the name of the desired instrument.
+            number: the number of the instrument. (see Instrument for details.)
+            db: the database to load instruments from. (if the instrument is
+            not present, it will cause DataNotFoundError.
+        """
+        if self.instruments is None:
+            self.instruments = []
+        # if a database is present, try to load from it.
+        if db is not None:
+            new_ins = Instrument.load_from_db(ins_name, db, number=number)
+        elif number is not None:
+            new_ins = Instrument.numbered_name(
+                ins_name, number=number, abbr=abbr, clef=clef, midi=midi,
+                keyboard=keyboard, family=family)
+        else:
+            new_ins = Instrument(ins_name, abbr=abbr, clef=clef, midi=midi,
+                                 keyboard=keyboard, family=family)
+        self.instruments.append(new_ins)
+
+    @classmethod
+    def load_from_db(cls, name, db):
+        """
+        Load ensemble and instruments from database.
+        NOTE: This method enforces that if an ensemble is in the database, all
+        of its instruments MUST be in the database. If they are not, it will
+        fail to create.
+
+        Arguments:
+            name: the name of the ensemble
+            db: a TinyDB object
+        """
+        name = _normalize(name)
+        data = load_name_from_table(name, db, 'ensembles')
+        new_ens = cls(name, instruments=[])
+        try:
+            for insdata in data['instruments']:
+                new_ins = Instrument.load_from_db(name=insdata['name'],
+                                                  db=db,
+                                                  number=insdata['number'])
+                new_ens.instruments.append(new_ins)
+        except exceptions.DataNotFoundError as err:
+            raise exceptions.MissingInstrumentError(
+                "An instrument specified for {name} was not found in the "
+                "database. This is not allowed. Details follow: ".format(
+                    name=name), e)
+        return new_ens
+
+    def add_to_db(self, db):
+        """
+        Serializes the Ensemble and adds it to the supplied database in the
+        'ensembles' table.
+        This should only be called after load_from_db fails or the databse is
+        otherwise checked so duplicates aren't added to the database.
+
+        Arguments:
+            db: a tinydb instance to insert into.
+        """
+        ens_table = db.table('ensembles')
+        ins_table = db.table('instruments')
+        data = {'name': self.name}
+        data['instruments'] = []
+        for instrument in self.instruments:
+            # if the instrument isn't in the database
+            if not explore_table(ins_table, search=('name', instrument.name)):
+                instrument.add_to_db(db)
+            data['instruments'].append(
+                {'name': instrument.name, 'number': instrument.number})
+        ens_table.insert(data)

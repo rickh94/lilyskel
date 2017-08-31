@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 import shutil
 from tinydb import TinyDB, Query
+from . import exceptions
 
 here = Path(__file__).parents[0]
 def_path = Path(os.path.expanduser('~'), '.local', 'lyskel', 'db.json')
@@ -81,14 +82,25 @@ def explore_table(table, search=None):
             founditems.append(item['name'])
         except KeyError:
             pass
-
     return founditems
 
 
-def check_table(table, search):
+def load_name_from_table(name, db, tablename):
     """
-    Check whether something is in a particular table in the database.
+    Load data with specified 'name' from the specified 'db' table.
+
+    Arguments:
+        name: the name of the item to be retrieved.
+        db: a TinyDB object.
+        tablename: the name of the table to search.
     """
-    if explore_table(table, search=('name', search)):
-        return True
-    return False
+    Search = Query()
+    # get an object matching name from the db.
+    dbtable = db.table(tablename)
+    data = dbtable.get(Search.name == name)
+    if data is None:
+        raise exceptions.DataNotFoundError(
+            "'{name}' is not in the '{table}' table.".format(name=name,
+                                                             table=tablename)
+        )
+    return data
