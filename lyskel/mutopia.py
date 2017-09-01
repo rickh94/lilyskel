@@ -8,6 +8,7 @@ SITE = None
 
 def _scrape_mutopia():
     """Grab the table off mutopia contributing."""
+    # pylint: disable=global-statement
     global SITE
     if not SITE:
         SITE = requests.get("http://www.mutopiaproject.org/contribute.html")
@@ -20,17 +21,29 @@ def _get_mutopia_table_data(field):
     table = _scrape_mutopia()
     for index, item in enumerate(table):
         if field in item.get_text():
-            text = table[index + 1]
-            break
-    return text
+            return table[index + 1]
+    raise exceptions.MutopiaError("'{field}' was not found".format(
+        field=field))
 
 
 def validate_mutopia(field, data):
     """Validates mutopia fields against accepted mutopia input."""
-    # it's silly to download the site multiple times, so stick the content in a
-    # global.
+    # special case for licenses
+    if field == 'license':
+        licenses = _get_licenses()
+        if data not in licenses:
+            raise exceptions.MutopiaError('{data} was not found in '
+                                          '{field}'.format(data=data,
+                                                           field=field))
+        else:
+            return
+
     text = _get_mutopia_table_data(field=field)
-    if data not in text.get_text():
+    # this will clean out some preceding text
+    breaktext = text.get_text().split(':\n')
+    cleantext = breaktext[1]
+    data_list = [item.strip() for item in cleantext.split(', ')]
+    if data not in data_list:
         raise exceptions.MutopiaError('{data} was not found in {field}'.format(
             data=data, field=field))
 
@@ -39,4 +52,5 @@ def _get_licenses():
     """Gets allowed licenses from mutopia.org and returns a list."""
     text = _get_mutopia_table_data(field='license')
     licenses = text.find_all('li')
-    return [license.get_text() for license in licenses]
+    # some text cleaning
+    return [license.get_text().replace('"', '') for license in licenses]
