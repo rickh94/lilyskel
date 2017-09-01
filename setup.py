@@ -22,6 +22,8 @@ setup(
         'tinydb',
         'attrs',
         'titlecase',
+        'bs4',
+        'requests',
     ],
     tests_require=['pytest', 'pytest-cov'],
     package=find_packages(),

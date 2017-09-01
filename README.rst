@@ -18,10 +18,13 @@ the user:
 * Lilypond version installed (preferably retrieved from lilypond --version)
 * Language used for input
 * Instruments in the piece
+
   - Will look up instrument information against a local tinydb database
     (single json file). This database will have Instruments and Ensembles
+
   - If something is missing, it will be created from user input and can be
     added to the database for future use.
+
 * Composer (in db too?)
 * Title
 * Subtitle
