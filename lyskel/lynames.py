@@ -225,7 +225,8 @@ class Ensemble():
     instruments = attr.ib(default=None)
 
     def add_instrument(self, ins_name, *, db=None, number=None, abbr='',
-                       clef='treble', keyboard=False, midi=None, family=None):
+                       clef='treble', keyboard=False, midi=None,
+                       transposition=None, family=None):
         """
         Add an instrument to the ensemble.
 
@@ -243,7 +244,7 @@ class Ensemble():
         elif number is not None:
             new_ins = Instrument.numbered_name(
                 ins_name, number=number, abbr=abbr, clef=clef, midi=midi,
-                keyboard=keyboard, family=family)
+                keyboard=keyboard, transposition=transposition, family=family)
         else:
             new_ins = Instrument(ins_name, abbr=abbr, clef=clef, midi=midi,
                                  keyboard=keyboard, family=family)

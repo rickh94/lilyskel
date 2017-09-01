@@ -1,7 +1,7 @@
 """Tests for LyName and it's child classes."""
 from unittest import mock
 import pytest
-from tinydb import TinyDB
+from tinydb import TinyDB, Query
 from lyskel import lynames
 from lyskel import exceptions
 # pylint: disable=protected-access,no-self-use
@@ -367,8 +367,11 @@ class TestEnsemble():
         assert viola in test_ens.instruments, "should load viola"
         assert violoncello in test_ens.instruments, "should load violoncello"
 
+        # pylint: disable=unused-argument
         def raises_data_not_found(*args, **kwargs):
+            """Raises DataNotFoundError."""
             raise exceptions.DataNotFoundError('thing not found here')
+        # pylint: enable=unused-argument
 
         monkeypatch.setattr("lyskel.lynames.Instrument.load_from_db",
                             raises_data_not_found)
@@ -381,3 +384,52 @@ class TestEnsemble():
                            match=(".*instrument.*string_quartet.*database"
                                   ".*thing not found here.*")):
             lynames.Ensemble.load_from_db('string_quartet', livedb)
+
+    def test_add_to_db(self, livedb):
+        """Test adding to the database."""
+        wind_quartet = lynames.Ensemble('Wind Quartet')
+        wind_quartet.add_instrument('flute', abbr='Fl.', midi='flute',
+                                    family='woodwinds')
+        wind_quartet.add_instrument('clarinet_in_bb', abbr='Cl.',
+                                    midi='clarinet', transposition='Bb',
+                                    family='woodwinds')
+        wind_quartet.add_instrument('Oboe', abbr='Ob.',
+                                    midi='oboe', family='woodwinds')
+        wind_quartet.add_instrument('Bassoon', abbr='Bsn.',
+                                    midi='bassoon', family='woodwinds')
+        wind_quartet.add_to_db(livedb)
+        Search = Query()
+        ensembles = livedb.table('ensembles')
+        instruments = livedb.table('instruments')
+        assert ensembles.search(Search.name == 'wind_quartet'),\
+            ("There should be an object in the database with the name "
+             "wind_quartet (therefore search should return a list, which "
+             "is implicitly true.")
+        wq = ensembles.get(Search.name == 'wind_quartet')
+        instrument_list = [
+            {'name': 'flute', 'number': None},
+            {'name': 'oboe', 'number': None},
+            {'name': 'clarinet_in_bb', 'number': None},
+            {'name': 'bassoon', 'number': None}
+        ]
+        for ins in instrument_list:
+            assert ins in wq['instruments'], ("All instrument names should be "
+                                              "represented in the db.")
+
+        # all instruments should have been added to the database.
+        assert instruments.search(Search.name == 'flute'),\
+            "There should be a flute in the database now."
+        assert instruments.search(Search.name == 'oboe'),\
+            "There should be a oboe in the database now."
+        assert instruments.search(Search.name == 'clarinet_in_bb'),\
+            "There should be a clarinet_in_bb in the database now."
+        assert instruments.search(Search.name == 'bassoon'),\
+            "There should be a bassoon in the database now."
+
+        wind_quartet_loaded = lynames.Ensemble.load_from_db('wind quartet',
+                                                            livedb)
+
+        assert wind_quartet_loaded == wind_quartet, ("The object loaded from "
+                                                     "the database should be "
+                                                     "the same as the one "
+                                                     "that was added to it.")

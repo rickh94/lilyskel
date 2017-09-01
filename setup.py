@@ -15,14 +15,15 @@ setup(
     author_email='fredericmhenry@gmail.com',
 
     license='MIT',
-    python_requires='>=3.4',
+    python_requires='>=3.6',
+    setup_requires=['pytest-runner'],
     install_requires=[
         'num2words',
         'tinydb',
         'attrs',
         'titlecase',
     ],
-    test_requires=['pytest', 'pytest-cov'],
+    tests_require=['pytest', 'pytest-cov'],
     package=find_packages(),
 
     )
