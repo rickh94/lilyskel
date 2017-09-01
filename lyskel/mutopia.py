@@ -32,9 +32,9 @@ def validate_mutopia(field, data):
     if field == 'license':
         licenses = _get_licenses()
         if data not in licenses:
-            raise exceptions.MutopiaError('{data} was not found in '
-                                          '{field}'.format(data=data,
-                                                           field=field))
+            raise exceptions.MutopiaError(
+                '{data} was not found in {field}'.format(data=data,
+                                                         field=field))
         else:
             return
 
@@ -54,3 +54,13 @@ def _get_licenses():
     licenses = text.find_all('li')
     # some text cleaning
     return [license.get_text().replace('"', '') for license in licenses]
+
+
+def _get_composers():
+    """Gets allowed licenses from mutopia.org and returns a list."""
+    text = _get_mutopia_table_data(field='mutopiacomposers')
+    breaktext = text.get_text().split(':\n')
+    cleantext = breaktext[1]
+    data_list = [item.strip() for item in cleantext.split(', ')]
+    # some text cleaning
+    return data_list

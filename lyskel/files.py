@@ -1,13 +1,41 @@
 """Classes for files and file info."""
 import attr
 from lyskel.lynames import Instrument, Ensemble
-from lyskel.lynames import validate_mutopia
+from lyskel import mutopia
 
 
 @attr.s
 class Composer():
     """Stores and formats information about a composer."""
     name = attr.ib()
+    mutopianame = attr.ib(default=None)
+
+    def mutopia_name(guess=False):
+        """
+        Get the mutopia name for a composer.
+        Arugments:
+            guess: if True, a guess will be made at the mutopia name of a
+            composer.
+        """
+        if self.mutopianame is not None:
+            return self.mutopianame
+        elif guess:
+            mutopia_composers = mutopia._get_composers()
+            namelist = name.split()
+            lname = namelist[-1]
+            for comp in mutopia_composers:
+                if lname in comp:
+                    self.mutopianame = comp
+                    return comp
+        else:
+            raise AttributeError("No mutopia name defined.")
+
+
+def _validate_mutopia_headers(headers):
+    if headers is not None and not isinstance(headers, MutopiaHeaders):
+        raise TypeError("mutopiaheaders is defined but not a MutopiaHeaders
+                        " object.")
+
 
 @attr.s
 class Headers():
@@ -22,25 +50,8 @@ class Headers():
     arranger = attr.ib(default=None)
     tagline = attr.ib(default=None)
     copyright = attr.ib(default=None)
-
-    # def add_mutopia_headers(self, *,
-    #                         instruments,
-    #                         source,
-    #                         style,
-    #                         license,
-    #                         maintainer,
-    #                         maintainerEmail,
-    #                         maintainerWeb,
-    #                         mutopiatitle=None,
-    #                         mutopiapoet=None,
-    #                         mutopiaopus=None,
-    #                         date=None,
-    #                         moreinfo):
-    #     """
-    #     Set header information for submission to the mutopia project.
-    #
-    #     Arguments: See mutopiaproject.org/contribute.hmtl for details
-    #     """
+    mutopiaheaders = attr.ib(default=None,
+                             validator=_validate_mutopia_headers)
 
 
 def validate_instruments(instruments):
@@ -62,28 +73,37 @@ def convert_ensemble(instruments):
     return instruments
 
 
-
-
 def _validate_style(style):
     """Calls validate_mutopia with field 'style'"""
-    return validate_mutopia(data=style, field='style')
+    return mutopia.validate_mutopia(data=style, field='style')
 
 
 def _validate_composer(comp):
     """Calls validate_mutopia with field 'mutopiacomposer'"""
-    return validate_mutopia(data=comp, field='mutopiacomposer')
+    return mutopia.validate_mutopia(data=comp, field='mutopiacomposer')
 
 
 def _validate_license(license):
     """Calls validate_mutopia with field 'license'"""
-    return validate_mutopia(data=license, field='license')
-
-
+    return mutopia.validate_mutopia(data=license, field='license')
 
 
 @attr.s
 class MutopiaHeaders():
+    """
+    The headers available for Mutopia project submissions. See www.mutopia.org
+    for more details.
+    """
     instruments = attr.ib(validator=validate_instruments,
                           convert=convert_ensemble)
     source = attr.ib(validator=attr.validators.instance_of(str))
     style = attr.ib(validator=_validate_style)
+    composer = attr.ib(init=False, validator=_validate_composer)
+    maintainer = attr.ib(default=None)
+    maintainerEmail = attr.ib(default=None)
+    maintainerWeb = attr.ib(default=None)
+    mutopiatitle = attr.ib(default=None)
+    mutopiapoet = attr.ib(default=None)
+    mutopiaopus = attr.ib(default=None)
+    date = attr.ib(default=None)
+    moreinfo = attr.ib(default=None)
