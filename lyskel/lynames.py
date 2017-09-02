@@ -103,18 +103,34 @@ class LyName():
             num += '_mov'
         return full_name + '_' + num
 
-    def file_name(self, mov_num):
+    def mov_file_name(self, mov_num):
         """Returns the filename form for a part + movement."""
-        return self._movement(mov_num, form='num')
+        return self._movement(mov_num, form='num') + '.ily'
+
+    def part_file_name(self, prefix=''):
+        """Returns a plain file name with a prefix prepended."""
+        if prefix:
+            name = str(prefix) + '_' + self.name
+        else:
+            name = self.name
+        if self.number is not None:
+            name += str(self.number)
+        return name + '.ly'
+
+    def dir_name(self):
+        """Returns a directory name."""
+        name = self.name
+        if self.number is not None:
+            name += str(self.number)
+        return name
 
     def var_name(self, mov_num):
         """Returns the variable name for a part + movement."""
-        return self._movement(mov_num, form='ord')
+        return '\\' + self._movement(mov_num, form='ord')
 
 
 @attr.s
 class Instrument(LyName):
-    # pylint: disable=protected-access
     """
     Class for Instruments.
     Inherits from LyName
@@ -128,6 +144,7 @@ class Instrument(LyName):
         midi: the corresponding midi instrument.
         family: the family of the instrument (e.g. woodwinds, strings, etc.)
     """
+    # pylint: disable=protected-access
     abbr = attr.ib(default='')
     clef = attr.ib(default='treble')
     transposition = attr.ib(default=None)

@@ -64,3 +64,10 @@ def test_get_licenses():
                 "Public Domain"}
     assert licenses.issubset(set(mutopia._get_licenses())),\
         "These licenses should be in the list, and possibly more."
+
+
+def test_get_composers():
+    """Test getting list of mutopia formatted composers."""
+    assert {'BachJS', 'BeethovenLv', 'HolstGT', 'TchaikovskyPI',
+            'Anonymous', 'Traditional'}.issubset(
+                set(mutopia._get_composers()))

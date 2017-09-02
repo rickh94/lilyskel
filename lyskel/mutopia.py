@@ -58,7 +58,7 @@ def _get_licenses():
 
 def _get_composers():
     """Gets allowed licenses from mutopia.org and returns a list."""
-    text = _get_mutopia_table_data(field='mutopiacomposers')
+    text = _get_mutopia_table_data(field='mutopiacomposer')
     breaktext = text.get_text().split(':\n')
     cleantext = breaktext[1]
     data_list = [item.strip() for item in cleantext.split(', ')]

@@ -73,6 +73,19 @@ class TestRomanNumeral(object):
             lynames._roman_numeral(0)
 
 
+@pytest.fixture
+def testlyname1():
+    return lynames.LyName('global')
+
+
+@pytest.fixture
+def testlyname2():
+    test2 = lynames.LyName('test')
+    test2.number = 2
+    test2._numword = 'two'
+    return test2
+
+
 class TestLyName():
     """Test the LyName class methods."""
     def test_init(self):
@@ -85,26 +98,27 @@ class TestLyName():
         assert test2.name == 'another_test_name', "name should be normalized"
         assert test2.number is None, "Number should be None if not specified"
 
-    def test_movement(self):
-        """Tests file_name and var_name methods and related exceptions."""
-        testlyname1 = lynames.LyName('global')
-        testlyname2 = lynames.LyName('test')
-        testlyname2.number = 2
-        testlyname2._numword = 'two'
+    def test_mov_file_name(self, testlyname1, testlyname2):
+        """Tests getting a filename for movement notest files."""
+        # test mov_file_name
+        assert testlyname1.mov_file_name(1) == 'global_1.ily',\
+            "should append number"
+        assert testlyname1.mov_file_name(2) == 'global_2.ily',\
+            "should append number"
+        assert testlyname2.mov_file_name(1) == 'test2_1.ily',\
+            "should append number"
 
-        # test file_name
-        assert testlyname1.file_name(1) == 'global_1', "should append number"
-        assert testlyname1.file_name(2) == 'global_2', "should append number"
-        assert testlyname2.file_name(1) == 'test2_1', "should append number"
-
-        # test var_name
-        assert testlyname1.var_name(2) == 'global_second_mov',\
+    def test_var_name(self, testlyname1, testlyname2):
+        """Tests getting the variable name."""
+        assert testlyname1.var_name(2) == '\\global_second_mov',\
             "should append number words"
-        assert testlyname1.var_name(31) == 'global_thirty_first_mov',\
+        assert testlyname1.var_name(31) == '\\global_thirty_first_mov',\
             "should append number words"
-        assert testlyname2.var_name(2) == 'test_two_second_mov',\
+        assert testlyname2.var_name(2) == '\\test_two_second_mov',\
             "should append number words"
 
+    def test_movement_exceptions(self, testlyname1, testlyname2):
+        """Tests the possible exceptions for the _movement private method."""
         # test exceptions
         with pytest.raises(TypeError,
                            message="Expect TypeError if form no specified.",
@@ -122,6 +136,29 @@ class TestLyName():
                                     "'ord', 'word', 'num'."),
                            match=".*'form'.*'word'"):
             testlyname1._movement(10, form='fail')
+
+    def test_dir_name(self, testlyname1, testlyname2):
+        """Test getting a dir_name for an instrument."""
+        assert testlyname1.dir_name() == 'global',\
+            "should return without set number"
+        assert testlyname2.dir_name() == 'test2',\
+            "should append the number if present."
+
+    def test_part_file_name(self, testlyname1, testlyname2):
+        """
+        Test getting a file name for the file that has the part
+        structure.
+        """
+        assert testlyname1.part_file_name() == 'global.ly',\
+            "should return without prefix."
+        assert testlyname1.part_file_name(prefix='abc') == 'abc_global.ly',\
+            "Should add prefix and underscore."
+        assert testlyname1.part_file_name(prefix=123) == '123_global.ly',\
+            "should handle non string types."
+        assert testlyname2.part_file_name() == 'test2.ly',\
+            "should work with numbers."
+        assert testlyname2.part_file_name(prefix='O12') == 'O12_test2.ly',\
+            "should work with numbers and a prefix"
 
 
 @pytest.fixture(scope='module')
