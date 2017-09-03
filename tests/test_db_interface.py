@@ -152,6 +152,13 @@ def test_explore_table(mocktable, livetable):
             'Expect TypeError if table is not a tinydb table.')):
         db_interface.explore_table(123, search=('name', 'test'))
 
+    # test that it handles malformed data
+    mocktable.search.return_value = [
+        {'name': 'hi'}, {'fake': 'table'}, {'key': 'value'},
+        {'name': 'test'}]
+    assert db_interface.explore_table(mocktable, search=('name', 'test')) ==\
+        ['hi', 'test']
+
 
 def test_load_name_from_table(livedb):
     """Test loading data from a table."""
