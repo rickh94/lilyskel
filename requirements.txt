@@ -1,0 +1,7 @@
+num2words
+tinydb
+attrs
+titlecase
+bs4
+requests
+fuzzywuzzy[speedup]
