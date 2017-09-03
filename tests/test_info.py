@@ -156,6 +156,36 @@ def test_convert_instruments(mutopiaheader2, test_ins, test_ins2, test_ins3,
     assert test_ins4 in inslist
 
 
+def test_validate_mutopia_headers(mutopiaheader1):
+    """Test validation of mutopia headers."""
+    # these should not raise exceptions
+    info._validate_mutopia_headers(None)
+    info._validate_mutopia_headers(mutopiaheader1)
+
+    with pytest.raises(TypeError, match='.*mutopiaheaders.*MutopiaHeaders.*',
+                       message=('Expect TypeError if not none or a '
+                                'MutopiaHeaders instance.')):
+        info._validate_mutopia_headers('fail badly')
+
+
+def test_validate_instruments(mutopiaheader1):
+    """Test validation of instrument list."""
+    with pytest.raises(TypeError, match='instruments.*list.*',
+                       message=('Expect TypeError when not a list of '
+                                'instruments')):
+        mutopiaheader1.validate_instruments('instrument_list', 'not a list')
+    with pytest.raises(TypeError, match='instruments.*list.*',
+                       message=('Expect TypeError when not a list of '
+                                'instruments')):
+        mutopiaheader1.validate_instruments('instrument_list', ['not',
+                                                                'an',
+                                                                'instrument'])
+
+
+def test_validate_composer(mutopiaheader1):
+    """Test validation of composer."""
+
+
 @pytest.fixture
 def headers1(bach):
     """A headers instance."""

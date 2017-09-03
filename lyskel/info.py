@@ -198,12 +198,11 @@ class MutopiaHeaders():
 
     @instrument_list.validator
     def validate_instruments(self, attribute, value):
-        """Validates either a list of instruments or instance of Ensemble."""
+        """Validates a list of instruments."""
         if isinstance(value, list):
             if isinstance(value[0], Instrument):
                 return
-        raise TypeError("'instruments' must be a list of instruments or an "
-                        "Ensemble instance.")
+        raise TypeError("'instruments' must be a list of instruments")
 
     @style.validator
     def _validate_style(self, attribute, value):

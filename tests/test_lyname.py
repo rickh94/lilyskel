@@ -412,6 +412,17 @@ class TestEnsemble():
                                   ".*thing not found here.*")):
             lynames.Ensemble.load_from_db('string_quartet', livedb)
 
+    def test_add_instrument_from_obj(self, test_ins):
+        """Test adding an instrument directly from an instrument object."""
+        test_ens = lynames.Ensemble('test_ensemble')
+        test_ens.add_instrument_from_obj(test_ins)
+        assert test_ins in test_ens.instruments
+
+        with pytest.raises(TypeError, match=".*'instrument'.*'Instrument'",
+                           message=("Expect TypeError if instrument is not an "
+                                    "Instrument class.")):
+            test_ens.add_instrument_from_obj('not an instrument')
+
     def test_add_to_db(self, livedb):
         """Test adding to the database."""
         wind_quartet = lynames.Ensemble('Wind Quartet')
