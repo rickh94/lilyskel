@@ -9,7 +9,8 @@ before_install:
   - pip install codecov
   - pip install pytest
   - pip install pytest-cov
-  - apt-get install lilypond
+  - sudo apt-get -qq update
+  - sudo apt-get install lilypond
 script: python setup.py test
 
 after_success:
