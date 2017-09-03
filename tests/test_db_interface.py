@@ -80,18 +80,6 @@ def test_bootstrap_db(mock_shutil, mock_makedirs):
     )
 
 
-@pytest.fixture
-def mockdb(monkeypatch, tmpdir):
-    """Returns a monkeypatched db."""
-    test_db = TinyDB(Path(tmpdir, 'mockdb.json'))
-
-    def mocktables():
-        return {'instruments', '_default', 'ensembles'}
-
-    monkeypatch.setattr(test_db, 'tables', mocktables)
-    yield test_db
-
-
 def test_explore_db(monkeypatch, mockdb):
     """Test exploring a database."""
     ret_tables = db_interface.explore_db(mockdb)
@@ -155,6 +143,14 @@ def test_explore_table(mocktable, livetable):
     assert not db_interface.explore_table(livetable, search=(
         'name', 'not in the database')), ("A search that returns nothing "
                                           "should be implicitly false.")
+
+    with pytest.raises(TypeError, match='.*tuple.*', message=(
+            'Expect TypeError if search is not a tuple.')):
+        db_interface.explore_table(livetable, search='hi')
+
+    with pytest.raises(TypeError, match='.*tinydb.*', message=(
+            'Expect TypeError if table is not a tinydb table.')):
+        db_interface.explore_table(123, search=('name', 'test'))
 
 
 def test_load_name_from_table(livedb):

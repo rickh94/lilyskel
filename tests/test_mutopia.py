@@ -54,7 +54,7 @@ def test_validate_mutopia():
     with pytest.raises(exceptions.MutopiaError, match='.*was not found in.*',
                        message=('if the data is invalid, it should raise '
                                 'MutopiaError.')):
-        mutopia.validate_mutopia(field='license', data='Creative')
+        mutopia.validate_mutopia(field='license', data='Creatmutopiaive')
 
 
 def test_get_licenses():
@@ -71,3 +71,10 @@ def test_get_composers():
     assert {'BachJS', 'BeethovenLv', 'HolstGT', 'TchaikovskyPI',
             'Anonymous', 'Traditional'}.issubset(
                 set(mutopia._get_composers()))
+
+
+def test_get_instruments():
+    """Test getting list of instruments from mutopia."""
+    assert {'Violin', 'Cello', 'Flute', 'Clarinet', 'Trumpet'}.issubset(
+        set(mutopia._get_instruments())),\
+        "These instruments are allowed and should be in the list."

@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from lyskel import exceptions
 
 SITE = None
+SITE2 = None
 
 
 def _scrape_mutopia():
@@ -64,3 +65,16 @@ def _get_composers():
     data_list = [item.strip() for item in cleantext.split(', ')]
     # some text cleaning
     return data_list
+
+
+def _get_instruments():
+    """Gets the allowed instruments from mutopia."""
+    global SITE2
+    if not SITE2:
+        SITE2 = requests.get("http://www.mutopiaproject.org/advsearch.html")
+    html = BeautifulSoup(SITE2.content, 'html.parser')
+    inst_elements = html.find(id='adv-instr-sel')
+    instruments = []
+    for item in inst_elements.find_all('option'):
+        instruments.append(item['value'])
+    return instruments

@@ -71,12 +71,15 @@ def explore_table(table, search=None):
         items = table.all()
     else:
         if not isinstance(search, tuple):
-            raise ValueError('search must be a tuple (field, value)')
+            raise TypeError('search must be a tuple (field, value)')
         field, term = search
         Search = Query()
         # Search[field]: look specified field, lambda val: return the value
         # from the db if the term is found in it.
-        items = table.search(Search[field].test(lambda val: term in val))
+        try:
+            items = table.search(Search[field].test(lambda val: term in val))
+        except AttributeError as err:
+            raise TypeError("table may not be a tinydb table ", err)
     for item in items:
         try:
             founditems.append(item['name'])

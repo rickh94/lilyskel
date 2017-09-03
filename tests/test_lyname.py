@@ -184,6 +184,15 @@ def test_ins3():
 
 
 @pytest.fixture
+def test_ins4():
+    """A fourth test instrument."""
+    return lynames.Instrument('Oboe', abbr='Ob.', clef='treble',
+                              transposition=None, keyboard=False,
+                              midi='oboe', family='woodwinds',
+                              mutopianame='Oboe_')
+
+
+@pytest.fixture
 def mockdb():
     """A mocked database."""
     mock_db = mock.MagicMock(spec=TinyDB)
@@ -317,7 +326,8 @@ class TestInstrument():
              'transposition': None,
              'keyboard': False,
              'midi': None,
-             'family': None
+             'family': None,
+             'mutopianame': None,
              }
         )
 
@@ -330,7 +340,8 @@ class TestInstrument():
              'transposition': None,
              'keyboard': False,
              'midi': 'violoncello',
-             'family': 'strings'
+             'family': 'strings',
+             'mutopianame': None,
              }
         )
 
@@ -343,9 +354,19 @@ class TestInstrument():
              'transposition': 'Bb',
              'keyboard': False,
              'midi': 'clarinet',
-             'family': 'woodwinds'
+             'family': 'woodwinds',
+             'mutopianame': None,
              }
         )
+
+    def test_get_mutopia_name(self, test_ins, test_ins2, test_ins3, test_ins4):
+        """Test getting the mutopia name."""
+        assert test_ins.get_mutopia_name() == 'Violin', "Should match closest."
+        assert test_ins2.get_mutopia_name() == 'Cello', "Should match closest."
+        assert test_ins3.get_mutopia_name() == 'Clarinet',\
+            "Should match closest."
+        assert test_ins4.get_mutopia_name() == 'Oboe_',\
+            "Explicitly set should override."
 
 
 @pytest.fixture

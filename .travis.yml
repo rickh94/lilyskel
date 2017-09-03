@@ -9,9 +9,7 @@ before_install:
   - pip install codecov
   - pip install pytest
   - pip install pytest-cov
-install:
-  - pip install .
-script: pytest --cov=lyskel
+script: python setup.py test
 
 after_success:
   - codecov

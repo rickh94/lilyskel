@@ -1,10 +1,12 @@
 """Classes for names of files and directories."""
 import re
 import attr
+from fuzzywuzzy import process
 from num2words import num2words
 from titlecase import titlecase
-from . import exceptions
-from .db_interface import load_name_from_table, explore_table
+from lyskel import exceptions
+from lyskel import mutopia
+from lyskel.db_interface import load_name_from_table, explore_table
 
 
 def _normalize(name):
@@ -143,6 +145,7 @@ class Instrument(LyName):
         know whether to create multiple staves.)
         midi: the corresponding midi instrument.
         family: the family of the instrument (e.g. woodwinds, strings, etc.)
+        mutopianame: the name of the instrument as in mutopia
     """
     # pylint: disable=protected-access
     abbr = attr.ib(default='')
@@ -151,6 +154,7 @@ class Instrument(LyName):
     keyboard = attr.ib(default=False)
     midi = attr.ib(default=None)
     family = attr.ib(default=None, convert=_normalize)
+    mutopianame = attr.ib(default=None)
 
     def part_name(self, key=False):
         """
@@ -233,6 +237,15 @@ class Instrument(LyName):
                                attr.fields(Instrument).number
                            ))
         ins_table.insert(data)
+
+    def get_mutopia_name(self):
+        """Gets the mutopia version of the Instrument's name."""
+        if self.mutopianame is not None:
+            return self.mutopianame
+        instrs = mutopia._get_instruments()
+        choice, _ = process.extractOne(self.name, instrs)
+        self.mutopianame = choice
+        return choice
 
 
 @attr.s
