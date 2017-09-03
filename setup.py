@@ -24,7 +24,7 @@ setup(
         'titlecase',
         'bs4',
         'requests',
-        'fuzzywuzzy',
+        'fuzzywuzzy[speedup]',
     ],
     tests_require=['pytest', 'pytest-cov'],
     package=find_packages(),
