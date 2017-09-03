@@ -1,6 +1,7 @@
 """Classes for files and file info."""
 import re
 import subprocess
+from pathlib import Path
 import sys
 import attr
 from fuzzywuzzy import process
@@ -9,6 +10,8 @@ from lyskel import mutopia
 from lyskel import exceptions
 from lyskel import db_interface
 # pylint: disable=too-few-public-methods,protected-access
+
+ENCODING = sys.stdout.encoding
 
 
 @attr.s
@@ -237,18 +240,26 @@ class Piece():
             raise AttributeError("Lilypond version number does not appear to "
                                  " valid. Check you installation.")
 
-    # @language.validator
-    # def validate_language(self, attribute, value):
-    #     """Check for a valid language."""
-    #     langauge_file_name = 'default-note-names.scm'
+    @language.validator
+    def validate_language(self, attribute, value):
+        """Check for a valid language."""
+        langfile = Path('/usr', 'share', 'lilypond', self.version, 'scm',
+                        'define-note-names.scm')
+        with open(langfile, 'rb') as file_:
+            content = file_.read()
+        langs = re.findall(r'Language: ([^\s]*)', content.decode(ENCODING),
+                           re.M | re.I)
+        languages = [lang.lower() for lang in langs]
+        if value.lower() not in languages:
+            raise AttributeError("Language is not valid. Must be one of "
+                                 "{}".format(', '.join(languages)))
 
     @classmethod
     def init_version(cls, name, headers, language):
         """Automatically gets the version number from the system."""
         run_ly = subprocess.run(['lilypond', '--version'],
                                 stdout=subprocess.PIPE)
-        encoding = sys.stdout.encoding
         matchvers = re.search(r'LilyPond ([^\n]*)',
-                              run_ly.stdout.decode(encoding))
+                              run_ly.stdout.decode(ENCODING))
         vers = matchvers.group(1)
         return cls(name=name, headers=headers, version=vers, language=language)
