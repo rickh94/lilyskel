@@ -161,37 +161,6 @@ class TestLyName():
             "should work with numbers and a prefix"
 
 
-@pytest.fixture(scope='module')
-def test_ins():
-    """A test instrument."""
-    return lynames.Instrument.numbered_name('VioliN', 1)
-
-
-@pytest.fixture(scope='module')
-def test_ins2():
-    """Another test instrument."""
-    return lynames.Instrument.numbered_name('violoncello', 2, abbr='Vc.',
-                                            clef='bass', midi='violoncello',
-                                            family='strings')
-
-
-@pytest.fixture(scope='module')
-def test_ins3():
-    """A third test instrument."""
-    return lynames.Instrument('Clarinet in Bb', abbr='Cl.', clef='treble',
-                              transposition='Bb', keyboard=False,
-                              midi='clarinet', family='woodwinds')
-
-
-@pytest.fixture
-def test_ins4():
-    """A fourth test instrument."""
-    return lynames.Instrument('Oboe', abbr='Ob.', clef='treble',
-                              transposition=None, keyboard=False,
-                              midi='oboe', family='woodwinds',
-                              mutopianame='Oboe_')
-
-
 @pytest.fixture
 def mockdb():
     """A mocked database."""

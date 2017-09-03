@@ -1,5 +1,9 @@
 """Classes for files and file info."""
+import re
+import subprocess
+import sys
 import attr
+from fuzzywuzzy import process
 from lyskel.lynames import Instrument, Ensemble
 from lyskel import mutopia
 from lyskel import exceptions
@@ -49,18 +53,11 @@ class Composer():
             namelist = self.name.split()
             # pylint: enable=no-member
             lname = namelist.pop()
-            # get first inital to check
-            try:
-                fletter = namelist[0][0]
-            # protect against single name composers
-            except IndexError:
-                fletter = ''
-            for comp in mutopia_composers:
-                if lname in comp and fletter in comp:
-                    self.mutopianame = comp
-                    return comp
-            # if it hasn't returned yet, nothing is there.
-            raise exceptions.MutopiaError("No matching composer found.")
+            name, _ = process.extractOne(self.name, mutopia_composers)
+            if lname not in name:
+                raise exceptions.MutopiaError("No matching composer found.")
+            self.mutopianame = name
+            return name
         else:
             raise AttributeError("No mutopia name defined.")
 
@@ -139,27 +136,22 @@ class Headers():
         Arguments:
             mu_headers: a MutopiaHeaders object
             guess_composer: Whether to guess at the mutopiacomposer if not set.
+
+        Note: This will overwrite the copyright to match the license.
         """
         # pylint: disable=no-member
-        mu_headers.composer = self.composer.mutopia_name(guess=guess_composer)
+        mu_headers.composer = self.composer.get_mutopia_name(
+            guess=guess_composer)
         # pylint: enable=no-member
+
+        # converts list of instruments to mutopia friendly string
         mutopia_instrument_names =\
-            [instrument.mutopianame for
+            [instrument.get_mutopia_name() for
              instrument in mu_headers.instrument_list]
         instruments = ', '.join(mutopia_instrument_names)
         mu_headers.instruments = instruments
-
-
-def validate_instruments(instruments):
-    """Validates either a list of instruments or instance of Ensemble."""
-    if isinstance(instruments, list):
-        if isinstance(instruments[0], Instrument):
-            pass
-    elif isinstance(instruments, Ensemble):
-        pass
-    else:
-        raise TypeError("'instruments' must be a list of instruments or an "
-                        "Ensemble instance.")
+        self.copyright = mu_headers.license
+        self.mutopiaheaders = mu_headers
 
 
 def convert_ensemble(instruments):
@@ -169,19 +161,14 @@ def convert_ensemble(instruments):
     return instruments
 
 
-def _validate_style(style):
-    """Calls validate_mutopia with field 'style'"""
-    return mutopia.validate_mutopia(data=style, field='style')
-
-
-def _validate_composer(comp):
-    """Calls validate_mutopia with field 'mutopiacomposer'"""
-    return mutopia.validate_mutopia(data=comp, field='mutopiacomposer')
-
-
-def _validate_license(license_):
-    """Calls validate_mutopia with field 'license'"""
-    return mutopia.validate_mutopia(data=license_, field='license')
+def convert_license(license_):
+    """Returns the proper name of the license."""
+    licenses = {
+        'cc4':  'Creative Commons Attribution 4.0',
+        'ccsa4': 'Creative Commons Attribution-ShareAlike 4.0',
+        'pd': 'Public Domain'
+    }
+    return licenses.get(license_)
 
 
 @attr.s
@@ -190,11 +177,11 @@ class MutopiaHeaders():
     The headers available for Mutopia project submissions. See www.mutopia.org
     for more details.
     """
-    instrument_list = attr.ib(validator=validate_instruments,
-                              convert=convert_ensemble)
+    instrument_list = attr.ib(convert=convert_ensemble)
     source = attr.ib(validator=attr.validators.instance_of(str))
-    style = attr.ib(validator=_validate_style)
-    composer = attr.ib(init=False, validator=_validate_composer)
+    style = attr.ib()
+    license = attr.ib(default='pd', convert=convert_license)
+    composer = attr.ib(init=False)
     maintainer = attr.ib(default="Anonymous")
     maintainerEmail = attr.ib(default=None)
     maintainerWeb = attr.ib(default=None)
@@ -203,6 +190,32 @@ class MutopiaHeaders():
     mutopiaopus = attr.ib(default=None)
     date = attr.ib(default=None)
     moreinfo = attr.ib(default=None)
+    instruments = attr.ib(init=False,
+                          validator=attr.validators.instance_of(str))
+
+    @instrument_list.validator
+    def validate_instruments(self, attribute, value):
+        """Validates either a list of instruments or instance of Ensemble."""
+        if isinstance(value, list):
+            if isinstance(value[0], Instrument):
+                return
+        raise TypeError("'instruments' must be a list of instruments or an "
+                        "Ensemble instance.")
+
+    @style.validator
+    def _validate_style(self, attribute, value):
+        """Calls validate_mutopia with field 'style'"""
+        mutopia.validate_mutopia(data=value, field='style')
+
+    @composer.validator
+    def _validate_composer(self, attribute, value):
+        """Calls validate_mutopia with field 'mutopiacomposer'"""
+        mutopia.validate_mutopia(data=comp, field='mutopiacomposer')
+
+    @license.validator
+    def _validate_license(self, attribute, value):
+        """Calls validate_mutopia with field 'license'"""
+        mutopia.validate_mutopia(data=value, field='license')
 
 
 @attr.s
@@ -212,3 +225,30 @@ class Piece():
     """
     name = attr.ib()
     headers = attr.ib(validator=attr.validators.instance_of(Headers))
+    version = attr.ib()
+    language = attr.ib(default=None)
+
+    @version.validator
+    def validate_version(self, attribute, value):
+        """Check that the version number makes sense."""
+        try:
+            assert re.match(r'[0-9]', value)
+        except AssertionError:
+            raise AttributeError("Lilypond version number does not appear to "
+                                 " valid. Check you installation.")
+
+    # @language.validator
+    # def validate_language(self, attribute, value):
+    #     """Check for a valid language."""
+    #     langauge_file_name = 'default-note-names.scm'
+
+    @classmethod
+    def init_version(cls, name, headers, language):
+        """Automatically gets the version number from the system."""
+        run_ly = subprocess.run(['lilypond', '--version'],
+                                stdout=subprocess.PIPE)
+        encoding = sys.stdout.encoding
+        matchvers = re.search(r'LilyPond ([^\n]*)',
+                              run_ly.stdout.decode(encoding))
+        vers = matchvers.group(1)
+        return cls(name=name, headers=headers, version=vers, language=language)

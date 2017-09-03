@@ -1,6 +1,8 @@
 """Tests for info classes."""
+import re
 import pytest
 from lyskel import info
+from lyskel import lynames
 from lyskel import exceptions
 from lyskel import db_interface
 
@@ -105,3 +107,79 @@ class TestComposer():
         debussy.add_to_db(mockdb)
         assert db_interface.explore_table(
             comptable, search=('name', 'Claude Debussy'))
+
+
+@pytest.fixture
+def mutopiaheader1(test_ins, test_ins2, test_ins3, test_ins4, bach):
+    """Some mutopia Headers."""
+    return info.MutopiaHeaders(instrument_list=[test_ins, test_ins2, test_ins3,
+                                                test_ins4],
+                               source='Breitkopf und Hartël',
+                               style='Baroque',
+                               maintainer='Rick Henry',
+                               maintainerEmail='fredericmhenry@gmail.com',
+                               date='1234',
+                               license='cc4',
+                               )
+
+
+@pytest.fixture
+def random_ens(test_ins, test_ins2, test_ins3, test_ins4):
+    new_ens = lynames.Ensemble('random_ens')
+    new_ens.add_instrument_from_obj(test_ins)
+    new_ens.add_instrument_from_obj(test_ins2)
+    new_ens.add_instrument_from_obj(test_ins3)
+    new_ens.add_instrument_from_obj(test_ins4)
+    return new_ens
+
+
+@pytest.fixture
+def mutopiaheader2(random_ens):
+    """Some mutopia Headers from an ensemble object."""
+    return info.MutopiaHeaders(instrument_list=random_ens,
+                               source='Breitkopf und Hartël',
+                               style='Baroque',
+                               maintainer='Rick Henry',
+                               maintainerEmail='fredericmhenry@gmail.com',
+                               date='1234',
+                               license='ccsa4',
+                               )
+
+
+def test_convert_instruments(mutopiaheader2, test_ins, test_ins2, test_ins3,
+                             test_ins4):
+    """Test that an instrument list was created from the ensemble object."""
+    inslist = mutopiaheader2.instrument_list
+    assert test_ins in inslist
+    assert test_ins2 in inslist
+    assert test_ins3 in inslist
+    assert test_ins4 in inslist
+
+
+@pytest.fixture
+def headers1(bach):
+    """A headers instance."""
+    return info.Headers(title='Test Piece',
+                        composer=bach,
+                        tagline='mytagline',
+                        )
+
+
+class TestHeaders():
+    """Test methods and initialization."""
+    def test_add_mutopia_headers(self, headers1, mutopiaheader1):
+        """Test adding mutopia headers."""
+        headers1.add_mutopia_headers(mutopiaheader1, guess_composer=True)
+        assert 'Violin' in headers1.mutopiaheaders.instruments,\
+            "instruments should have been loaded."
+        assert 'Creative' in headers1.copyright,\
+            "copyright info should have been overridden"
+
+
+class TestPiece():
+    """Test piece methods."""
+    def test_init_version(self, headers1):
+        """Test getting the version number from the system."""
+        test = info.Piece.init_version(name='test1', headers=headers1,
+                                       language='english')
+        assert re.match(r'^2.1.*', test.version)

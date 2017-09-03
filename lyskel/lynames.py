@@ -280,6 +280,15 @@ class Ensemble():
                                  keyboard=keyboard, family=family)
         self.instruments.append(new_ins)
 
+    def add_instrument_from_obj(self, instrument):
+        """Add an instrument from an existing Instrument instance.
+        """
+        if self.instruments is None:
+            self.instruments = []
+        if not isinstance(instrument, Instrument):
+            raise TypeError("'instrument' must be of type 'Instrument'")
+        self.instruments.append(instrument)
+
     @classmethod
     def load_from_db(cls, name, db):
         """
