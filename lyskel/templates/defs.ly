@@ -36,25 +36,25 @@
   composer = "{{ piece.headers.mutopiaheaders.composer }}"
   maintainer = "{{ piece.headers.mutopiaheaders.maintainer }}"
   {%- if piece.headers.mutopiaheaders.maintainerEmail %}
-    maintainerEmail = "{{ piece.headers.mutopiaheaders.maintainerEmail }}"
+  maintainerEmail = "{{ piece.headers.mutopiaheaders.maintainerEmail }}"
   {% endif %}
   {%- if piece.headers.mutopiaheaders.maintainerWeb %}
-    maintainerWeb = "{{ piece.headers.mutopiaheaders.maintainerWeb }}"
+  maintainerWeb = "{{ piece.headers.mutopiaheaders.maintainerWeb }}"
   {% endif %}
   {%- if piece.headers.mutopiaheaders.mutopiatitle %}
-    mutopiatitle = "{{ piece.headers.mutopiaheaders.mutopiatitle }}"
+  mutopiatitle = "{{ piece.headers.mutopiaheaders.mutopiatitle }}"
   {% endif %}
   {%- if piece.headers.mutopiaheaders.mutopiapoet %}
-    mutopiapoet = "{{ piece.headers.mutopiaheaders.mutopiapoet }}"
+  mutopiapoet = "{{ piece.headers.mutopiaheaders.mutopiapoet }}"
   {% endif %}
   {%- if piece.headers.mutopiaheaders.mutopiaopus %}
-    mutopiaopus = "{{ piece.headers.mutopiaheaders.mutopiaopus }}"
+  mutopiaopus = "{{ piece.headers.mutopiaheaders.mutopiaopus }}"
   {% endif %}
   {%- if piece.headers.mutopiaheaders.date %}
-    date = "{{ piece.headers.mutopiaheaders.date }}"
+  date = "{{ piece.headers.mutopiaheaders.date }}"
   {% endif %}
   {%- if piece.headers.mutopiaheaders.moreinfo %}
-    moreinfo = "{{ piece.headers.mutopiaheaders.moreinfo }}"
+  moreinfo = "{{ piece.headers.mutopiaheaders.moreinfo }}"
   {% endif %}
   {% endif %}
 }

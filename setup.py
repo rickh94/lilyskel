@@ -25,6 +25,7 @@ setup(
         'bs4',
         'requests',
         'fuzzywuzzy[speedup]',
+        'jinja2',
     ],
     tests_require=['pytest', 'pytest-cov'],
     package=find_packages(),

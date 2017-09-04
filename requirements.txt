@@ -5,3 +5,4 @@ titlecase
 bs4
 requests
 fuzzywuzzy[speedup]
+jinja2
