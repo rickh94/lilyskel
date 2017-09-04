@@ -237,7 +237,7 @@ class Piece():
             assert re.match(r'[0-9]', value)
         except AssertionError:
             raise AttributeError("Lilypond version number does not appear to "
-                                 " valid. Check you installation.")
+                                 " be valid. Check you installation.")
 
     @language.validator
     def validate_language(self, attribute, value):
