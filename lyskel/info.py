@@ -229,6 +229,7 @@ class Piece():
     headers = attr.ib(validator=attr.validators.instance_of(Headers))
     version = attr.ib()
     language = attr.ib(default=None)
+    opus = attr.ib(default=None)
 
     @version.validator
     def validate_version(self, attribute, value):
@@ -254,11 +255,12 @@ class Piece():
                                  "{}".format(', '.join(languages)))
 
     @classmethod
-    def init_version(cls, name, headers, language):
+    def init_version(cls, name, headers, language, opus=None):
         """Automatically gets the version number from the system."""
         run_ly = subprocess.run(['lilypond', '--version'],
                                 stdout=subprocess.PIPE)
         matchvers = re.search(r'LilyPond ([^\n]*)',
                               run_ly.stdout.decode(ENCODING))
         vers = matchvers.group(1)
-        return cls(name=name, headers=headers, version=vers, language=language)
+        return cls(name=name, headers=headers, version=vers, language=language,
+                   opus=opus)

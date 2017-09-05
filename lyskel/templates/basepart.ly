@@ -1,7 +1,9 @@
 \version "{{ piece.version}}"
 {%- if piece.language %}
 \language "{{ piece.language }}"
-{% endif %}
+{%- endif %}
+{%- block IDblock %}
+{%- endblock %}
 
 #(ly:set-option 'relative-includes #t)
 \include "defs.ily"
@@ -10,7 +12,8 @@
 {% endfor %}
 
 \header {
-  {%- block globalheader %}{%- endblock %}
+  {%- block globalheader %}
+  {%- endblock -%}
 }
 
 \book {

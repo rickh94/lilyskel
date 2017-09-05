@@ -19,7 +19,7 @@ def piece1(headers1):
     """A piece with minimal headers."""
     return info.Piece.init_version(name='testpiece1',
                                    language='english',
-                                   headers=headers1
+                                   headers=headers1,
                                    )
 
 
@@ -28,7 +28,8 @@ def piece2(headers2):
     """A piece with more complete headers."""
     return info.Piece.init_version(name='testpiece2',
                                    language='english',
-                                   headers=headers2
+                                   headers=headers2,
+                                   opus='Op. 15'
                                    )
 
 
@@ -58,23 +59,38 @@ def test_render_defs(tmpdir, jinja_env, piece1, piece2):
     assert 'To my test functions' in test2, "dedication should be in the file"
 
 
-def test_render_ins_part(tmpdir, jinja_env, test_ins, piece1):
+def test_render_ins_part(tmpdir, jinja_env, test_ins, test_ins3, piece1,
+                         piece2):
     """Tests rendering an instrument part."""
     instemplate = jinja_env.get_template('ins_part.ly')
     lyglobals = lynames.LyName(name='global')
-    flags = {
+    flags1 = {
         'key_in_partname': False,
         'compress_full_bar_rests': True,
     }
+    flags2 = {
+        'key_in_partname': True,
+        'compress_full_bar_rests': False
+    }
     moreincludes = ['expressions.ily']
     render1 = instemplate.render(piece=piece1, instrument=test_ins,
-                                 lyglobal=lyglobals, flags=flags,
-                                 movements=3, moreincludes=moreincludes)
+                                 lyglobal=lyglobals, flags=flags1,
+                                 movements=3, moreincludes=moreincludes,
+                                 filename='inspart_test1.ly')
+    render2 = instemplate.render(piece=piece2, instrument=test_ins3,
+                                 lyglobal=lyglobals, flags=flags2,
+                                 movements=8, filename='inspart_test2.ly')
     with open(Path(tmpdir, 'inspart_test1.ly'), 'w') as part:
         part.write(render1)
 
+    with open(Path(tmpdir, 'inspart_test2.ly'), 'w') as part:
+        part.write(render2)
+
     with open(Path(tmpdir, 'inspart_test1.ly'), 'r') as part:
         part_test1 = part.read()
+
+    with open(Path(tmpdir, 'inspart_test2.ly'), 'r') as part:
+        part_test2 = part.read()
 
     assert 'expressions.ily' in part_test1
     assert '\\version' in part_test1
@@ -82,3 +98,11 @@ def test_render_ins_part(tmpdir, jinja_env, test_ins, piece1):
     assert '\\violin_one_first_mov' in part_test1
     assert '\\global_second_mov' in part_test1
     assert '\\compressFullBarRests' in part_test1
+
+    assert '\\version' in part_test2
+    assert '\\include "defs.ily"' in part_test2
+    assert '\\clarinet_in_bb_first_mov' in part_test2
+    assert '\\clarinet_in_bb_fourth_mov' in part_test2
+    assert '\\global_second_mov' in part_test2
+    assert '\\compressFullBarRests' not in part_test2
+    assert 'Op. 15' in part_test2

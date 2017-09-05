@@ -1,4 +1,7 @@
 {% extends 'basepart.ly' %}
+{%- block IDblock %}
+% {{ filename }} - part for {{ instrument.part_name() }} of {{ piece.headers.title }}
+{%- endblock %}
 
 {% block globalheader %}
 {%- if flags.key_in_partname %}
@@ -12,9 +15,9 @@
 {%- for mov in range(1, (movements + 1)) %}
   \score { % Movement {{ mov }}
     \new Staff {
-      {%- if mov == 1 and opus %}
+      {%- if mov == 1 and piece.opus %}
       \header {
-        opus = "{{ opus }}"
+        opus = "{{ piece.opus }}"
       }
       {%- endif %}
       \new Voice {
@@ -29,5 +32,5 @@
     }
   }
 {%- endfor %}
-{% endblock %}
+{%- endblock %}
 
