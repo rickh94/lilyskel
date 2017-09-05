@@ -34,7 +34,8 @@ def mov_two():
     """Two movement."""
     return info.Movement(num=2,
                          tempo='Largo',
-                         key=('a', 'minor')
+                         key=('a', 'minor'),
+                         time='3/4'
                          )
 
 
@@ -43,7 +44,8 @@ def mov_three():
     """Third movement"""
     return info.Movement(num=3,
                          tempo='Vivace',
-                         key=('a', 'major')
+                         key=('a', 'major'),
+                         time='2/4'
                          )
 
 
@@ -166,6 +168,9 @@ def test_render_ins_part(tmpdir, jinja_env, test_ins, test_ins3, piece1,
     assert '\\violin_one_first_mov' in part_test1
     assert '\\global_second_mov' in part_test1
     assert '\\compressFullBarRests' in part_test1
+    assert '\\key a \\major' in part_test1
+    assert '\\key a \\minor' in part_test1
+    assert '\\time 4/4' in part_test1
 
     assert '\\version' in part_test2
     assert '\\include "defs.ily"' in part_test2
@@ -174,3 +179,5 @@ def test_render_ins_part(tmpdir, jinja_env, test_ins, test_ins3, piece1,
     assert '\\global_second_mov' in part_test2
     assert '\\compressFullBarRests' not in part_test2
     assert 'Op. 15' in part_test2
+    assert '\\key c \\major' in part_test2
+    assert '\\time 3/4' in part_test2

@@ -26,7 +26,7 @@
           \time {{ mov.time }}
           {%- endif %}
           {%- if mov.key %}
-          \key "{{ mov.key }}"
+          \key {{ mov.key[0] }} \{{ mov.key[1]}}
           {%- endif %}
           {{ lyglobal.var_name(mov.num) }}
           {%- if flags.compress_full_bar_rests %}
