@@ -12,21 +12,27 @@
 {% endblock %}
 
 {%- block book %}
-{%- for mov in range(1, (movements + 1)) %}
-  \score { % Movement {{ mov }}
+{%- for mov in piece.movements %}
+  \score { % Movement {{ mov.num }}
     \new Staff {
-      {%- if mov == 1 and piece.opus %}
+      {%- if mov.num == 1 and piece.opus %}
       \header {
         opus = "{{ piece.opus }}"
       }
       {%- endif %}
       \new Voice {
         <<
-          {{ lyglobal.var_name(mov) }}
+          {%- if mov.time %}
+          \time {{ mov.time }}
+          {%- endif %}
+          {%- if mov.key %}
+          \key "{{ mov.key }}"
+          {%- endif %}
+          {{ lyglobal.var_name(mov.num) }}
           {%- if flags.compress_full_bar_rests %}
           \compressFullBarRests
           {%- endif %}
-          {{ instrument.var_name(mov) }}
+          {{ instrument.var_name(mov.num) }}
         >>
       }
     }

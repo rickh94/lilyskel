@@ -126,9 +126,12 @@ class LyName():
             name += str(self.number)
         return name
 
-    def var_name(self, mov_num):
+    def var_name(self, mov_num, slash=True):
         """Returns the variable name for a part + movement."""
-        return '\\' + self._movement(mov_num, form='ord')
+        prefix = ''
+        if slash:
+            prefix = '\\'
+        return prefix + self._movement(mov_num, form='ord')
 
 
 @attr.s

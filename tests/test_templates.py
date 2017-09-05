@@ -15,21 +15,89 @@ def jinja_env():
 
 
 @pytest.fixture
-def piece1(headers1):
+def mov_one_all():
+    """Populated first movement."""
+    return info.Movement(num=1,
+                         tempo='Allegro',
+                         time='4/4',
+                         key=('a', 'major'))
+
+
+@pytest.fixture
+def mov_one_empty():
+    """Empty first movement."""
+    return info.Movement(num=1)
+
+
+@pytest.fixture
+def mov_two():
+    """Two movement."""
+    return info.Movement(num=2,
+                         tempo='Largo',
+                         key=('a', 'minor')
+                         )
+
+
+@pytest.fixture
+def mov_three():
+    """Third movement"""
+    return info.Movement(num=3,
+                         tempo='Vivace',
+                         key=('a', 'major')
+                         )
+
+
+@pytest.fixture
+def mov_four():
+    """fourth movement"""
+    return info.Movement(num=4,
+                         tempo='Adagio',
+                         key=('d', 'major')
+                         )
+
+
+@pytest.fixture
+def mov_five():
+    """blank movement"""
+    return info.Movement(num=5)
+
+
+@pytest.fixture
+def mov_six():
+    """blank movement"""
+    return info.Movement(num=6)
+
+
+@pytest.fixture
+def three_movs(mov_one_all, mov_two, mov_three):
+    """Three movements."""
+    return [mov_one_all, mov_two, mov_three]
+
+
+@pytest.fixture
+def piece1(headers1, three_movs):
     """A piece with minimal headers."""
     return info.Piece.init_version(name='testpiece1',
                                    language='english',
                                    headers=headers1,
+                                   movements=three_movs
                                    )
 
 
 @pytest.fixture
-def piece2(headers2):
+def six_movs(mov_one_empty, mov_two, mov_three, mov_four, mov_five, mov_six):
+    """List of six movements."""
+    return [mov_one_empty, mov_two, mov_three, mov_four, mov_five, mov_six]
+
+
+@pytest.fixture
+def piece2(headers2, six_movs):
     """A piece with more complete headers."""
     return info.Piece.init_version(name='testpiece2',
                                    language='english',
                                    headers=headers2,
-                                   opus='Op. 15'
+                                   opus='Op. 15',
+                                   movements=six_movs
                                    )
 
 
@@ -75,11 +143,11 @@ def test_render_ins_part(tmpdir, jinja_env, test_ins, test_ins3, piece1,
     moreincludes = ['expressions.ily']
     render1 = instemplate.render(piece=piece1, instrument=test_ins,
                                  lyglobal=lyglobals, flags=flags1,
-                                 movements=3, moreincludes=moreincludes,
+                                 moreincludes=moreincludes,
                                  filename='inspart_test1.ly')
     render2 = instemplate.render(piece=piece2, instrument=test_ins3,
                                  lyglobal=lyglobals, flags=flags2,
-                                 movements=8, filename='inspart_test2.ly')
+                                 filename='inspart_test2.ly')
     with open(Path(tmpdir, 'inspart_test1.ly'), 'w') as part:
         part.write(render1)
 

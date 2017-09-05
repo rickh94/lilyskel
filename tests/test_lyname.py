@@ -116,6 +116,8 @@ class TestLyName():
             "should append number words"
         assert testlyname2.var_name(2) == '\\test_two_second_mov',\
             "should append number words"
+        assert testlyname2.var_name(2, slash=False) == 'test_two_second_mov',\
+            "should append number words, without slash"
 
     def test_movement_exceptions(self, testlyname1, testlyname2):
         """Tests the possible exceptions for the _movement private method."""

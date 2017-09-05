@@ -221,6 +221,33 @@ class MutopiaHeaders():
 
 
 @attr.s
+class Movement():
+    num = attr.ib(validator=attr.validators.instance_of(int))
+    tempo = attr.ib(validator=attr.validators.instance_of(str),
+                    default='')
+    time = attr.ib(validator=attr.validators.instance_of(str),
+                   default='')
+    key = attr.ib(default=('c', 'major'))
+
+    @key.validator
+    def validate_key(self, attribute, value):
+        """Validate key."""
+        err = AttributeError("'key' must be tuple of note and major or minor")
+        if not isinstance(value, tuple):
+            raise err
+        if value[0][0] not in ['a', 'b', 'c', 'd', 'e', 'f', 'g']:
+            raise err
+        try:
+            if value[0][1] not in ['f', 'b']:
+                raise err
+        except IndexError:
+            pass
+
+        if value[1] not in ['major', 'minor']:
+            raise err
+
+
+@attr.s
 class Piece():
     """
     Info for the entire piece.
@@ -230,6 +257,7 @@ class Piece():
     version = attr.ib()
     language = attr.ib(default=None)
     opus = attr.ib(default=None)
+    movements = attr.ib(default=[Movement(num=1)])
 
     @version.validator
     def validate_version(self, attribute, value):
@@ -254,8 +282,19 @@ class Piece():
             raise AttributeError("Language is not valid. Must be one of "
                                  "{}".format(', '.join(languages)))
 
+    @movements.validator
+    def movements_validator(self, attribute, value):
+        """Check for valid movements."""
+        err = AttributeError("Movements are not valid, Must be a list of "
+                             "Movement objects.")
+        if not isinstance(value, list):
+            raise err
+        if not isinstance(value[0], Movement):
+            raise err
+
     @classmethod
-    def init_version(cls, name, headers, language, opus=None):
+    def init_version(cls, name, headers, language, opus=None,
+                     movements=[Movement(num=1)]):
         """Automatically gets the version number from the system."""
         run_ly = subprocess.run(['lilypond', '--version'],
                                 stdout=subprocess.PIPE)
@@ -263,4 +302,4 @@ class Piece():
                               run_ly.stdout.decode(ENCODING))
         vers = matchvers.group(1)
         return cls(name=name, headers=headers, version=vers, language=language,
-                   opus=opus)
+                   opus=opus, movements=movements)
