@@ -2,6 +2,7 @@
 {% if piece.language %}
 \language "{{ piece.language }}"
 {% endif %}
+% defs.ily - important information for {{ piece.title }}
 
 \header {
   title = "{{ piece.headers.title }}"
@@ -61,5 +62,7 @@
   {%- endif %}
   {%- endif %}
 }
+
+\include "includes.ily"
 
 {# vim se: tw=1000: #}

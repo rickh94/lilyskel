@@ -24,23 +24,26 @@ def make_instrument(instrument, lyglobal, piece, flags=FLAGS, prefix=None,
             key_in_partname: bool, compress_full_bar_rests: bool.
             If not supplied, both will default to false.
         prefix: path prefix for generation of the directory structure. Defaults
-            to current working directory
+            to current working directory. Relative paths are prefered.
         moreincluds: a list of additional files to include. Defaults to empty
             list.
     """
     instemplate = ENV.get_template('ins_part.ly')
     notestemplate = ENV.get_template('notes.ily')
     if not prefix:
-        # set to current dir if not set
-        prefix = Path(os.getcwd())
+        # It is for mobility of the directory tree to use relative paths, so
+        # '.' is default so the path will be relative.
+        prefix = Path('.')
 
     partfilename = instrument.part_file_name(prefix=piece.opus)
     dirpath = Path(prefix, instrument.dir_name())
     partpath = Path(prefix, partfilename)
     os.makedirs(dirpath)
 
+    include_paths = []
     for movement in piece.movements:
-        _render_notes(dirpath, piece, instrument, movement)
+        mov_path = _render_notes(dirpath, piece, instrument, movement)
+        include_paths.append(mov_path)
 
     partrender = instemplate.render(piece=piece, instrument=instrument,
                                     lyglobal=lyglobals, flags=flags,
@@ -50,6 +53,9 @@ def make_instrument(instrument, lyglobal, piece, flags=FLAGS, prefix=None,
     with open(partpath, 'w') as partfile:
         partfile.write(partrender)
 
+    include_paths.append(partpath)
+    return include_paths
+
 
 def _render_notes(dirpath, piece, instrument, movement):
     # TODO: add to includes file
@@ -58,3 +64,11 @@ def _render_notes(dirpath, piece, instrument, movement):
     tmppath = Path(dirpath, instrument.mov_file_name(movement.num))
     with open(tmppath, 'w') as outfile:
         outfile.write(render)
+
+    return tmppath
+
+
+def render_includes(includepaths, piece):
+    """
+    Renders the includes file for the
+    """
