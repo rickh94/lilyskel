@@ -1,4 +1,5 @@
 """Tests that template files produce the correct output."""
+import os
 from pathlib import Path
 import pytest
 from jinja2 import Environment, PackageLoader
@@ -181,3 +182,57 @@ def test_render_ins_part(tmpdir, jinja_env, test_ins, test_ins3, piece1,
     assert 'Op. 15' in part_test2
     assert '\\key c \\major' in part_test2
     assert '\\time 3/4' in part_test2
+
+
+@pytest.fixture
+def global_ins():
+    """An object for global info."""
+    return lynames.LyName(name='global')
+
+
+def test_render_notes(tmpdir, jinja_env, test_ins, test_ins2, three_movs,
+                      piece1, global_ins):
+    """Test generating the notes template parts."""
+    template = jinja_env.get_template('notes.ily')
+    for ins in [global_ins, test_ins, test_ins2]:
+        dirpath = Path(tmpdir, ins.dir_name())
+        os.makedirs(dirpath)
+        for mov in piece1.movements:
+            render = template.render(piece=piece1, instrument=ins,
+                                     movement=mov)
+            with open(Path(dirpath, ins.mov_file_name(mov.num)), 'w') as out:
+                out.write(render)
+
+    globalpath = Path(tmpdir, 'global')
+    test_ins_path = Path(tmpdir, 'violin1')
+    test_ins2_path = Path(tmpdir, 'violoncello2')
+
+    with open(Path(globalpath, 'global_1.ily'), 'r') as file1:
+        global1 = file1.read()
+    with open(Path(globalpath, 'global_2.ily'), 'r') as file2:
+        global2 = file2.read()
+    with open(Path(globalpath, 'global_3.ily'), 'r') as file3:
+        global3 = file3.read()
+    with open(Path(test_ins_path, 'violin1_1.ily'), 'r') as file4:
+        test_ins_1 = file4.read()
+    with open(Path(test_ins_path, 'violin1_2.ily'), 'r') as file5:
+        test_ins_2 = file5.read()
+    with open(Path(test_ins_path, 'violin1_3.ily'), 'r') as file6:
+        test_ins_3 = file6.read()
+    with open(Path(test_ins2_path, 'violoncello2_1.ily'), 'r') as file7:
+        test_ins2_1 = file7.read()
+    with open(Path(test_ins2_path, 'violoncello2_2.ily'), 'r') as file8:
+        test_ins2_2 = file8.read()
+    with open(Path(test_ins2_path, 'violoncello2_3.ily'), 'r') as file9:
+        test_ins2_3 = file9.read()
+
+    assert 'global_first_mov' in global1, "should have variable"
+    assert 'Allegro' in global1, "global should have tempo"
+    assert 'global_second_mov' in global2, "should have variable"
+    assert 'global_third_mov' in global3, "should have variable"
+    assert 'violin_one_first_mov' in test_ins_1, "should have variable"
+    assert 'violin_one_second_mov' in test_ins_2, "should have variable"
+    assert 'violin_one_third_mov' in test_ins_3, "should have variable"
+    assert 'violoncello_two_first_mov' in test_ins2_1, "should have variable"
+    assert 'violoncello_two_second_mov' in test_ins2_2, "should have variable"
+    assert 'violoncello_two_third_mov' in test_ins2_3, "should have variable"
