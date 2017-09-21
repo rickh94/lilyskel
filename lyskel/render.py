@@ -11,8 +11,7 @@ FLAGS = {
 }
 
 
-def make_instrument(instrument, lyglobal, piece, flags=FLAGS, prefix=None,
-                    moreincludes=[]):
+def make_instrument(instrument, lyglobal, piece, flags=FLAGS, prefix=None):
     """
     Create all the files related to an instrument.
 
@@ -25,8 +24,6 @@ def make_instrument(instrument, lyglobal, piece, flags=FLAGS, prefix=None,
             If not supplied, both will default to false.
         prefix: path prefix for generation of the directory structure. Defaults
             to current working directory. Relative paths are prefered.
-        moreincluds: a list of additional files to include. Defaults to empty
-            list.
     """
     instemplate = ENV.get_template('ins_part.ly')
     notestemplate = ENV.get_template('notes.ily')
@@ -47,7 +44,6 @@ def make_instrument(instrument, lyglobal, piece, flags=FLAGS, prefix=None,
 
     partrender = instemplate.render(piece=piece, instrument=instrument,
                                     lyglobal=lyglobals, flags=flags,
-                                    moreincludes=moreincludes,
                                     filename=partfilename)
 
     with open(partpath, 'w') as partfile:
@@ -68,7 +64,14 @@ def _render_notes(dirpath, piece, instrument, movement):
     return tmppath
 
 
-def render_includes(includepaths, piece):
+def render_includes(includepaths, extra_includes, piece):
     """
-    Renders the includes file for the
+    Renders the includes file for the piece.
+
+    Arguments:
+        includepaths: The auto defined includes from generation of notes files
+        a list of Path objects
+        extra_includes: more includes defined by the user. a list of Path
+        objects
+        piece: a Piece object
     """

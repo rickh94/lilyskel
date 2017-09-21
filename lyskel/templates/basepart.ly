@@ -7,9 +7,6 @@
 
 #(ly:set-option 'relative-includes #t)
 \include "defs.ily"
-{%- for item in moreincludes %}
-\include "{{ item }}"
-{% endfor %}
 
 \header {
   {%- block globalheader %}

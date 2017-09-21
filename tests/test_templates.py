@@ -143,10 +143,8 @@ def test_render_ins_part(tmpdir, jinja_env, test_ins, test_ins3, piece1,
         'key_in_partname': True,
         'compress_full_bar_rests': False
     }
-    moreincludes = ['expressions.ily']
     render1 = instemplate.render(piece=piece1, instrument=test_ins,
                                  lyglobal=lyglobals, flags=flags1,
-                                 moreincludes=moreincludes,
                                  filename='inspart_test1.ly')
     render2 = instemplate.render(piece=piece2, instrument=test_ins3,
                                  lyglobal=lyglobals, flags=flags2,
@@ -163,7 +161,6 @@ def test_render_ins_part(tmpdir, jinja_env, test_ins, test_ins3, piece1,
     with open(Path(tmpdir, 'inspart_test2.ly'), 'r') as part:
         part_test2 = part.read()
 
-    assert 'expressions.ily' in part_test1
     assert '\\version' in part_test1
     assert '\\include "defs.ily"' in part_test1
     assert '\\violin_one_first_mov' in part_test1
@@ -236,3 +233,33 @@ def test_render_notes(tmpdir, jinja_env, test_ins, test_ins2, three_movs,
     assert 'violoncello_two_first_mov' in test_ins2_1, "should have variable"
     assert 'violoncello_two_second_mov' in test_ins2_2, "should have variable"
     assert 'violoncello_two_third_mov' in test_ins2_3, "should have variable"
+
+
+def test_includes(tmpdir, jinja_env, piece1):
+    """Test the includes template."""
+    template = jinja_env.get_template('includes.ily')
+    extra_includes = [Path('expressions.ily'), Path('macros.ily')]
+    includepaths = [Path('global', 'global_1.ily'),
+                    Path('global', 'global_2.ily'),
+                    Path('global', 'global_3.ily'),
+                    Path('violin1', 'violin1_1.ily'),
+                    Path('violin1', 'violin1_2.ily'),
+                    Path('violin1', 'violin1_3.ily'),
+                    ]
+    render = template.render(piece=piece1, extra_includes=extra_includes,
+                             includepaths=includepaths)
+
+    with open(Path(tmpdir, 'includes.ily'), 'w') as file1:
+        file1.write(render)
+
+    with open(Path(tmpdir, 'includes.ily'), 'r') as file2:
+        test_render1 = file2.read()
+
+    assert 'Path' not in test_render1,\
+        'path objects should come out as strings'
+    assert 'Test Piece' in test_render1, 'Name of piece should be in comment'
+    assert '\\include "violin1/violin1_1.ily"' in test_render1,\
+        'path should assemble from path object'
+    assert '\\version "2.' in test_render1, 'version number should be in file'
+    assert '\\include "global/global_2.ily"' in test_render1,\
+        'path should assemble for global'
