@@ -104,7 +104,7 @@ def piece2(headers2, six_movs):
                                    )
 
 
-def test_render_defs(tmpdir, jinja_env, piece1, piece2):
+def test_defs(tmpdir, jinja_env, piece1, piece2):
     """Test rendering the defs template."""
     defstemplate = jinja_env.get_template('defs.ily')
     with open(Path(tmpdir, 'defs_test1.ily'), 'w') as defs1:
@@ -130,8 +130,8 @@ def test_render_defs(tmpdir, jinja_env, piece1, piece2):
     assert 'To my test functions' in test2, "dedication should be in the file"
 
 
-def test_render_ins_part(tmpdir, jinja_env, test_ins, test_ins3, piece1,
-                         piece2):
+def test_ins_part(tmpdir, jinja_env, test_ins, test_ins3, piece1,
+                  piece2):
     """Tests rendering an instrument part."""
     instemplate = jinja_env.get_template('ins_part.ly')
     lyglobals = lynames.LyName(name='global')
@@ -187,8 +187,8 @@ def global_ins():
     return lynames.LyName(name='global')
 
 
-def test_render_notes(tmpdir, jinja_env, test_ins, test_ins2, three_movs,
-                      piece1, global_ins):
+def test_notes(tmpdir, jinja_env, test_ins, test_ins2, three_movs,
+               piece1, global_ins):
     """Test generating the notes template parts."""
     template = jinja_env.get_template('notes.ily')
     for ins in [global_ins, test_ins, test_ins2]:
@@ -263,3 +263,23 @@ def test_includes(tmpdir, jinja_env, piece1):
     assert '\\version "2.' in test_render1, 'version number should be in file'
     assert '\\include "global/global_2.ily"' in test_render1,\
         'path should assemble for global'
+
+
+def test_score(piece1, jinja_env, instrument_list1, tmpdir):
+    """Test the score template."""
+    lyglobal = lynames.LyName(name='global')
+    template = jinja_env.get_template('score.ly')
+    render = template.render(piece=piece1, filename='score.ly',
+                             lyglobal=lyglobal, instruments=instrument_list1)
+    scorepath = Path(tmpdir, 'score.ly')
+    with open(scorepath, 'w') as scorefile:
+        scorefile.write(render)
+
+    with open(scorepath, 'r') as scorefile:
+        scorerender = scorefile.read()
+
+    assert 'Test Piece' in scorerender
+    assert '\\version' in scorerender
+    assert '\\violin_one_first_mov' in scorerender
+    assert '\\global_first_mov' in scorerender
+    assert '\\violoncello_two_third_mov' in scorerender

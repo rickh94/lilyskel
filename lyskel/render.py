@@ -11,7 +11,8 @@ FLAGS = {
 }
 
 
-def make_instrument(instrument, lyglobal, piece, flags=FLAGS, prefix=None):
+def make_instrument(instrument, lyglobal, piece, flags=FLAGS,
+                    prefix=Path('.')):
     """
     Create all the files related to an instrument.
 
@@ -27,21 +28,19 @@ def make_instrument(instrument, lyglobal, piece, flags=FLAGS, prefix=None):
     """
     instemplate = ENV.get_template('ins_part.ly')
     notestemplate = ENV.get_template('notes.ily')
-    if not prefix:
-        # It is for mobility of the directory tree to use relative paths, so
-        # '.' is default so the path will be relative.
-        prefix = Path('.')
 
     partfilename = instrument.part_file_name(prefix=piece.opus)
     dirpath = Path(prefix, instrument.dir_name())
     partpath = Path(prefix, partfilename)
     os.makedirs(dirpath)
 
+    # notes files that need to be included
     include_paths = []
     for movement in piece.movements:
         mov_path = _render_notes(dirpath, piece, instrument, movement)
         include_paths.append(mov_path)
 
+    # part rendering lilypond file
     partrender = instemplate.render(piece=piece, instrument=instrument,
                                     lyglobal=lyglobals, flags=flags,
                                     filename=partfilename)
@@ -50,21 +49,21 @@ def make_instrument(instrument, lyglobal, piece, flags=FLAGS, prefix=None):
         partfile.write(partrender)
 
     include_paths.append(partpath)
+    # return the paths for including in the includes.ily
     return include_paths
 
 
 def _render_notes(dirpath, piece, instrument, movement):
-    # TODO: add to includes file
     render = notestemplate.render(piece=piece, instrument=instrument,
                                   movement=movement)
-    tmppath = Path(dirpath, instrument.mov_file_name(movement.num))
-    with open(tmppath, 'w') as outfile:
+    filepath = Path(dirpath, instrument.mov_file_name(movement.num))
+    with open(fileath, 'w') as outfile:
         outfile.write(render)
 
-    return tmppath
+    return filepath
 
 
-def render_includes(includepaths, extra_includes, piece):
+def render_includes(includepaths, extra_includes, piece, prefix=Path('.')):
     """
     Renders the includes file for the piece.
 
@@ -75,3 +74,20 @@ def render_includes(includepaths, extra_includes, piece):
         objects
         piece: a Piece object
     """
+    template = ENV.get_template('includes.ily')
+    render = template.render(piece=piece, extra_includes=extra_includes,
+                             includepaths=includepaths)
+    includepath = Path(prefix, 'includes.ily')
+
+    with open(includepath, 'w') as includefile:
+        includefile.write(render)
+
+
+def render_defs(piece, prefix=Path('.')):
+    """Renders the defs file."""
+    template = ENV.get_template('defs.ily')
+    defspath = Path(prefix, 'defs.ily')
+    render = template.render(piece=piece)
+
+    with open(defspath, 'w') as defsfile:
+        defsfile.write(render)
