@@ -8,14 +8,6 @@ from lyskel import db_interface
 
 
 @pytest.fixture
-def bach():
-    """A composer instance with everything."""
-    return info.Composer(name="Johann Sebastian Bach",
-                         mutopianame="BachJS",
-                         shortname="J.S. Bach")
-
-
-@pytest.fixture
 def beethoven():
     """Bare minimum composer instance"""
     return info.Composer(name="Ludwig van Beethoven")
@@ -26,13 +18,6 @@ def brahms():
     """A composer instance with mutopianame."""
     return info.Composer(name="Johannes Brahms",
                          mutopianame="BrahmsJ")
-
-
-@pytest.fixture
-def debussy():
-    """A composer instance with shortname."""
-    return info.Composer(name="Claude Debussy",
-                         shortname="Claude Debussy")
 
 
 @pytest.fixture
@@ -110,20 +95,6 @@ class TestComposer():
 
 
 @pytest.fixture
-def mutopiaheader1(test_ins, test_ins2, test_ins3, test_ins4, bach):
-    """Some mutopia Headers."""
-    return info.MutopiaHeaders(instrument_list=[test_ins, test_ins2, test_ins3,
-                                                test_ins4],
-                               source='Breitkopf und Hartël',
-                               style='Baroque',
-                               maintainer='Rick Henry',
-                               maintainerEmail='fredericmhenry@gmail.com',
-                               date='1234',
-                               license='cc4',
-                               )
-
-
-@pytest.fixture
 def random_ens(test_ins, test_ins2, test_ins3, test_ins4):
     new_ens = lynames.Ensemble('random_ens')
     new_ens.add_instrument_from_obj(test_ins)
@@ -184,15 +155,6 @@ def test_validate_instruments(mutopiaheader1):
 
 def test_validate_composer(mutopiaheader1):
     """Test validation of composer."""
-
-
-@pytest.fixture
-def headers1(bach):
-    """A headers instance."""
-    return info.Headers(title='Test Piece',
-                        composer=bach,
-                        tagline='mytagline',
-                        )
 
 
 class TestHeaders():
