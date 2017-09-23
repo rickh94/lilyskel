@@ -14,6 +14,7 @@
 {%- block book %}
 {%- for mov in piece.movements %}
   \score { % Movement {{ mov.num }}
+  {%- if not instrument.keyboard %}
     \new Staff {
       {%- if mov.num == 1 and piece.opus %}
       \header {
@@ -22,12 +23,6 @@
       {%- endif %}
       \new Voice {
         <<
-          {%- if mov.time %}
-          \time {{ mov.time }}
-          {%- endif %}
-          {%- if mov.key %}
-          \key {{ mov.key[0] }} \{{ mov.key[1]}}
-          {%- endif %}
           {{ lyglobal.var_name(mov.num) }}
           {%- if flags.compress_full_bar_rests %}
           \compressFullBarRests
@@ -36,6 +31,25 @@
         >>
       }
     }
+    {%- elif instrument.keyboard %}
+    \new PianoStaff <<
+      \new Staff = "RH" {
+        <<
+          {{ lyglobal.var_name(mov.num) }}
+          {%- if flags.compress_full_bar_rests %}
+          \compressFullBarRests
+          {%- endif %}
+          {{ instrument.var_name(mov.num) }}_RH
+        >>
+      }
+      \new Staff = "LH" {
+        {%- if flags.compress_full_bar_rests %}
+        \compressFullBarRests
+        {%- endif %}
+        {{ instrument.var_name(mov.num) }}_LH
+      }
+    >>
+    {%- endif %}
   }
 {%- endfor %}
 {%- endblock %}

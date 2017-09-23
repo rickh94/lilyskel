@@ -66,6 +66,14 @@ def test_ins4():
 
 
 @pytest.fixture
+def piano():
+    """A piano instrument."""
+    return lynames.Instrument('Piano', abbr='Pno.', transposition=None,
+                              keyboard=True, midi='acoustic grand',
+                              family='percussion', mutopianame='Piano')
+
+
+@pytest.fixture
 def bach():
     """A composer instance with everything."""
     return info.Composer(name="Johann Sebastian Bach",

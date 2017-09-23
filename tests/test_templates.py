@@ -131,7 +131,7 @@ def test_defs(tmpdir, jinja_env, piece1, piece2):
 
 
 def test_ins_part(tmpdir, jinja_env, test_ins, test_ins3, piece1,
-                  piece2):
+                  piece2, piano):
     """Tests rendering an instrument part."""
     instemplate = jinja_env.get_template('ins_part.ly')
     lyglobals = lynames.LyName(name='global')
@@ -149,26 +149,28 @@ def test_ins_part(tmpdir, jinja_env, test_ins, test_ins3, piece1,
     render2 = instemplate.render(piece=piece2, instrument=test_ins3,
                                  lyglobal=lyglobals, flags=flags2,
                                  filename='inspart_test2.ly')
+    render3 = instemplate.render(piece=piece1, instrument=piano,
+                                 lyglobal=lyglobals, flags=flags1,
+                                 filename='piano_part.ly')
     with open(Path(tmpdir, 'inspart_test1.ly'), 'w') as part:
         part.write(render1)
-
     with open(Path(tmpdir, 'inspart_test2.ly'), 'w') as part:
         part.write(render2)
+    with open(Path(tmpdir, 'piano_part.ly'), 'w') as part:
+        part.write(render3)
 
     with open(Path(tmpdir, 'inspart_test1.ly'), 'r') as part:
         part_test1 = part.read()
-
     with open(Path(tmpdir, 'inspart_test2.ly'), 'r') as part:
         part_test2 = part.read()
+    with open(Path(tmpdir, 'piano_part.ly'), 'r') as part:
+        part_test3 = part.read()
 
     assert '\\version' in part_test1
     assert '\\include "defs.ily"' in part_test1
     assert '\\violin_one_first_mov' in part_test1
     assert '\\global_second_mov' in part_test1
     assert '\\compressFullBarRests' in part_test1
-    assert '\\key a \\major' in part_test1
-    assert '\\key a \\minor' in part_test1
-    assert '\\time 4/4' in part_test1
 
     assert '\\version' in part_test2
     assert '\\include "defs.ily"' in part_test2
@@ -177,8 +179,12 @@ def test_ins_part(tmpdir, jinja_env, test_ins, test_ins3, piece1,
     assert '\\global_second_mov' in part_test2
     assert '\\compressFullBarRests' not in part_test2
     assert 'Op. 15' in part_test2
-    assert '\\key c \\major' in part_test2
-    assert '\\time 3/4' in part_test2
+
+    assert '\\version' in part_test3
+    assert '\\include "defs.ily"' in part_test3
+    assert '\\piano_first_mov_LH' in part_test3
+    assert '\\piano_third_mov_RH' in part_test3
+    assert 'PianoStaff' in part_test3
 
 
 @pytest.fixture
@@ -188,10 +194,10 @@ def global_ins():
 
 
 def test_notes(tmpdir, jinja_env, test_ins, test_ins2, three_movs,
-               piece1, global_ins):
+               piece1, global_ins, piano):
     """Test generating the notes template parts."""
     template = jinja_env.get_template('notes.ily')
-    for ins in [global_ins, test_ins, test_ins2]:
+    for ins in [global_ins, test_ins, test_ins2, piano]:
         dirpath = Path(tmpdir, ins.dir_name())
         os.makedirs(dirpath)
         for mov in piece1.movements:
@@ -203,6 +209,7 @@ def test_notes(tmpdir, jinja_env, test_ins, test_ins2, three_movs,
     globalpath = Path(tmpdir, 'global')
     test_ins_path = Path(tmpdir, 'violin1')
     test_ins2_path = Path(tmpdir, 'violoncello2')
+    piano_path = Path(tmpdir, 'piano')
 
     with open(Path(globalpath, 'global_1.ily'), 'r') as file1:
         global1 = file1.read()
@@ -222,17 +229,33 @@ def test_notes(tmpdir, jinja_env, test_ins, test_ins2, three_movs,
         test_ins2_2 = file8.read()
     with open(Path(test_ins2_path, 'violoncello2_3.ily'), 'r') as file9:
         test_ins2_3 = file9.read()
+    with open(Path(piano_path, 'piano_1.ily'), 'r') as file10:
+        piano_1 = file10.read()
+    with open(Path(piano_path, 'piano_2.ily'), 'r') as file11:
+        piano_2 = file11.read()
+    with open(Path(piano_path, 'piano_3.ily'), 'r') as file12:
+        piano_3 = file12.read()
 
     assert 'global_first_mov' in global1, "should have variable"
     assert 'Allegro' in global1, "global should have tempo"
     assert 'global_second_mov' in global2, "should have variable"
     assert 'global_third_mov' in global3, "should have variable"
     assert 'violin_one_first_mov' in test_ins_1, "should have variable"
+    assert '\\clef "treble"' in test_ins_1, "should have clef"
     assert 'violin_one_second_mov' in test_ins_2, "should have variable"
     assert 'violin_one_third_mov' in test_ins_3, "should have variable"
     assert 'violoncello_two_first_mov' in test_ins2_1, "should have variable"
     assert 'violoncello_two_second_mov' in test_ins2_2, "should have variable"
+    assert '\\clef "bass"' in test_ins2_2, "should have clef"
     assert 'violoncello_two_third_mov' in test_ins2_3, "should have variable"
+    assert 'piano_first_mov_RH' in piano_1
+    assert 'piano_first_mov_LH' in piano_1
+    assert '\\clef "treble"' in piano_1
+    assert '\\clef "bass"' in piano_1
+    assert 'piano_second_mov_RH' in piano_2
+    assert 'piano_second_mov_LH' in piano_2
+    assert 'piano_third_mov_RH' in piano_3
+    assert 'piano_third_mov_LH' in piano_3
 
 
 def test_includes(tmpdir, jinja_env, piece1):
@@ -265,8 +288,9 @@ def test_includes(tmpdir, jinja_env, piece1):
         'path should assemble for global'
 
 
-def test_score(piece1, jinja_env, instrument_list1, tmpdir):
+def test_score(piece1, jinja_env, instrument_list1, piano, tmpdir):
     """Test the score template."""
+    instruments = instrument_list1.append(piano)
     lyglobal = lynames.LyName(name='global')
     template = jinja_env.get_template('score.ly')
     render = template.render(piece=piece1, filename='score.ly',
@@ -283,3 +307,6 @@ def test_score(piece1, jinja_env, instrument_list1, tmpdir):
     assert '\\violin_one_first_mov' in scorerender
     assert '\\global_first_mov' in scorerender
     assert '\\violoncello_two_third_mov' in scorerender
+    assert '\\piano_first_mov_LH' in scorerender
+    assert 'shortInstrumentName = "Cl."' in scorerender
+    assert 'instrumentName = "Violin I"' in scorerender
