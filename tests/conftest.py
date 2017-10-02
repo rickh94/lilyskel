@@ -2,6 +2,7 @@
 import shutil
 from pathlib import Path
 import pytest
+from jinja2 import Environment, PackageLoader
 from tinydb import TinyDB
 from lyskel import lynames
 from lyskel import info
@@ -127,3 +128,100 @@ def headers2(debussy, mutopiaheader1):
 def instrument_list1(test_ins, test_ins2, test_ins3, test_ins4):
     """A list of instruments."""
     return [test_ins, test_ins2, test_ins3, test_ins4]
+
+
+@pytest.fixture
+def jinja_env():
+    """Defines a jinja environment loading the default templates."""
+    return Environment(
+        loader=PackageLoader('lyskel', 'templates')
+    )
+
+
+@pytest.fixture
+def mov_one_all():
+    """Populated first movement."""
+    return info.Movement(num=1,
+                         tempo='Allegro',
+                         time='4/4',
+                         key=('a', 'major'))
+
+
+@pytest.fixture
+def mov_one_empty():
+    """Empty first movement."""
+    return info.Movement(num=1)
+
+
+@pytest.fixture
+def mov_two():
+    """Two movement."""
+    return info.Movement(num=2,
+                         tempo='Largo',
+                         key=('a', 'minor'),
+                         time='3/4'
+                         )
+
+
+@pytest.fixture
+def mov_three():
+    """Third movement"""
+    return info.Movement(num=3,
+                         tempo='Vivace',
+                         key=('a', 'major'),
+                         time='2/4'
+                         )
+
+
+@pytest.fixture
+def mov_four():
+    """fourth movement"""
+    return info.Movement(num=4,
+                         tempo='Adagio',
+                         key=('d', 'major')
+                         )
+
+
+@pytest.fixture
+def mov_five():
+    """blank movement"""
+    return info.Movement(num=5)
+
+
+@pytest.fixture
+def mov_six():
+    """blank movement"""
+    return info.Movement(num=6)
+
+
+@pytest.fixture
+def three_movs(mov_one_all, mov_two, mov_three):
+    """Three movements."""
+    return [mov_one_all, mov_two, mov_three]
+
+
+@pytest.fixture
+def piece1(headers1, three_movs):
+    """A piece with minimal headers."""
+    return info.Piece.init_version(name='testpiece1',
+                                   language='english',
+                                   headers=headers1,
+                                   movements=three_movs
+                                   )
+
+
+@pytest.fixture
+def six_movs(mov_one_empty, mov_two, mov_three, mov_four, mov_five, mov_six):
+    """List of six movements."""
+    return [mov_one_empty, mov_two, mov_three, mov_four, mov_five, mov_six]
+
+
+@pytest.fixture
+def piece2(headers2, six_movs):
+    """A piece with more complete headers."""
+    return info.Piece.init_version(name='testpiece2',
+                                   language='english',
+                                   headers=headers2,
+                                   opus='Op. 15',
+                                   movements=six_movs
+                                   )
