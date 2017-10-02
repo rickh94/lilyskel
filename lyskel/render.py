@@ -91,3 +91,19 @@ def render_defs(piece, prefix=Path('.')):
 
     with open(defspath, 'w') as defsfile:
         defsfile.write(render)
+
+
+# TODO: clean opus to mutopia style
+def render_score(piece, instruments, lyglobal, path_prefix=Path('.')):
+    """Renders the score."""
+    template = ENV.get_template('score.ly')
+    name_prefix = ''
+    if piece.opus:
+        name_prefix = str(piece.opus) + '_'
+    filename = name_prefix + 'score.ly'
+    render = template.render(piece=piece, filename=filename, lyglobal=lyglobal,
+                             instruments=instruments)
+    score_path = Path(path_prefix, filename)
+
+    with open(score_path, 'w') as scorefile:
+        scorefile.write(render)
