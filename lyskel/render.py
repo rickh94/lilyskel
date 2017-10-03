@@ -72,7 +72,8 @@ def _render_notes(dirpath, piece, instrument, movement):
     return filepath
 
 
-def render_includes(includepaths, extra_includes, piece, location=Path('.')):
+def render_includes(includepaths, piece, extra_includes=[],
+                    location=Path('.')):
     """
     Renders the includes file for the piece.
 
@@ -95,10 +96,10 @@ def render_includes(includepaths, extra_includes, piece, location=Path('.')):
     os.chdir(old_dir)
 
 
-def render_defs(piece, prefix=Path('.')):
+def render_defs(piece, location=Path('.')):
     """Renders the defs file."""
     template = ENV.get_template('defs.ily')
-    defspath = Path(prefix, 'defs.ily')
+    defspath = Path(location, 'defs.ily')
     render = template.render(piece=piece)
 
     with open(defspath, 'w') as defsfile:
@@ -115,7 +116,6 @@ def make_name_prefix(piece):
     return name_prefix
 
 
-# TODO: clean opus to mutopia style
 def render_score(piece, instruments, lyglobal, path_prefix=Path('.')):
     """Renders the score."""
     template = ENV.get_template('score.ly')

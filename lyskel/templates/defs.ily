@@ -2,7 +2,7 @@
 {% if piece.language %}
 \language "{{ piece.language }}"
 {% endif %}
-% defs.ily - important information for {{ piece.title }}
+% defs.ily - important information for {{ piece.headers.title }}
 
 \header {
   title = "{{ piece.headers.title }}"

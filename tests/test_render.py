@@ -38,3 +38,33 @@ def test_make_instrument(test_ins, test_ins2, test_ins3, piece1, piece2,
     assert os.path.exists(Path(tmpdir,
                                'clarinet_in_bb', 'clarinet_in_bb_3.ily'))
     assert Path('clarinet_in_bb', 'clarinet_in_bb_3.ily') in test3_includes
+
+
+def test_render_includes(piece1, tmpdir):
+    """Test rendering the include file."""
+    includes = [
+        Path('violin1', 'violin1_1.ily'),
+        Path('violin1', 'violin1_2.ily'),
+        Path('violin1', 'violin1_3.ily'),
+    ]
+    render.render_includes(includepaths=includes,
+                           piece=piece1, location=tmpdir)
+    assert os.path.exists(Path(tmpdir, 'includes.ily'))
+    with open(Path(tmpdir, 'includes.ily'), 'r') as includefile:
+        text = includefile.read()
+
+    assert '\\include "violin1/violin1_1.ily"' in text
+    assert '\\include "violin1/violin1_2.ily"' in text
+    assert '\\include "violin1/violin1_3.ily"' in text
+
+
+def test_render_defs(piece1, tmpdir):
+    """Test rendering the defs file."""
+    render.render_defs(piece=piece1, location=tmpdir)
+    assert os.path.exists(Path(tmpdir, 'defs.ily'))
+    with open(Path(tmpdir, 'defs.ily'), 'r') as defsfile:
+        text = defsfile.read()
+
+    assert '\\version "2.' in text
+    assert '\\include "includes.ily"' in text
+    assert 'title = "Test Piece"' in text
