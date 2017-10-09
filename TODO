@@ -1,4 +1,3 @@
-Add opus to headers
 add movement tests
 improve Piece tests
 add test for render_instrument

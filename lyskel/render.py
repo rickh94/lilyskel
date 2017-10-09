@@ -120,7 +120,7 @@ def render_score(piece, instruments, lyglobal, path_prefix=Path('.')):
     """Renders the score."""
     template = ENV.get_template('score.ly')
     name_prefix = make_name_prefix(piece)
-    filename = name_prefix + 'score.ly'
+    filename = name_prefix + '_score.ly'
     render = template.render(piece=piece, filename=filename, lyglobal=lyglobal,
                              instruments=instruments)
     score_path = Path(path_prefix, filename)

@@ -6,10 +6,14 @@ from lyskel import render
 from lyskel import lynames
 
 
+@pytest.fixture
+def lyglobal():
+    return lynames.LyName('global')
+
+
 def test_make_instrument(test_ins, test_ins2, test_ins3, piece1, piece2,
-                         tmpdir):
+                         tmpdir, lyglobal):
     """Test making the files and directory for an instrument."""
-    lyglobal = lynames.LyName('global')
     test1_includes = render.make_instrument(
         instrument=test_ins, lyglobal=lyglobal, piece=piece1, location=tmpdir)
     test2_includes = render.make_instrument(
@@ -68,3 +72,18 @@ def test_render_defs(piece1, tmpdir):
     assert '\\version "2.' in text
     assert '\\include "includes.ily"' in text
     assert 'title = "Test Piece"' in text
+
+
+def test_render_score(piece1, instrument_list1, tmpdir, lyglobal):
+    """Test rendering score file."""
+    render.render_score(piece=piece1, instruments=instrument_list1,
+                        lyglobal=lyglobal, path_prefix=tmpdir)
+    scorepath = Path(tmpdir, 'test_piece_score.ly')
+    assert scorepath.exists()
+    with scorepath.open() as scorefile:
+        text = scorefile.read()
+    assert '\\version "2.' in text
+    assert '\\book' in text
+    assert '\\violin_one_first_mov' in text
+    assert '\\global_third_mov' in text
+    assert 'instrumentName = "Oboe"' in text
