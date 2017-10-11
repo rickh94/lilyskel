@@ -26,6 +26,7 @@ setup(
         'requests',
         'fuzzywuzzy[speedup]',
         'jinja2',
+        'pyyaml'
     ],
     tests_require=['pytest', 'pytest-cov'],
     package=find_packages(),
