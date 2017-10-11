@@ -4,7 +4,7 @@ with open('README.rst') as f:
     long_description = f.read()
 
 setup(
-    name='lililyskel',
+    name='lilyskel',
     version='0.1',
 
     description='Generate a file/directory skeleton for lilypond projects',
