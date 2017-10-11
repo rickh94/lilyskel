@@ -247,6 +247,13 @@ class Movement():
             raise err
 
 
+def _validate_instrument_list(attribute, value):
+    if not isinstance(value, list):
+        raise AttributeError('instrument_list must be a list of instruments.')
+    if not isinstance(value[0], Instrument):
+        raise AttributeError('instrument_list must be a list of instruments.')
+
+
 @attr.s
 class Piece():
     """
@@ -258,6 +265,7 @@ class Piece():
     language = attr.ib(default=None)
     opus = attr.ib(default=None)
     movements = attr.ib(default=[Movement(num=1)])
+    instrument_list = attr.ib(validator=_validate_instrument_list)
 
     @version.validator
     def validate_version(self, attribute, value):
@@ -303,3 +311,7 @@ class Piece():
         vers = matchvers.group(1)
         return cls(name=name, headers=headers, version=vers, language=language,
                    opus=opus, movements=movements)
+
+    def serialize(self):
+        """Serialize internal data for writing to config file."""
+        data = {}

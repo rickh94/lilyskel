@@ -20,3 +20,4 @@ fuzzywuzzy = {extras = ["speedup"]}
 
 pytest = "*"
 "pytest-cov" = "*"
+ptpython = "*"

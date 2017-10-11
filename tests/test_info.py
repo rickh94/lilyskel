@@ -153,10 +153,6 @@ def test_validate_instruments(mutopiaheader1):
                                                                 'instrument'])
 
 
-def test_validate_composer(mutopiaheader1):
-    """Test validation of composer."""
-
-
 class TestHeaders():
     """Test methods and initialization."""
     def test_add_mutopia_headers(self, headers1, mutopiaheader1):
@@ -173,5 +169,6 @@ class TestPiece():
     def test_init_version(self, headers1):
         """Test getting the version number from the system."""
         test = info.Piece.init_version(name='test1', headers=headers1,
-                                       language='english')
+                                       language='english',
+                                       instrument_list=instrument_list_1)
         assert re.match(r'^2.1.*', test.version)
