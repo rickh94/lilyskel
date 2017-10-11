@@ -5,10 +5,10 @@ from pathlib import Path
 import sys
 import attr
 from fuzzywuzzy import process
-from lyskel.lynames import Instrument, Ensemble
-from lyskel import mutopia
-from lyskel import exceptions
-from lyskel import db_interface
+from lilyskel.lynames import Instrument, Ensemble
+from lilyskel import mutopia
+from lilyskel import exceptions
+from lilyskel import db_interface
 # pylint: disable=too-few-public-methods,protected-access
 
 ENCODING = sys.stdout.encoding
@@ -110,6 +110,14 @@ class Composer():
         data = attr.asdict(self)
         comp_table.insert(data)
 
+    @classmethod
+    def load(cls, datadict):
+        """Load info from dict."""
+        newcomp = cls(name=datadict.pop('name'))
+        for key, value in datadict.items():
+            setattr(newcomp, key, value)
+        return newcomp
+
 
 def _validate_mutopia_headers(headers):
     if headers is not None and not isinstance(headers, MutopiaHeaders):
@@ -118,7 +126,7 @@ def _validate_mutopia_headers(headers):
 
 
 @attr.s
-class Headers():
+class Headers(object):
     """Class for storing header info."""
     title = attr.ib()
     composer = attr.ib(default=Composer('Anonymous'),
@@ -155,6 +163,28 @@ class Headers():
         mu_headers.instruments = instruments
         self.copyright = mu_headers.license
         self.mutopiaheaders = mu_headers
+
+    @classmethod
+    def load(cls, datadict):
+        """Load info from dict."""
+        comp = Composer._load(datadict.pop('composer'))
+        try:
+            mutopiaheaders = MutopiaHeaders._load(
+                datadict.pop('mutopiaheaders'))
+        except KeyError:
+            mutopiaheaders = None
+        newheaders = cls(title=datadict.pop('title'), composer=comp,
+                         mutopiaheaders=mutopiaheaders)
+        for key, value in datadict.items():
+            setattr(newheaders, key, value)
+        return newheaders
+
+    def dump(self):
+        """Dump to dict for serialization to yaml/json.
+        Note: This will also serialize the composer object in the composer
+        field.
+        """
+        return attr.asdict(self)
 
 
 def convert_ensemble(instruments):
@@ -220,7 +250,7 @@ class MutopiaHeaders():
         mutopia.validate_mutopia(data=value, field='license')
 
 
-@attr.s
+@attr.s(slots=True)
 class Movement():
     num = attr.ib(validator=attr.validators.instance_of(int))
     tempo = attr.ib(validator=attr.validators.instance_of(str),
@@ -247,25 +277,17 @@ class Movement():
             raise err
 
 
-def _validate_instrument_list(attribute, value):
-    if not isinstance(value, list):
-        raise AttributeError('instrument_list must be a list of instruments.')
-    if not isinstance(value[0], Instrument):
-        raise AttributeError('instrument_list must be a list of instruments.')
-
-
 @attr.s
 class Piece():
     """
     Info for the entire piece.
     """
-    name = attr.ib()
     headers = attr.ib(validator=attr.validators.instance_of(Headers))
     version = attr.ib()
+    instruments = attr.ib()
     language = attr.ib(default=None)
     opus = attr.ib(default=None)
     movements = attr.ib(default=[Movement(num=1)])
-    instrument_list = attr.ib(validator=_validate_instrument_list)
 
     @version.validator
     def validate_version(self, attribute, value):
@@ -300,8 +322,19 @@ class Piece():
         if not isinstance(value[0], Movement):
             raise err
 
+    @instruments.validator
+    def validate_instrument_list(self, attribute, value):
+        if isinstance(value, Ensemble):
+            return
+        if not isinstance(value, list):
+            raise AttributeError(
+                'instrument_list must be a list of instruments.')
+        if not isinstance(value[0], Instrument):
+            raise AttributeError(
+                'instrument_list must be a list of instruments.')
+
     @classmethod
-    def init_version(cls, name, headers, language, opus=None,
+    def init_version(cls, headers, instruments, language=None, opus=None,
                      movements=[Movement(num=1)]):
         """Automatically gets the version number from the system."""
         run_ly = subprocess.run(['lilypond', '--version'],
@@ -309,8 +342,8 @@ class Piece():
         matchvers = re.search(r'LilyPond ([^\n]*)',
                               run_ly.stdout.decode(ENCODING))
         vers = matchvers.group(1)
-        return cls(name=name, headers=headers, version=vers, language=language,
-                   opus=opus, movements=movements)
+        return cls(headers=headers, version=vers, language=language,
+                   opus=opus, movements=movements, instruments=instruments)
 
     def serialize(self):
         """Serialize internal data for writing to config file."""

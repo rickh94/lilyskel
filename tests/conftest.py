@@ -4,14 +4,14 @@ from pathlib import Path
 import pytest
 from jinja2 import Environment, PackageLoader
 from tinydb import TinyDB
-from lyskel import lynames
-from lyskel import info
+from lilyskel import lynames
+from lilyskel import info
 # pylint: disable=redefined-outer-name
 
 
 here = Path(__file__)
 basedir = here.parents[1]
-srcdir = Path(basedir, 'lyskel')
+srcdir = Path(basedir, 'lilyskel')
 
 
 @pytest.fixture(scope='module')
@@ -134,7 +134,7 @@ def instrument_list1(test_ins, test_ins2, test_ins3, test_ins4):
 def jinja_env():
     """Defines a jinja environment loading the default templates."""
     return Environment(
-        loader=PackageLoader('lyskel', 'templates')
+        loader=PackageLoader('lilyskel', 'templates')
     )
 
 

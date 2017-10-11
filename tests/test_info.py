@@ -1,10 +1,10 @@
 """Tests for info classes."""
 import re
 import pytest
-from lyskel import info
-from lyskel import lynames
-from lyskel import exceptions
-from lyskel import db_interface
+from lilyskel import info
+from lilyskel import lynames
+from lilyskel import exceptions
+from lilyskel import db_interface
 
 
 @pytest.fixture

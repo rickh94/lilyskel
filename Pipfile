@@ -14,6 +14,7 @@ requests = "*"
 fuzzywuzzy = {extras = ["speedup"]}
 "jinja2" = "*"
 "e1839a8" = {path = ".", editable = true}
+pyyaml = "*"
 
 
 [dev-packages]

@@ -6,7 +6,7 @@ from tinydb import TinyDB, Query
 from . import exceptions
 
 here = Path(__file__).parents[0]
-def_path = Path(os.path.expanduser('~'), '.local', 'lyskel', 'db.json')
+def_path = Path(os.path.expanduser('~'), '.local', 'lilyskel', 'db.json')
 
 
 def pathify(in_path):

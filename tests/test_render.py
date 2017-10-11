@@ -2,8 +2,8 @@
 import os
 from pathlib import Path
 import pytest
-from lyskel import render
-from lyskel import lynames
+from lilyskel import render
+from lilyskel import lynames
 
 
 @pytest.fixture

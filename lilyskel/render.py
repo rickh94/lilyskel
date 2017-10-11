@@ -5,7 +5,7 @@ from pathlib import Path
 from jinja2 import Environment, PackageLoader
 
 
-ENV = Environment(loader=PackageLoader('lyskel', 'templates'))
+ENV = Environment(loader=PackageLoader('lilyskel', 'templates'))
 FLAGS = {
     'key_in_partname': False,
     'compress_full_bar_rests': False,

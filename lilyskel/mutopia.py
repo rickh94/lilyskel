@@ -1,7 +1,7 @@
 """Functions for scraping mutopia info."""
 import requests
 from bs4 import BeautifulSoup
-from lyskel import exceptions
+from lilyskel import exceptions
 
 SITE = None
 SITE2 = None

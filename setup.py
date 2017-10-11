@@ -4,12 +4,12 @@ with open('README.rst') as f:
     long_description = f.read()
 
 setup(
-    name='lilyskel',
+    name='lililyskel',
     version='0.1',
 
     description='Generate a file/directory skeleton for lilypond projects',
     long_description=long_description,
-    url='https://github.com/rickh94/lilyskel',
+    url='https://github.com/rickh94/lililyskel',
 
     author='Rick Henry',
     author_email='fredericmhenry@gmail.com',

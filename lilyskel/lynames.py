@@ -4,9 +4,9 @@ import attr
 from fuzzywuzzy import process
 from num2words import num2words
 from titlecase import titlecase
-from lyskel import exceptions
-from lyskel import mutopia
-from lyskel.db_interface import load_name_from_table, explore_table
+from lilyskel import exceptions
+from lilyskel import mutopia
+from lilyskel.db_interface import load_name_from_table, explore_table
 
 
 def _normalize(name):
@@ -74,7 +74,7 @@ def _roman_numeral(num):
     return roman_numeral
 
 
-@attr.s
+@attr.s(slots=True)
 class LyName():
     """Common attributes/names"""
     name = attr.ib(convert=_normalize)
@@ -134,7 +134,7 @@ class LyName():
         return prefix + self._movement(mov_num, form='ord')
 
 
-@attr.s
+@attr.s(slots=True)
 class Instrument(LyName):
     """
     Class for Instruments.
@@ -249,6 +249,14 @@ class Instrument(LyName):
         choice, _ = process.extractOne(self.name, instrs)
         self.mutopianame = choice
         return choice
+
+    @classmethod
+    def load(cls, datadict):
+        """Load from a dict."""
+        newins = cls(name=datadict.pop('name'))
+        for key, value in datadict.items():
+            setattr(newins, key, value)
+        return newins
 
 
 @attr.s

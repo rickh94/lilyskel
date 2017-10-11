@@ -1,7 +1,7 @@
 """Tests for functions scraping mutopia."""
 import pytest
-from lyskel import mutopia
-from lyskel import exceptions
+from lilyskel import mutopia
+from lilyskel import exceptions
 # pylint: disable=protected-access
 
 

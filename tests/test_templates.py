@@ -3,8 +3,8 @@ import os
 from pathlib import Path
 import pytest
 from jinja2 import Environment, PackageLoader
-from lyskel import info
-from lyskel import lynames
+from lilyskel import info
+from lilyskel import lynames
 
 
 def test_defs(tmpdir, jinja_env, piece1, piece2):

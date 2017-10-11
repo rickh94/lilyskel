@@ -2,8 +2,8 @@
 from unittest import mock
 import pytest
 from tinydb import TinyDB, Query
-from lyskel import lynames
-from lyskel import exceptions
+from lilyskel import lynames
+from lilyskel import exceptions
 # pylint: disable=protected-access,no-self-use
 
 
@@ -402,7 +402,7 @@ class TestEnsemble():
             raise exceptions.DataNotFoundError('thing not found here')
         # pylint: enable=unused-argument
 
-        monkeypatch.setattr("lyskel.lynames.Instrument.load_from_db",
+        monkeypatch.setattr("lilyskel.lynames.Instrument.load_from_db",
                             raises_data_not_found)
 
         with pytest.raises(exceptions.MissingInstrumentError,

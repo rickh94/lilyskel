@@ -5,13 +5,13 @@ import shutil
 import pytest
 from unittest import mock
 from tinydb import TinyDB
-from lyskel import db_interface
-from lyskel import exceptions
+from lilyskel import db_interface
+from lilyskel import exceptions
 
 home = os.path.join(os.path.expanduser('~'))
 here = Path(__file__)
 basedir = here.parents[1]
-srcdir = Path(basedir, 'lyskel')
+srcdir = Path(basedir, 'lilyskel')
 
 
 class TestPathify():
@@ -33,18 +33,18 @@ class TestPathify():
                                             "proper path object.")
 
 
-@mock.patch('lyskel.db_interface.os.makedirs')
-@mock.patch('lyskel.db_interface.Path.exists')
-@mock.patch('lyskel.db_interface.TinyDB')
+@mock.patch('lilyskel.db_interface.os.makedirs')
+@mock.patch('lilyskel.db_interface.Path.exists')
+@mock.patch('lilyskel.db_interface.TinyDB')
 def test_init_db(mock_db, mock_exists, mock_makedirs):
     """Test database initialization."""
     # test default no directories
     mock_exists.return_value = False
     db_interface.init_db(),
     mock_db.assert_called_once_with(
-        Path(home, '.local', 'lyskel', 'db.json'))
+        Path(home, '.local', 'lilyskel', 'db.json'))
     mock_makedirs.assert_called_once_with(
-        Path(home, '.local', 'lyskel'))
+        Path(home, '.local', 'lilyskel'))
 
     # test without missing directories
     mock_makedirs.reset_mock()
@@ -52,7 +52,7 @@ def test_init_db(mock_db, mock_exists, mock_makedirs):
     mock_exists.return_value = True
     db_interface.init_db(),
     mock_db.assert_called_once_with(
-        Path(home, '.local', 'lyskel', 'db.json'))
+        Path(home, '.local', 'lilyskel', 'db.json'))
     mock_makedirs.assert_not_called()
 
     # test custom
@@ -65,18 +65,18 @@ def test_init_db(mock_db, mock_exists, mock_makedirs):
     mock_makedirs.assert_called_once_with(Path('/one', 'two'))
 
 
-@mock.patch('lyskel.db_interface.os.makedirs')
-@mock.patch('lyskel.db_interface.shutil')
+@mock.patch('lilyskel.db_interface.os.makedirs')
+@mock.patch('lilyskel.db_interface.shutil')
 def test_bootstrap_db(mock_shutil, mock_makedirs):
     """Tests bootstraping the database with the default."""
     # test default db path
     db_interface.bootstrap_db()
     mock_makedirs.assert_called_once_with(
-        Path(home, '.local', 'lyskel'), exist_ok=True
+        Path(home, '.local', 'lilyskel'), exist_ok=True
     )
     mock_shutil.copy2.assert_called_once_with(
         Path(srcdir, 'default_db.json'),
-        Path(home, '.local', 'lyskel', 'db.json')
+        Path(home, '.local', 'lilyskel', 'db.json')
     )
 
 

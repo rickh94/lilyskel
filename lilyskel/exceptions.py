@@ -1,4 +1,4 @@
-"""Custom exceptions for lyskel."""
+"""Custom exceptions for lilyskel."""
 
 
 class DataNotFoundError(KeyError):
