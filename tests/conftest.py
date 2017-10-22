@@ -201,12 +201,12 @@ def three_movs(mov_one_all, mov_two, mov_three):
 
 
 @pytest.fixture
-def piece1(headers1, three_movs, instrument_list):
+def piece1(headers1, three_movs, instrument_list1):
     """A piece with minimal headers."""
     return info.Piece.init_version(language='english',
                                    headers=headers1,
                                    movements=three_movs,
-                                   instruments=instrument_list
+                                   instruments=instrument_list1
                                    )
 
 

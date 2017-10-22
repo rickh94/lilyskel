@@ -79,8 +79,8 @@ class LyName():
     """Common attributes/names"""
     name = attr.ib(convert=_normalize)
     number = attr.ib(init=False, default=None)
-    _numword = attr.ib(init=False, repr=False)
-    _roman = attr.ib(init=False, repr=False)
+    _numword = attr.ib(init=False, repr=False, default='')
+    _roman = attr.ib(init=False, repr=False, default='')
 
     def _movement(self, mov_num, *, form):
         """
@@ -168,10 +168,8 @@ class Instrument(LyName):
         # pylint: disable=no-member
         name = titlecase(' '.join(self.name.split('_')))
         # _roman is only needed if self was initialized with a number.
-        try:
+        if self._roman != '':
             name += ' ' + self._roman
-        except (AttributeError, TypeError):
-            pass
         if not key:
             if ' in ' in name:
                 name = re.sub(' in .*', '', name)
