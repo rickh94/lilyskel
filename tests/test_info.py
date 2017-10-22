@@ -166,9 +166,9 @@ class TestHeaders():
 
 class TestPiece():
     """Test piece methods."""
-    def test_init_version(self, headers1):
+    def test_init_version(self, headers1, instrument_list1):
         """Test getting the version number from the system."""
-        test = info.Piece.init_version(name='test1', headers=headers1,
+        test = info.Piece.init_version(headers=headers1,
                                        language='english',
-                                       instrument_list=instrument_list_1)
+                                       instruments=instrument_list1)
         assert re.match(r'^2.1.*', test.version)
