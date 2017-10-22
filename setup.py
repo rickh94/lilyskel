@@ -1,11 +1,12 @@
 from setuptools import setup, find_packages
+from lilyskel import __version__
 
 with open('README.rst') as f:
     long_description = f.read()
 
 setup(
     name='lilyskel',
-    version='0.1',
+    version=__version__,
 
     description='Generate a file/directory skeleton for lilypond projects',
     long_description=long_description,
