@@ -201,12 +201,12 @@ def three_movs(mov_one_all, mov_two, mov_three):
 
 
 @pytest.fixture
-def piece1(headers1, three_movs):
+def piece1(headers1, three_movs, instrument_list):
     """A piece with minimal headers."""
-    return info.Piece.init_version(name='testpiece1',
-                                   language='english',
+    return info.Piece.init_version(language='english',
                                    headers=headers1,
-                                   movements=three_movs
+                                   movements=three_movs,
+                                   instruments=instrument_list
                                    )
 
 
@@ -217,11 +217,11 @@ def six_movs(mov_one_empty, mov_two, mov_three, mov_four, mov_five, mov_six):
 
 
 @pytest.fixture
-def piece2(headers2, six_movs):
+def piece2(headers2, six_movs, instrument_list1):
     """A piece with more complete headers."""
-    return info.Piece.init_version(name='testpiece2',
-                                   language='english',
+    return info.Piece.init_version(language='english',
                                    headers=headers2,
                                    opus='Op. 15',
-                                   movements=six_movs
+                                   movements=six_movs,
+                                   instruments=instrument_list1
                                    )
