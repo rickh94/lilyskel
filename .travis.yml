@@ -1,3 +1,7 @@
+os:
+  - osx
+  - linux
+
 language: python
 cache: pip
 python:
@@ -7,15 +11,23 @@ python:
   - "3.6.3"
   - "3.7-dev"
 
+matrix:
+  allow_failures:
+    - os: osx
+    - python: "3.7-dev"
+
 addons:
   apt:
     packages:
       - lilypond
+
 before_install:
   - pip install codecov
   - pip install pytest
   - pip install pytest-cov
   - pip install -e .
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew upgrade; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install lilypond; fi
 
 script: python setup.py test
 
