@@ -7,13 +7,16 @@ python:
   - "3.6.3"
   - "3.7-dev"
 
+addons:
+  apt:
+    packages:
+      - lilypond
 before_install:
   - pip install codecov
   - pip install pytest
   - pip install pytest-cov
   - pip install -e .
-  - sudo apt-get -qq update
-  - sudo apt-get install lilypond
+
 script: python setup.py test
 
 after_success:
