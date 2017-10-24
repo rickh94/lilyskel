@@ -376,6 +376,7 @@ class Piece():
         data['opus'] = self.opus
         movements = [mov.dump() for mov in self.movements]
 
+    @classmethod
     def load(cls, datadict):
         """Load class from dict."""
         newclass = cls(
@@ -388,3 +389,4 @@ class Piece():
             movements=[Movement.load(mov)
                        for mov in datadict.pop('movements')],
         )
+        return newclass
