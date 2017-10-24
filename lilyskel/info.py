@@ -287,9 +287,15 @@ class Movement():
                 raise err
         except IndexError:
             pass
-
         if value[1] not in ['major', 'minor']:
             raise err
+
+    @classmethod
+    def load(cls, datadict):
+        newclass = cls(num=datadict.pop('num'))
+        for key, value in datadict.items():
+            setattr(newclass, key, value)
+        return newclass
 
 
 @attr.s
@@ -360,6 +366,25 @@ class Piece():
         return cls(headers=headers, version=vers, language=language,
                    opus=opus, movements=movements, instruments=instruments)
 
-    def serialize(self):
+    def dump(self):
         """Serialize internal data for writing to config file."""
         data = {}
+        data['headers'] = (self.headers.dump())
+        data['version'] = self.version
+        data['instruments'] = [attr.asdict(ins) for ins in self.instruments]
+        data['language'] = self.language
+        data['opus'] = self.opus
+        movements = [mov.dump() for mov in self.movements]
+
+    def load(cls, datadict):
+        """Load class from dict."""
+        newclass = cls(
+            headers=Headers.load(datadict.pop('headers')),
+            version=datadict.pop('version'),
+            instruments=[
+                lynames.Instrument.load(ins)
+                for ins in datadict.pop('instruments')],
+            opus=datadict.pop('opus'),
+            movements=[Movement.load(mov)
+                       for mov in datadict.pop('movements')],
+        )
