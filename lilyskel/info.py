@@ -118,6 +118,9 @@ class Composer():
             setattr(newcomp, key, value)
         return newcomp
 
+    def dump(self):
+        return attr.asdict(self)
+
 
 def _validate_mutopia_headers(headers):
     if headers is not None and not isinstance(headers, MutopiaHeaders):
@@ -167,9 +170,9 @@ class Headers(object):
     @classmethod
     def load(cls, datadict):
         """Load info from dict."""
-        comp = Composer._load(datadict.pop('composer'))
+        comp = Composer.load(datadict.pop('composer'))
         try:
-            mutopiaheaders = MutopiaHeaders._load(
+            mutopiaheaders = MutopiaHeaders.load(
                 datadict.pop('mutopiaheaders'))
         except KeyError:
             mutopiaheaders = None
@@ -180,7 +183,8 @@ class Headers(object):
         return newheaders
 
     def dump(self):
-        """Dump to dict for serialization to yaml/json.
+        """
+        Dump to dict for serialization to yaml/json.
         Note: This will also serialize the composer object in the composer
         field.
         """
@@ -210,9 +214,9 @@ class MutopiaHeaders():
     The headers available for Mutopia project submissions. See www.mutopia.org
     for more details.
     """
-    instrument_list = attr.ib(convert=convert_ensemble)
     source = attr.ib(validator=attr.validators.instance_of(str))
     style = attr.ib()
+    instrument_list = attr.ib(convert=convert_ensemble, default=[])
     license = attr.ib(default='pd', convert=convert_license)
     composer = attr.ib(init=False)
     maintainer = attr.ib(default="Anonymous")
@@ -229,10 +233,13 @@ class MutopiaHeaders():
     @instrument_list.validator
     def validate_instruments(self, attribute, value):
         """Validates a list of instruments."""
-        if isinstance(value, list):
-            if isinstance(value[0], Instrument):
-                return
-        raise TypeError("'instruments' must be a list of instruments")
+        try:
+            if isinstance(value, list):
+                if isinstance(value[0], Instrument):
+                    return
+            raise TypeError("'instruments' must be a list of instruments")
+        except IndexError:
+            return
 
     @style.validator
     def _validate_style(self, attribute, value):
@@ -248,6 +255,14 @@ class MutopiaHeaders():
     def _validate_license(self, attribute, value):
         """Calls validate_mutopia with field 'license'"""
         mutopia.validate_mutopia(data=value, field='license')
+
+    @classmethod
+    def load(cls, datadict):
+        newclass = cls(source=datadict.pop('source'),
+                       style=datadict.pop('style'))
+        for key, value in datadict.items():
+            setattr(newclass, key, value)
+        return newclass
 
 
 @attr.s(slots=True)

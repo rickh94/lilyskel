@@ -1,5 +1,6 @@
 """Tests for info classes."""
 import re
+import attr
 import pytest
 from lilyskel import info
 from lilyskel import lynames
@@ -93,6 +94,18 @@ class TestComposer():
         assert db_interface.explore_table(
             comptable, search=('name', 'Claude Debussy'))
 
+    def test_load_composer(self, bach, debussy, beethoven):
+        """Test dumping and loading composers."""
+        bachdict = bach.dump()
+        debussydict = debussy.dump()
+        beethovendict = beethoven.dump()
+        newbach = info.Composer.load(bachdict)
+        newdebussy = info.Composer.load(debussydict)
+        newbeethoven = info.Composer.load(beethovendict)
+        assert attr.asdict(bach) == attr.asdict(newbach)
+        assert attr.asdict(debussy) == attr.asdict(newdebussy)
+        assert attr.asdict(beethoven) == attr.asdict(newbeethoven)
+
 
 @pytest.fixture
 def random_ens(test_ins, test_ins2, test_ins3, test_ins4):
@@ -162,6 +175,17 @@ class TestHeaders():
             "instruments should have been loaded."
         assert 'Creative' in headers1.copyright,\
             "copyright info should have been overridden"
+
+    def test_headers_load(self, headers1, mutopiaheader1, headers2):
+        newheaders = headers1
+        newheaders.add_mutopia_headers(mutopiaheader1, guess_composer=True)
+        newheadersdict = newheaders.dump()
+        assert newheadersdict['mutopiaheaders']['style'] == 'Baroque'
+        newheaders_loaded = info.Headers.load(newheadersdict)
+        assert attr.asdict(newheaders_loaded) == attr.asdict(newheaders)
+        headers2dict = headers2.dump()
+        headers2_loaded = info.Headers.load(headers2dict)
+        assert attr.asdict(headers2_loaded) == attr.asdict(headers2)
 
 
 class TestPiece():
