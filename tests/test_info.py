@@ -181,11 +181,27 @@ class TestHeaders():
         newheaders.add_mutopia_headers(mutopiaheader1, guess_composer=True)
         newheadersdict = newheaders.dump()
         assert newheadersdict['mutopiaheaders']['style'] == 'Baroque'
-        newheaders_loaded = info.Headers.load(newheadersdict)
-        assert attr.asdict(newheaders_loaded) == attr.asdict(newheaders)
+        instruments1 = [info.Instrument.load(ins) for ins
+                       in newheadersdict['mutopiaheaders']['instrument_list']]
+        newheaders_loaded = info.Headers.load(newheadersdict, instruments1)
+        assert newheaders_loaded.title == newheaders.title
+        assert newheaders_loaded.meter == newheaders.meter
+        assert newheaders_loaded.copyright == newheaders.copyright
+        assert newheaders_loaded.mutopiaheaders.source ==\
+            newheaders.mutopiaheaders.source
+        assert newheaders_loaded.mutopiaheaders.license ==\
+            newheaders.mutopiaheaders.license
         headers2dict = headers2.dump()
-        headers2_loaded = info.Headers.load(headers2dict)
-        assert attr.asdict(headers2_loaded) == attr.asdict(headers2)
+        instruments2 = [info.Instrument.load(ins) for ins
+                        in headers2dict['mutopiaheaders']['instrument_list']]
+        headers2_loaded = info.Headers.load(headers2dict, instruments2)
+        assert headers2_loaded.title == headers2.title
+        assert headers2_loaded.meter == headers2.meter
+        assert headers2_loaded.copyright == headers2.copyright
+        assert headers2_loaded.mutopiaheaders.source == \
+               headers2.mutopiaheaders.source
+        assert headers2_loaded.mutopiaheaders.license == \
+               headers2.mutopiaheaders.license
 
 
 def test_movement_load(six_movs):
@@ -220,4 +236,23 @@ class TestPiece():
         assert piece2dump['movements'][3]['tempo'] == "Adagio"
         assert piece2dump['opus'] == "Op. 15"
         assert piece2dump['headers']['dedication'] == "To my test functions"
+
+    def test_piece_load(self, piece1, piece2):
+        """Test loading piece info."""
+        piece1dict = piece1.dump()
+        piece2dict = piece2.dump()
+        new_piece1 = info.Piece.load(piece1dict)
+        new_piece2 = info.Piece.load(piece2dict)
+        assert new_piece1.opus == piece1.opus
+        assert new_piece1.version == piece1.version
+        assert new_piece1.language == piece1.language
+        assert new_piece1.headers.composer.name == piece1.headers.composer.name
+        assert new_piece1.movements[1].tempo == piece1.movements[1].tempo
+        assert new_piece1.movements[0].key == piece1.movements[0].key
+        assert new_piece2.headers.meter == piece2.headers.meter
+        assert new_piece2.headers.tagline == piece2.headers.tagline
+        assert new_piece2.movements[0].num == piece2.movements[0].num
+        assert new_piece2.headers.copyright == piece2.headers.copyright
+        assert new_piece2.headers.mutopiaheaders.maintainer ==\
+               piece2.headers.mutopiaheaders.maintainer
 

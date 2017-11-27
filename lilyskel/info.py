@@ -146,7 +146,8 @@ class Headers(object):
     copyright = attr.ib(default=None)
     mutopiaheaders = attr.ib(default=None)
 
-    def add_mutopia_headers(self, mu_headers, guess_composer=False):
+    def add_mutopia_headers(self, mu_headers, guess_composer=False,
+                            instruments=None):
         """
         Add mutopia headers.
         Arguments:
@@ -159,29 +160,37 @@ class Headers(object):
         mu_headers.composer = self.composer.get_mutopia_name(
             guess=guess_composer)
         # pylint: enable=no-member
+        print(instruments)
+        if instruments is None:
+            instruments = mu_headers.instrument_list
+        # print(instruments)
 
         # converts list of instruments to mutopia friendly string
         mutopia_instrument_names =\
             [instrument.get_mutopia_name() for
-             instrument in mu_headers.instrument_list]
+             instrument in instruments]
         instruments = ', '.join(mutopia_instrument_names)
         mu_headers.instruments = instruments
         self.copyright = mu_headers.license
         self.mutopiaheaders = mu_headers
 
     @classmethod
-    def load(cls, datadict):
+    def load(cls, datadict, instruments=None):
         """Load info from dict."""
+        mutopiaheaders = None
         comp = Composer.load(datadict.pop('composer'))
         try:
-            mutopiaheaders = MutopiaHeaders.load(
-                datadict.pop('mutopiaheaders'))
+            if datadict['mutopiaheaders']:
+                mutopiaheaders = MutopiaHeaders.load(
+                    datadict.pop('mutopiaheaders'))
         except KeyError:
             mutopiaheaders = None
-        newheaders = cls(title=datadict.pop('title'), composer=comp,
-                         mutopiaheaders=mutopiaheaders)
+        newheaders = cls(title=datadict.pop('title'), composer=comp)
         for key, value in datadict.items():
             setattr(newheaders, key, value)
+        if mutopiaheaders:
+            newheaders.add_mutopia_headers(mutopiaheaders,
+                                           instruments=instruments)
         return newheaders
 
     def dump(self):
@@ -365,8 +374,10 @@ class Piece():
 
     @classmethod
     def init_version(cls, headers, instruments, language=None, opus=None,
-                     movements=[Movement(num=1)]):
+                     movements=None):
         """Automatically gets the version number from the system."""
+        if movements is None:
+            movements=[Movement(num=1)]
         run_ly = subprocess.run(['lilypond', '--version'],
                                 stdout=subprocess.PIPE)
         matchvers = re.search(r'LilyPond ([^\n]*)',
@@ -389,14 +400,15 @@ class Piece():
     @classmethod
     def load(cls, datadict):
         """Load class from dict."""
+        instruments = [Instrument.load(ins)
+                       for ins in datadict.pop('instruments')]
         newclass = cls(
-            headers=Headers.load(datadict.pop('headers')),
+            headers=Headers.load(datadict.pop('headers'), instruments),
             version=datadict.pop('version'),
-            instruments=[
-                lynames.Instrument.load(ins)
-                for ins in datadict.pop('instruments')],
+            instruments=instruments,
             opus=datadict.pop('opus'),
             movements=[Movement.load(mov)
                        for mov in datadict.pop('movements')],
+            language=datadict.pop('language')
         )
         return newclass
