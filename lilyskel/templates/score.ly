@@ -66,3 +66,5 @@
   }
 {% endfor %}
 {%- endblock %}
+
+{# vim: se ft=lilypond: #}

@@ -65,4 +65,4 @@
 
 \include "includes.ily"
 
-{# vim se: tw=1000: #}
+{# vim: se ft=lilypond tw=1000: #}

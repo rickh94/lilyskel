@@ -38,3 +38,5 @@
   {%- endif %}
 }
 {% endif %}
+
+{# vim: se ft=lilypond: #}

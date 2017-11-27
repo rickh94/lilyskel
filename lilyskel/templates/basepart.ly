@@ -29,3 +29,5 @@
     {%- endblock %}
   }
 }
+
+{# vim: se ft=lilypond :#}

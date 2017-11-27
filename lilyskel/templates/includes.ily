@@ -15,3 +15,5 @@
 {%- for item in includepaths %}
 \include "{{ item }}"
 {%- endfor %}
+
+{# vim: se ft=lilypond: #}
