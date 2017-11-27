@@ -83,7 +83,6 @@ class Composer():
             comps = [comps]
         for item in comps:
             if name_parts[0] in item:
-                print(item)
                 data = db_interface.load_name_from_table(item, db=db,
                                                          tablename='composers')
                 name = data['name']
@@ -160,10 +159,8 @@ class Headers(object):
         mu_headers.composer = self.composer.get_mutopia_name(
             guess=guess_composer)
         # pylint: enable=no-member
-        print(instruments)
         if instruments is None:
             instruments = mu_headers.instrument_list
-        # print(instruments)
 
         # converts list of instruments to mutopia friendly string
         mutopia_instrument_names =\
