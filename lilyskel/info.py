@@ -303,6 +303,9 @@ class Movement:
             setattr(newclass, key, value)
         return newclass
 
+    def dump(self):
+        return attr.asdict(self)
+
 
 @attr.s
 class Piece():
@@ -380,7 +383,8 @@ class Piece():
         data['instruments'] = [attr.asdict(ins) for ins in self.instruments]
         data['language'] = self.language
         data['opus'] = self.opus
-        movements = [mov.dump() for mov in self.movements]
+        data['movements'] = [mov.dump() for mov in self.movements]
+        return data
 
     @classmethod
     def load(cls, datadict):

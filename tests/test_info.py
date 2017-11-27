@@ -188,6 +188,17 @@ class TestHeaders():
         assert attr.asdict(headers2_loaded) == attr.asdict(headers2)
 
 
+def test_movement_load(six_movs):
+    """Test loading movements from a dict"""
+    for mov in six_movs:
+        mov_dict = mov.dump()
+        new_mov = info.Movement.load(mov_dict)
+        assert mov.num == new_mov.num, "movement numbers should match"
+        assert mov.tempo == new_mov.tempo, "tempos should match"
+        assert mov.time == new_mov.time, "time signatures should match"
+        assert mov.key == new_mov.key, "keys should match"
+
+
 class TestPiece():
     """Test piece methods."""
     def test_init_version(self, headers1, instrument_list1):
@@ -197,13 +208,16 @@ class TestPiece():
                                        instruments=instrument_list1)
         assert re.match(r'^2.1.*', test.version)
 
+    def test_piece_dump(self, piece1, piece2):
+        """Test dumping piece info."""
+        piece1dump = piece1.dump()
+        piece2dump = piece2.dump()
+        assert "2.1" in piece1dump['version']
+        assert piece1dump['movements'][0]['num'] == 1
+        assert piece1dump['headers']['title'] == "Test Piece"
+        assert piece1dump['instruments'][0]['name'] == "violin"
+        assert piece2dump['headers']['composer']['name'] == "Claude Debussy"
+        assert piece2dump['movements'][3]['tempo'] == "Adagio"
+        assert piece2dump['opus'] == "Op. 15"
+        assert piece2dump['headers']['dedication'] == "To my test functions"
 
-def test_movement_load(six_movs):
-    """Test loading movements from a dict"""
-    for mov in six_movs:
-        mov_dict = attr.asdict(mov)
-        new_mov = info.Movement.load(mov_dict)
-        assert mov.num == new_mov.num, "movement numbers should match"
-        assert mov.tempo == new_mov.tempo, "tempos should match"
-        assert mov.time == new_mov.time, "time signatures should match"
-        assert mov.key == new_mov.key, "keys should match"
