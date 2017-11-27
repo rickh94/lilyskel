@@ -1,4 +1,5 @@
 """Classes for files and file info."""
+from collections import namedtuple
 import re
 import subprocess
 from pathlib import Path
@@ -12,6 +13,7 @@ from lilyskel import db_interface
 # pylint: disable=too-few-public-methods,protected-access
 
 ENCODING = sys.stdout.encoding
+KeySignature = namedtuple('KeySignature', ['note', 'mode'])
 
 
 @attr.s
@@ -265,34 +267,38 @@ class MutopiaHeaders():
         return newclass
 
 
+def convert_key(keyinfo):
+    return KeySignature(keyinfo[0], keyinfo[1])
+
+
 @attr.s(slots=True)
-class Movement():
+class Movement:
     num = attr.ib(validator=attr.validators.instance_of(int))
     tempo = attr.ib(validator=attr.validators.instance_of(str),
                     default='')
     time = attr.ib(validator=attr.validators.instance_of(str),
                    default='')
-    key = attr.ib(default=('c', 'major'))
+    key = attr.ib(convert=convert_key, default=('c', 'major'))
 
     @key.validator
     def validate_key(self, attribute, value):
         """Validate key."""
         err = AttributeError("'key' must be tuple of note and major or minor")
-        if not isinstance(value, tuple):
+        if not isinstance(value, KeySignature):
             raise err
-        if value[0][0] not in ['a', 'b', 'c', 'd', 'e', 'f', 'g']:
+        if value.note[0] not in ['a', 'b', 'c', 'd', 'e', 'f', 'g']:
             raise err
         try:
-            if value[0][1] not in ['f', 'b']:
+            if value.note[1] not in ['f', 'b']:
                 raise err
         except IndexError:
             pass
-        if value[1] not in ['major', 'minor']:
+        if value.mode not in ['major', 'minor']:
             raise err
 
     @classmethod
     def load(cls, datadict):
-        newclass = cls(num=datadict.pop('num'))
+        newclass = cls(num=datadict.pop('num'), key=datadict.pop('key'))
         for key, value in datadict.items():
             setattr(newclass, key, value)
         return newclass

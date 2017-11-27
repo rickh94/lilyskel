@@ -196,3 +196,14 @@ class TestPiece():
                                        language='english',
                                        instruments=instrument_list1)
         assert re.match(r'^2.1.*', test.version)
+
+
+def test_movement_load(six_movs):
+    """Test loading movements from a dict"""
+    for mov in six_movs:
+        mov_dict = attr.asdict(mov)
+        new_mov = info.Movement.load(mov_dict)
+        assert mov.num == new_mov.num, "movement numbers should match"
+        assert mov.tempo == new_mov.tempo, "tempos should match"
+        assert mov.time == new_mov.time, "time signatures should match"
+        assert mov.key == new_mov.key, "keys should match"
