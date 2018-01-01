@@ -199,9 +199,9 @@ class TestHeaders():
         assert headers2_loaded.meter == headers2.meter
         assert headers2_loaded.copyright == headers2.copyright
         assert headers2_loaded.mutopiaheaders.source == \
-               headers2.mutopiaheaders.source
+           headers2.mutopiaheaders.source
         assert headers2_loaded.mutopiaheaders.license == \
-               headers2.mutopiaheaders.license
+           headers2.mutopiaheaders.license
 
 
 def test_movement_load(six_movs):
@@ -253,6 +253,5 @@ class TestPiece():
         assert new_piece2.headers.tagline == piece2.headers.tagline
         assert new_piece2.movements[0].num == piece2.movements[0].num
         assert new_piece2.headers.copyright == piece2.headers.copyright
-        assert new_piece2.headers.mutopiaheaders.maintainer ==\
-               piece2.headers.mutopiaheaders.maintainer
-
+        assert new_piece2.headers.mutopiaheaders.maintainer == \
+           piece2.headers.mutopiaheaders.maintainer

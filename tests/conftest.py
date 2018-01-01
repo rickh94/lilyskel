@@ -6,7 +6,6 @@ from jinja2 import Environment, PackageLoader
 from tinydb import TinyDB
 from lilyskel import lynames
 from lilyskel import info
-# pylint: disable=redefined-outer-name
 
 
 here = Path(__file__)

@@ -18,7 +18,6 @@ def test_make_instrument(test_ins, test_ins2, test_ins3, piece1, piece2,
         instrument=test_ins, lyglobal=lyglobal, piece=piece1, location=tmpdir)
     test2_includes = render.make_instrument(
         instrument=test_ins2, lyglobal=lyglobal, piece=piece1, location=tmpdir)
-    flags3 = {'key_in_partname': True, 'compress_full_bar_rests': True}
     test3_includes = render.make_instrument(
         instrument=test_ins3, lyglobal=lyglobal, piece=piece2, location=tmpdir)
 

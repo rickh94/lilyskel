@@ -10,21 +10,19 @@ from lilyskel.lynames import Instrument, Ensemble
 from lilyskel import mutopia
 from lilyskel import exceptions
 from lilyskel import db_interface
-# pylint: disable=too-few-public-methods,protected-access
 
 ENCODING = sys.stdout.encoding
 KeySignature = namedtuple('KeySignature', ['note', 'mode'])
 
 
 @attr.s
-class Composer():
+class Composer:
     """Stores and formats information about a composer."""
     name = attr.ib(validator=attr.validators.instance_of(str))
     mutopianame = attr.ib(default=None)
     shortname = attr.ib(default=None)
 
     def get_short_name(self):
-        # pylint: disable=no-member,unsubscriptable-object
         """Returns shortened composer name. Generates if not present."""
         if self.shortname is not None:
             return self.shortname
@@ -41,7 +39,6 @@ class Composer():
         self.shortname = sname
         return sname
 
-        # pylint: enable=no-member,unsubscriptable-object
 
     def get_mutopia_name(self, guess=False):
         """
@@ -54,9 +51,7 @@ class Composer():
             return self.mutopianame
         elif guess:
             mutopia_composers = mutopia._get_composers()
-            # pylint: disable=no-member
             namelist = self.name.split()
-            # pylint: enable=no-member
             lname = namelist.pop()
             name, _ = process.extractOne(self.name, mutopia_composers)
             if lname not in name:
@@ -217,7 +212,7 @@ def convert_license(license_):
 
 
 @attr.s
-class MutopiaHeaders():
+class MutopiaHeaders:
     """
     The headers available for Mutopia project submissions. See www.mutopia.org
     for more details.

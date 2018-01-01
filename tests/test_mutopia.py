@@ -2,7 +2,6 @@
 import pytest
 from lilyskel import mutopia
 from lilyskel import exceptions
-# pylint: disable=protected-access
 
 
 def test_scrape_mutopia():
