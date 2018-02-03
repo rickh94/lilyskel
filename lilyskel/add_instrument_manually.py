@@ -10,6 +10,8 @@ def add_instrument():
     name = input("Instrument Name (lower): ")
     abbr = input("Instrument Abbreviation: ")
     clef = input("Instrument clef: ") or "treble"
+    if ' ' in clef:
+        clef = clef.split()
     transposition = input("Transposition: ") or None
     keyboard = bool(input("Keyboard? ")) or False
     midi = input("Midi instrument name: ")
@@ -26,10 +28,11 @@ def add_instrument():
         mutopianame=mutopianame
     )
     print(new_ins)
-    add = input("Correct? [y/N]")
+    add = input("Correct? [y/N] ")
     if add[0].lower() == 'y':
         new_ins.add_to_db(db)
     return
+
 
 if __name__ == '__main__':
     add_instrument()
