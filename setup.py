@@ -28,6 +28,8 @@ setup(
         'fuzzywuzzy[speedup]',
         'jinja2',
         'ruamel.yaml',
+        'click',
+        'prompt-toolkit',
     ],
     tests_require=['pytest', 'pytest-cov'],
     package=find_packages(),
