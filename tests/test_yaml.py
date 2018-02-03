@@ -25,3 +25,10 @@ def test_read_write_piece(piece1, piece2, tmpdir):
     yaml_interface.write_config(testfile2, piece2)
     piece2read = yaml_interface.read_config(testfile2)
     assert piece2read.dump() == piece2data, "other piece should work"
+
+
+def test_empty_piece(tmpdir):
+    testfile3 = Path(tmpdir, "testfile3.yaml")
+    testfile3.open("w").close()
+    with pytest.raises(ValueError):
+        yaml_interface.read_config(testfile3)

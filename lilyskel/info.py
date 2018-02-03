@@ -380,21 +380,21 @@ class Piece():
 
     def dump(self):
         """Serialize internal data for writing to config file."""
-        data = {}
-        data['headers'] = (self.headers.dump())
-        data['version'] = self.version
-        data['instruments'] = [attr.asdict(ins) for ins in self.instruments]
-        data['language'] = self.language
-        data['opus'] = self.opus
-        data['movements'] = [mov.dump() for mov in self.movements]
-        return data
+        return {
+            "headers" : self.headers.dump(),
+            "version": self.version,
+            "instruments": [attr.asdict(ins) for ins in self.instruments],
+            "language": self.language,
+            "opus": self.opus,
+            "movements": [mov.dump() for mov in self.movements]
+        }
 
     @classmethod
     def load(cls, datadict):
         """Load class from dict."""
         instruments = [Instrument.load(ins)
                        for ins in datadict.pop('instruments')]
-        newclass = cls(
+        return cls(
             headers=Headers.load(datadict.pop('headers'), instruments),
             version=datadict.pop('version'),
             instruments=instruments,
@@ -403,4 +403,3 @@ class Piece():
                        for mov in datadict.pop('movements')],
             language=datadict.pop('language')
         )
-        return newclass
