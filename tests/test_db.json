@@ -1,0 +1,109 @@
+{
+    "_default": {},
+    "instruments": {
+        "1": {
+            "name": "violin",
+            "abbr": "Vln.",
+            "clef": "treble",
+            "transposition": null,
+            "keyboard": false,
+            "midi": "violin",
+            "family": "strings"
+        },
+        "2": {
+            "name": "viola",
+            "abbr": "Vla.",
+            "clef": "alto",
+            "transposition": null,
+            "keyboard": false,
+            "midi": "viola",
+            "family": "strings"
+        },
+        "3": {
+            "name": "violoncello",
+            "abbr": "Vc.",
+            "clef": "bass",
+            "transposition": null,
+            "keyboard": false,
+            "midi": "cello",
+            "family": "strings"
+        },
+        "4": {
+            "name": "double_bass",
+            "abbr": "Cb.",
+            "clef": "bass",
+            "transposition": null,
+            "keyboard": false,
+            "midi": "contrabass",
+            "family": "strings"
+        },
+        "5": {
+            "name": "contrabass",
+            "abbr": "Cb.",
+            "clef": "bass",
+            "transposition": null,
+            "keyboard": false,
+            "midi": "contrabass",
+            "family": "strings"
+        },
+        "6": {
+            "name": "piano",
+            "abbr": "Pno.",
+            "clef": [
+                "treble",
+                "bass"
+            ],
+            "transposition": null,
+            "keyboard": true,
+            "midi": "grand piano",
+            "family": "keyboards"
+        }
+    },
+    "ensembles": {
+        "1": {
+            "name": "string_quartet",
+            "instruments": [
+                {
+                    "name": "violin",
+                    "number": 1
+                },
+                {
+                    "name": "violin",
+                    "number": 2
+                },
+                {
+                    "name": "viola",
+                    "number": null
+                },
+                {
+                    "name": "violoncello",
+                    "number": null
+                }
+            ]
+        },
+        "2": {
+            "name": "piano_trio",
+            "instruments": [
+                {
+                    "name": "piano",
+                    "number": null
+                },
+                {
+                    "name": "violin",
+                    "number": null
+                },
+                {
+                    "name": "violoncello",
+                    "number": null
+                }
+            ]
+        }
+    },
+    "composers": {
+        "1": {
+            "name": "Johann Sebastian Bach",
+            "mutopianame": "BachJS",
+            "shortname": "J.S. Bach"
+        }
+    }
+}

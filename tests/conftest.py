@@ -17,8 +17,8 @@ srcdir = Path(basedir, 'lilyskel')
 def livedb(tmpdir_factory):
     """A live database with data."""
     tmpdir_ = tmpdir_factory.mktemp('livedb')
-    shutil.copy2(Path(srcdir, 'default_db.json'), Path(tmpdir_))
-    return TinyDB(Path(tmpdir_, 'default_db.json'))
+    shutil.copy2(Path(basedir, 'tests', 'test_db.json'), Path(tmpdir_))
+    return TinyDB(Path(tmpdir_, 'test_db.json'))
 
 
 @pytest.fixture
