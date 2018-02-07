@@ -39,7 +39,6 @@ class Composer:
         self.shortname = sname
         return sname
 
-
     def get_mutopia_name(self, guess=False):
         """
         Get the mutopia name for a composer.

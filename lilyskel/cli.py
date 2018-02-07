@@ -19,7 +19,7 @@ def cli():
 @click.argument("filename", required=True, help=(
     "Name of the configuration file for this project."
 ))
-@click.argument("--path", "-p", default=".", help=(
+@click.option("--path", "-p", default=".", help=(
         "path to new directory, defaults to current working directory."))
 def init(filename, path):
     if ".yaml" not in filename:
@@ -35,7 +35,7 @@ def init(filename, path):
 
 
 @cli.command()
-@click.argument("-f", "--file", required=False,
+@click.option("-f", "--file", required=False,
                 help="Path to yaml config file for project.")
 def edit(filepath):
     if not filepath:

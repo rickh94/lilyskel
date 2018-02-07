@@ -1,4 +1,5 @@
 """Custom exceptions for lilyskel."""
+import better_exceptions
 
 
 class DataNotFoundError(KeyError):
