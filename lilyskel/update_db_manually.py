@@ -68,5 +68,13 @@ def composer(name):
     print(newrec)
 
 
+@cli.command()
+@click.argument("table", required=True)
+@click.argument("field", required=True)
+@click.argument("term", required=True)
+def search(table, field, term):
+    print(db_interface.explore_table(db.table(table), search=(field, term)))
+
+
 if __name__ == '__main__':
     cli()
