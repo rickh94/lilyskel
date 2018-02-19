@@ -34,4 +34,9 @@ setup(
     ],
     tests_require=['pytest', 'pytest-cov'],
     package=find_packages(),
+    entry_points={
+        'console_scripts': [
+                       'lilyskel=lilyskel.cli:cli',
+        ],
+    },
 )
