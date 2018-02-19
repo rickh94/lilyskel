@@ -30,6 +30,7 @@ setup(
         'ruamel.yaml',
         'click',
         'prompt-toolkit',
+        'better_exceptions'
     ],
     tests_require=['pytest', 'pytest-cov'],
     package=find_packages(),
