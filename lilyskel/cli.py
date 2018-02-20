@@ -11,6 +11,8 @@ from lilyskel import yaml_interface
 
 TEMP = tempfile.gettempdir()
 PATHSAVE = Path(TEMP, "lilyskel_path")
+BOLD = "\033[1m"
+END = "\033[0m"
 
 @click.group()
 def cli():
@@ -49,10 +51,10 @@ def edit(file_path):
             file_path = prompt("No path specified or saved. Please enter the path "
                    "to the config file. ")
     try:
-        piece = yaml_interface.read_config(file_path)
-    except (ValueError, FileNotFoundError):
+        piece = yaml_interface.read_config(Path(file_path))
+    except (ValueError, FileNotFoundError, AttributeError):
         piece = None
-    edit_prompt(piece, file_path)
+    edit_prompt(piece, Path(file_path))
 
 
 def edit_prompt(piece, config_path):
@@ -64,14 +66,15 @@ def edit_prompt(piece, config_path):
     """
     print(config_path)
     help = (
-        "You can now add score information. Available modes are:\n"
-        "header: add title, composer, etc.\n"
-        "instrument: add/remove/re-order individual instruments "
+        "\nYou can now add score information. Available modes are:\n"
+        f"{BOLD}header:{END}\t\tadd title, composer, etc.\n"
+        f"{BOLD}instrument:{END}\tadd/remove/re-order individual instruments "
         "in the score\n"
-        "ensemble: add an ensemble to the score\n"
-        "movement: add/remove movements (including time, key, and tempo info\n"
-        "quit: write out file and exit\n"
-        "help: print this message\n"
+        f"{BOLD}ensemble:{END}\tadd an ensemble to the score\n"
+        f"{BOLD}movement:{END}\tadd/remove movements (including time, key, "
+        f"and tempo info\n"
+        f"{BOLD}quit:{END}\t\twrite out file and exit\n"
+        f"{BOLD}help:{END}\t\tprint this message\n"
     )
     try:
         opus = piece.opus
@@ -84,5 +87,10 @@ def edit_prompt(piece, config_path):
         except AttributeError:
             command = prompt("Untitled> ")
         if command[0].lower() == 'q':
-            os.remove(PATHSAVE)
+            try:
+                os.remove(PATHSAVE)
+            except FileNotFoundError:
+                pass
             raise SystemExit(0)
+        elif command.lower() == "help":
+            print(help)
