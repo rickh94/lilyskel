@@ -61,10 +61,10 @@ def explore_table(table, search=None):
     """
     Explore a table in the database.
 
-    Arguments:
-        table: the table to search.
-        search: (optional) a tuple of (field, search_term) to search for in the
+     :param table: the tinydb table object to search.
+     :param search: (optional) a tuple of (field, search_term) to search for in the
         table.
+    :return: results of the search
     """
     founditems = []
     if search is None:
