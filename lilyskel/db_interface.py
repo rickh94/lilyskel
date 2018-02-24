@@ -18,7 +18,7 @@ def pathify(in_path):
     return Path(in_path)
 
 
-def init_db(path):
+def init_db(path=None):
     """
     Initializes the database.
     :param path: (optional) the path of the database.
@@ -32,7 +32,7 @@ def init_db(path):
     return TinyDB(path)
 
 
-def bootstrap_db(path):
+def bootstrap_db(path=None):
     """
     Bootstraps the database from included defaults.
     :param path: (optional) the destination of the database.
@@ -84,10 +84,10 @@ def explore_table(table, search=None):
         except AttributeError as err:
             raise TypeError("table may not be a tinydb table ", err)
     for item in items:
-        try:
+        if "name" in item:
             founditems.append(item['name'])
-        except KeyError:
-            pass
+        elif "word" in item:
+            founditems.append(item['word'])
     return founditems
 
 

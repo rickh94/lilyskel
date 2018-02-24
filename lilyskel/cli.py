@@ -105,13 +105,15 @@ def edit_prompt(piece, config_path, db):
             command = prompt(piece["headers"].title + "> ")
         except (AttributeError, KeyError, TypeError):
             command = prompt("Untitled> ")
+        if len(command) == 0:
+            continue
         if command[0].lower() == 'q':
             try:
                 os.remove(PATHSAVE)
             except FileNotFoundError:
                 pass
             raise SystemExit(0)
-        elif command.lower() == "help":
+        elif command.lower().strip() == "help":
             print(help)
         elif "header" in command.lower():
             edit_header(infodict, db)
@@ -136,7 +138,30 @@ def edit_header(infodict, db):
         composer = composer_prompt(db)
         title = prompt("Enter Title: ", completer=titlewords)
         infodict["headers"] = info.Headers(title=title, composer=composer)
-    print(infodict["headers"])
+    while 1:
+        # DEBUG LINE
+        print(infodict["headers"])
+        field = prompt("Headers> ")
+        if len(field) == 0:
+            continue
+        if field.lower().strip() == "title":
+            title = prompt(
+                "Current title is \"{}\" enter a new title or press "
+                "enter to keep the current one: ".format(
+                    infodict["headers"].title
+                )
+            )
+            if len(title) != 0:
+                infodict["headers"].title = title
+        elif "comp" in field.lower():
+            yn = prompt("Current composer is {}. Would you like to change it? "
+                        "[y/N] ".format(
+                infodict["headers"].composer.name
+            ), default='N')
+            if yn.lower()[0] == 'y':
+                infodict["headers"].composer = composer_prompt(db)
+        # elif "mutopia" in field.lower():
+        #     infodict["headers"].mutopiaheaders = mutopia_prompt(db, )
 
 
 def composer_prompt(db):
