@@ -18,24 +18,27 @@ def pathify(in_path):
     return Path(in_path)
 
 
-def init_db(path=def_path):
+def init_db(path):
     """
     Initializes the database.
-    Arguments:
-        path: (optional) the path of the database.
+    :param path: (optional) the path of the database.
+    :return: TinyDB of common instruments and composers
     """
+    if path is None:
+        path = def_path
     path = pathify(path)
     if not path.parents[0].exists():
         os.makedirs(path.parents[0])
     return TinyDB(path)
 
 
-def bootstrap_db(path=def_path):
+def bootstrap_db(path):
     """
     Bootstraps the database from included defaults.
-    Arguments:
-        path: (optional) the destination of the database.
+    :param path: (optional) the destination of the database.
     """
+    if path is None:
+        path = def_path
     path = pathify(path)
     os.makedirs(path.parents[0], exist_ok=True)
     # grab the included default database

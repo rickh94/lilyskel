@@ -7,7 +7,7 @@ import tempfile
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter
 
-from lilyskel import yaml_interface
+from lilyskel import yaml_interface, info, db_interface
 
 TEMP = tempfile.gettempdir()
 PATHSAVE = Path(TEMP, "lilyskel_path")
@@ -42,7 +42,9 @@ def init(filename, path):
 @cli.command()
 @click.option("-f", "--file-path", required=False,
                 help="Path to yaml config file for project.")
-def edit(file_path):
+@click.option("-d", "--db-path", required=False, default=None,
+              help="Path to tinydb.")
+def edit(file_path, db_path):
     if not file_path:
         try:
             with open(PATHSAVE, "r") as savepath:
@@ -54,10 +56,20 @@ def edit(file_path):
         piece = yaml_interface.read_config(Path(file_path))
     except (ValueError, FileNotFoundError, AttributeError):
         piece = None
-    edit_prompt(piece, Path(file_path))
+    db = db_interface.init_db(db_path)
+    tables = db_interface.explore_db(db)
+    if "composers" not in tables or "instruments" not in tables:
+        bootstrap = prompt("Lilyskel supports a small database to help with "
+                           "commonly used items (such as instruments and "
+                           "composers). You do not appear to have one. "
+                           "Would you like to copy the included one? [Y/n]",
+                           default='Y')
+        if bootstrap.lower()[0] == 'y':
+            db_interface.bootstrap_db(db_path)
+    edit_prompt(piece, Path(file_path), db)
 
 
-def edit_prompt(piece, config_path):
+def edit_prompt(piece, config_path, db):
     """
     edit_prompt is the prompt for editing the configuration in the command line
     :param piece: the data from the piece currently being worked on
@@ -76,15 +88,22 @@ def edit_prompt(piece, config_path):
         f"{BOLD}quit:{END}\t\twrite out file and exit\n"
         f"{BOLD}help:{END}\t\tprint this message\n"
     )
-    try:
-        opus = piece.opus
-    except AttributeError:
-        opus = prompt("Please enter an opus or catalog number or the piece: ")
+    infodict = {}
+    if isinstance(piece, info.Piece):
+        infodict = {
+            "headers": piece.headers,
+            "instruments": piece.instruments,
+            "opus": piece.opus,
+            "movements": piece.movements,
+        }
+    if "opus" not in infodict:
+        infodict["opus"] = prompt(
+            "Please enter an opus or catalog number or the piece: ")
     print(help)
     while 1:
         try:
-            command = prompt(piece.headers.title + "> ")
-        except AttributeError:
+            command = prompt(piece["headers"].title + "> ")
+        except (AttributeError, KeyError, TypeError):
             command = prompt("Untitled> ")
         if command[0].lower() == 'q':
             try:
@@ -94,3 +113,42 @@ def edit_prompt(piece, config_path):
             raise SystemExit(0)
         elif command.lower() == "help":
             print(help)
+        elif "header" in command.lower():
+            edit_header(infodict, db)
+        elif command.lower()[0] == 'i':
+            edit_instruments(infodict, db)
+
+
+def edit_header(infodict, db):
+    help = (
+        "You may edit any of the following headers:\n"
+        "title\t\tcomposer\n"
+        "dedication\t\tsubtitle\n"
+        "subsubtitle\tpoet\n"
+        "meter\t\tarranger\n"
+        "tagline\t\tcopyright\n"
+        "You may also enter \"mutopia\" to enter headers for submission"
+        "to the mutopia project or \"done\" to finish."
+    )
+    titlewords = WordCompleter(db_interface.explore_table(
+        db.table("titlewords"), search=("word", "")))
+    if "headers" not in infodict:
+        composer = composer_prompt(db)
+        title = prompt("Enter Title: ", completer=titlewords)
+        infodict["headers"] = info.Headers(title=title, composer=composer)
+    print(infodict["headers"])
+
+
+def composer_prompt(db):
+    composers = db_interface.explore_table(db.table("composers"),
+                                           search=("name", ""))
+    composer_completer = WordCompleter(composers)
+    comp = prompt("Enter Composer: ", completer=composer_completer)
+    if comp in composers:
+        load = prompt(f"{comp} is in the database, would you like to load it? "
+                      "[Y/n] ", default='Y')
+        if load.lower()[0] == 'y':
+            return info.Composer.load_from_db(comp, db)
+    # TODO: add guessing of mutopianame etc.
+    return info.Composer(comp)
+
