@@ -78,7 +78,7 @@ def table(name):
 @cli.command()
 @click.argument("table")
 @click.argument("infile")
-def add_from_file(table, infile):
+def addfromfile(table, infile):
     """
     Adds data to a table from the lines of a file
     :param table:
@@ -87,11 +87,11 @@ def add_from_file(table, infile):
     """
     with open(infile, "r") as data:
         items = data.readlines()
-
     table_obj = db.table(table)
     for item in items:
-        table_obj.insert({"word": item})
-        print(db_interface.explore_table(table_obj, search=("word", item)))
+        table_obj.insert({"word": item.strip()})
+
+    print(table_obj.all())
 
 
 
