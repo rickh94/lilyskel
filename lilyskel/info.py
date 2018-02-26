@@ -200,16 +200,6 @@ def convert_ensemble(instruments):
     return instruments
 
 
-def convert_license(license_):
-    """Returns the proper name of the license."""
-    licenses = {
-        'cc4':  'Creative Commons Attribution 4.0',
-        'ccsa4': 'Creative Commons Attribution-ShareAlike 4.0',
-        'pd': 'Public Domain'
-    }
-    return licenses.get(license_)
-
-
 @attr.s
 class MutopiaHeaders:
     """
@@ -219,7 +209,7 @@ class MutopiaHeaders:
     source = attr.ib(validator=attr.validators.instance_of(str))
     style = attr.ib()
     instrument_list = attr.ib(convert=convert_ensemble, default=[])
-    license = attr.ib(default='pd', convert=convert_license)
+    license = attr.ib(default='Public Domain')
     composer = attr.ib(init=False)
     maintainer = attr.ib(default="Anonymous")
     maintainerEmail = attr.ib(default=None)

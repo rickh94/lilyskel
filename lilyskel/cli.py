@@ -7,12 +7,13 @@ import tempfile
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter
 
-from lilyskel import yaml_interface, info, db_interface
+from lilyskel import yaml_interface, info, db_interface, mutopia
 
 TEMP = tempfile.gettempdir()
 PATHSAVE = Path(TEMP, "lilyskel_path")
 BOLD = "\033[1m"
 END = "\033[0m"
+
 
 @click.group()
 def cli():
@@ -116,12 +117,14 @@ def edit_prompt(piece, config_path, db):
         elif command.lower().strip() == "help":
             print(help)
         elif "header" in command.lower():
-            edit_header(infodict, db)
+            if "headers" not in infodict:
+                infodict["headers"] = None
+            edit_header(infodict["headers"], db)
         elif command.lower()[0] == 'i':
             edit_instruments(infodict, db)
 
 
-def edit_header(infodict, db):
+def edit_header(curr_headers, db):
     help = (
         "You may edit any of the following headers:\n"
         "title\t\tcomposer\n"
@@ -132,15 +135,16 @@ def edit_header(infodict, db):
         "You may also enter \"mutopia\" to enter headers for submission"
         "to the mutopia project or \"done\" to finish."
     )
+    print(help)
     titlewords = WordCompleter(db_interface.explore_table(
         db.table("titlewords"), search=("word", "")))
-    if "headers" not in infodict:
+    if curr_headers is None:
         composer = composer_prompt(db)
         title = prompt("Enter Title: ", completer=titlewords)
-        infodict["headers"] = info.Headers(title=title, composer=composer)
+        curr_headers = info.Headers(title=title, composer=composer)
     while 1:
         # DEBUG LINE
-        print(infodict["headers"])
+        print(curr_headers)
         field = prompt("Headers> ")
         if len(field) == 0:
             continue
@@ -148,20 +152,20 @@ def edit_header(infodict, db):
             title = prompt(
                 "Current title is \"{}\" enter a new title or press "
                 "enter to keep the current one: ".format(
-                    infodict["headers"].title
+                    curr_headers.title
                 )
             )
             if len(title) != 0:
-                infodict["headers"].title = title
+                curr_headers.title = title
         elif "comp" in field.lower():
             yn = prompt("Current composer is {}. Would you like to change it? "
                         "[y/N] ".format(
-                infodict["headers"].composer.name
+                curr_headers.composer.name
             ), default='N')
             if yn.lower()[0] == 'y':
-                infodict["headers"].composer = composer_prompt(db)
-        # elif "mutopia" in field.lower():
-        #     infodict["headers"].mutopiaheaders = mutopia_prompt(db, )
+                curr_headers.composer = composer_prompt(db)
+        elif "mutopia" in field.lower():
+            curr_headers.mutopiaheaders = mutopia_prompt(db, curr_headers)
 
 
 def composer_prompt(db):
@@ -176,4 +180,42 @@ def composer_prompt(db):
             return info.Composer.load_from_db(comp, db)
     # TODO: add guessing of mutopianame etc.
     return info.Composer(comp)
+
+
+def mutopia_prompt(db, curr_headers):
+    license_completer = WordCompleter(mutopia._get_licenses())
+    try:
+        mu_headers = curr_headers.mutopiaheaders
+    except AttributeError:
+        source = prompt("Enter the source: ")
+        style = prompt("Enter the style: ")
+        license = prompt("Enter the license: ", completer=license_completer)
+        mu_headers = MutopiaHeaders(source=source, style=style, license=license)
+    help = (
+        "You may enter any of the following data or leave blank. Anything required and "
+        "not collected will be filled with defaults or predictions:\n"
+        "maintainer\tmaintainerEmail\n"
+        "maintainerWeb\tmutopiatitle\n"
+        "mutopiapoet\tmutopiaopus\n"
+        "date\t\tmoreinfo"
+        "You can also change the source, style, or license"
+        "Type \"done\" to save and return to the previous screen."
+    )
+    print(help)
+    while 1:
+        command = prompt("Mutopia Headers> ")
+        if len(command) == 0:
+            continue
+        elif command.lower() == "done":
+            return mu_headers
+        elif command in ["maintainer", "maintainerEmail", "maintainerWeb",
+                         "mutopiatitle", "mutopiapoet", "mutopiaopus", "date",
+                         "moreinfo", "style", "license", "source"
+                         ]:
+            print("{} is {}".format(command, getattr(mu_headers, command, "blank")))
+            new = prompt(f"Enter {command} or enter to leave unchanged: ")
+            if len(new) > 0:
+                setattr(mu_headers, command, new)
+        else:
+            print("Error: invalid option.")
 
