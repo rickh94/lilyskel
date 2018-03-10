@@ -7,7 +7,7 @@ import tempfile
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter
 
-from lilyskel import yaml_interface, info, db_interface, mutopia
+from lilyskel import yaml_interface, info, db_interface, mutopia, exceptions
 
 TEMP = tempfile.gettempdir()
 PATHSAVE = Path(TEMP, "lilyskel_path")
@@ -183,21 +183,36 @@ def composer_prompt(db):
 
 
 def mutopia_prompt(db, curr_headers):
-    license_completer = WordCompleter(mutopia._get_licenses())
-    try:
-        mu_headers = curr_headers.mutopiaheaders
-    except AttributeError:
+    licenses = mutopia._get_licenses()
+    license_completer = WordCompleter(licenses)
+    mu_headers = curr_headers.mutopiaheaders
+    if mu_headers is None:
         source = prompt("Enter the source: ")
         style = prompt("Enter the style: ")
+        print(license_ for license_ in licenses)
         license = prompt("Enter the license: ", completer=license_completer)
-        mu_headers = MutopiaHeaders(source=source, style=style, license=license)
+        while 1:
+            try:
+                mu_headers = info.MutopiaHeaders(source=source,
+                                                 style=style, license=license)
+                break
+            except exceptions.MutopiaError as err:
+                if "style" in str(err):
+                    style = prompt(
+                        f"Style {style} not valid. Enter valid style: ")
+                if "license" in str(err):
+                    print("Invalid license")
+                    print(license_ for license_ in licenses)
+                    license = prompt("Enter valid license: ",
+                                     completer=license_completer)
     help = (
-        "You may enter any of the following data or leave blank. Anything required and "
+        "You may enter any of the following data or leave blank. "
+        "Anything required and "
         "not collected will be filled with defaults or predictions:\n"
         "maintainer\tmaintainerEmail\n"
         "maintainerWeb\tmutopiatitle\n"
         "mutopiapoet\tmutopiaopus\n"
-        "date\t\tmoreinfo"
+        "date\t\tmoreinfo\n"
         "You can also change the source, style, or license"
         "Type \"done\" to save and return to the previous screen."
     )
