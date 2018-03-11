@@ -173,11 +173,30 @@ def composer_prompt(db):
                                            search=("name", ""))
     composer_completer = WordCompleter(composers)
     comp = prompt("Enter Composer: ", completer=composer_completer)
-    if comp in composers:
+    matches = []
+    for item in composers:
+        if comp in item:
+            matches.append(item)
+    if matches:
         load = prompt(f"{comp} is in the database, would you like to load it? "
                       "[Y/n] ", default='Y')
         if load.lower()[0] == 'y':
-            return info.Composer.load_from_db(comp, db)
+            if len(matches) > 1:
+                for num, match in enumerate(matches):
+                    print(f"{num}. {match}")
+                while 1:
+                    choice = prompt("Please enter the number of the "
+                                    "matching composer or N if none match: ")
+                    if len(choice) == 0:
+                        continue
+                    if choice[0].isdigit():
+                        match = matches[int(choice[0])]
+                        break
+                    elif choice[0].lower() == 'n':
+                        return info.Composer(comp)
+            else:
+                match = matches[0]
+            return info.Composer.load_from_db(match, db)
     # TODO: add guessing of mutopianame etc.
     return info.Composer(comp)
 
