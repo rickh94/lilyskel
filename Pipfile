@@ -8,6 +8,7 @@ name = "pypi"
 [packages]
 
 "e1839a8" = {path = "."}
+better-exceptions = "*"
 
 
 [dev-packages]
