@@ -45,8 +45,7 @@ def validate_mutopia(field, data):
     cleantext = breaktext[1]
     data_list = [item.strip() for item in cleantext.split(', ')]
     if data not in data_list:
-        raise exceptions.MutopiaError('{data} was not found in {field}'.format(
-            data=data, field=field))
+        raise exceptions.MutopiaError(f'{data} was not found in {field}')
 
 
 def _get_licenses():

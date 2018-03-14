@@ -7,7 +7,7 @@ import tempfile
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter
 
-from lilyskel import yaml_interface, info, db_interface, mutopia
+from lilyskel import yaml_interface, info, db_interface, mutopia, exceptions
 
 TEMP = tempfile.gettempdir()
 PATHSAVE = Path(TEMP, "lilyskel_path")
@@ -173,31 +173,65 @@ def composer_prompt(db):
                                            search=("name", ""))
     composer_completer = WordCompleter(composers)
     comp = prompt("Enter Composer: ", completer=composer_completer)
-    if comp in composers:
+    matches = []
+    for item in composers:
+        if comp in item:
+            matches.append(item)
+    if matches:
         load = prompt(f"{comp} is in the database, would you like to load it? "
                       "[Y/n] ", default='Y')
         if load.lower()[0] == 'y':
-            return info.Composer.load_from_db(comp, db)
+            if len(matches) > 1:
+                for num, match in enumerate(matches):
+                    print(f"{num}. {match}")
+                while 1:
+                    choice = prompt("Please enter the number of the "
+                                    "matching composer or N if none match: ")
+                    if len(choice) == 0:
+                        continue
+                    if choice[0].isdigit():
+                        match = matches[int(choice[0])]
+                        break
+                    elif choice[0].lower() == 'n':
+                        return info.Composer(comp)
+            else:
+                match = matches[0]
+            return info.Composer.load_from_db(match, db)
     # TODO: add guessing of mutopianame etc.
     return info.Composer(comp)
 
 
 def mutopia_prompt(db, curr_headers):
-    license_completer = WordCompleter(mutopia._get_licenses())
-    try:
-        mu_headers = curr_headers.mutopiaheaders
-    except AttributeError:
+    licenses = mutopia._get_licenses()
+    license_completer = WordCompleter(licenses)
+    mu_headers = curr_headers.mutopiaheaders
+    if mu_headers is None:
         source = prompt("Enter the source: ")
         style = prompt("Enter the style: ")
+        print(license_ for license_ in licenses)
         license = prompt("Enter the license: ", completer=license_completer)
-        mu_headers = MutopiaHeaders(source=source, style=style, license=license)
+        while 1:
+            try:
+                mu_headers = info.MutopiaHeaders(source=source,
+                                                 style=style, license=license)
+                break
+            except exceptions.MutopiaError as err:
+                if "style" in str(err):
+                    style = prompt(
+                        f"Style {style} not valid. Enter valid style: ")
+                if "license" in str(err):
+                    print("Invalid license")
+                    print(license_ for license_ in licenses)
+                    license = prompt("Enter valid license: ",
+                                     completer=license_completer)
     help = (
-        "You may enter any of the following data or leave blank. Anything required and "
+        "You may enter any of the following data or leave blank. "
+        "Anything required and "
         "not collected will be filled with defaults or predictions:\n"
         "maintainer\tmaintainerEmail\n"
         "maintainerWeb\tmutopiatitle\n"
         "mutopiapoet\tmutopiaopus\n"
-        "date\t\tmoreinfo"
+        "date\t\tmoreinfo\n"
         "You can also change the source, style, or license"
         "Type \"done\" to save and return to the previous screen."
     )
