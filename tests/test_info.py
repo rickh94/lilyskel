@@ -126,7 +126,7 @@ def mutopiaheader2(random_ens):
                                maintainer='Rick Henry',
                                maintainerEmail='fredericmhenry@gmail.com',
                                date='1234',
-                               license='ccsa4',
+                               license='Creative Commons Attribution-ShareAlike 4.0',
                                )
 
 

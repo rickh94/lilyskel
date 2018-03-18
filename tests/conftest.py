@@ -90,7 +90,7 @@ def mutopiaheader1(instrument_list1):
                                maintainer='Rick Henry',
                                maintainerEmail='fredericmhenry@gmail.com',
                                date='1234',
-                               license='cc4',
+                               license='Creative Commons Attribution 4.0',
                                )
 
 

@@ -13,6 +13,7 @@ TEMP = tempfile.gettempdir()
 PATHSAVE = Path(TEMP, "lilyskel_path")
 BOLD = "\033[1m"
 END = "\033[0m"
+INVALID = "Command not recognized. Please try again."
 
 
 @click.group()
@@ -77,7 +78,7 @@ def edit_prompt(piece, config_path, db):
     :param config_path: The path to the configuration file being worked on.
     :return:
     """
-    print(config_path)
+    #print(config_path)
     help = (
         "\nYou can now add score information. Available modes are:\n"
         f"{BOLD}header:{END}\t\tadd title, composer, etc.\n"
@@ -86,9 +87,12 @@ def edit_prompt(piece, config_path, db):
         f"{BOLD}ensemble:{END}\tadd an ensemble to the score\n"
         f"{BOLD}movement:{END}\tadd/remove movements (including time, key, "
         f"and tempo info\n"
+        f"{BOLD}print:{END}\t\t print the current state of the score info.\n"
         f"{BOLD}quit:{END}\t\twrite out file and exit\n"
         f"{BOLD}help:{END}\t\tprint this message\n"
     )
+    command_completer = WordCompleter(['header', 'instrument', 'ensemble', 'movement',
+                                       'print', 'quit', 'help'])
     infodict = {}
     if isinstance(piece, info.Piece):
         infodict = {
@@ -102,10 +106,12 @@ def edit_prompt(piece, config_path, db):
             "Please enter an opus or catalog number or the piece: ")
     print(help)
     while 1:
+        # DEBUG LINE
+        print(infodict)
         try:
             command = prompt(piece["headers"].title + "> ")
         except (AttributeError, KeyError, TypeError):
-            command = prompt("Untitled> ")
+            command = prompt("Untitled> ", completer=command_completer)
         if len(command) == 0:
             continue
         if command[0].lower() == 'q':
@@ -119,25 +125,34 @@ def edit_prompt(piece, config_path, db):
         elif "header" in command.lower():
             if "headers" not in infodict:
                 infodict["headers"] = None
-            edit_header(infodict["headers"], db)
+            infodict["headers"] = edit_header(infodict["headers"], db)
         elif command.lower()[0] == 'i':
             edit_instruments(infodict, db)
+        elif command.lower()[0] == 'p':
+            print(infodict)
+        else:
+            print(INVALID)
 
 
 def edit_header(curr_headers, db):
     help = (
         "You may edit any of the following headers:\n"
         "title\t\tcomposer\n"
-        "dedication\t\tsubtitle\n"
+        "dedication\tsubtitle\n"
         "subsubtitle\tpoet\n"
         "meter\t\tarranger\n"
         "tagline\t\tcopyright\n"
         "You may also enter \"mutopia\" to enter headers for submission"
-        "to the mutopia project or \"done\" to finish."
+        "to the mutopia project."
+        "Enter \"print\" to print the current headers and \"done\" to finish"
+        "and return to the main prompt."
     )
     print(help)
     titlewords = WordCompleter(db_interface.explore_table(
         db.table("titlewords"), search=("word", "")))
+    field_completer = WordCompleter(["title", "composer", "subtitle", "subsubtitle",
+                                     "poet", "meter", "arranger", "tagline", "copyright",
+                                     "mutopia", "print", "done"])
     if curr_headers is None:
         composer = composer_prompt(db)
         title = prompt("Enter Title: ", completer=titlewords)
@@ -145,10 +160,11 @@ def edit_header(curr_headers, db):
     while 1:
         # DEBUG LINE
         print(curr_headers)
-        field = prompt("Headers> ")
-        if len(field) == 0:
+        command = prompt("Headers> ", completer=field_completer)
+        if len(command) == 0:
             continue
-        if field.lower().strip() == "title":
+        field = command.lower().strip()
+        if field == "title":
             title = prompt(
                 "Current title is \"{}\" enter a new title or press "
                 "enter to keep the current one: ".format(
@@ -157,15 +173,31 @@ def edit_header(curr_headers, db):
             )
             if len(title) != 0:
                 curr_headers.title = title
-        elif "comp" in field.lower():
+        elif "comp" in field:
             yn = prompt("Current composer is {}. Would you like to change it? "
                         "[y/N] ".format(
                 curr_headers.composer.name
             ), default='N')
             if yn.lower()[0] == 'y':
                 curr_headers.composer = composer_prompt(db)
-        elif "mutopia" in field.lower():
+        elif field in ["dedication", "subtitle", "subsubtitle", "poet",
+                       "meter", "arranger", "tagline", "copyright"]:
+            print("{} is {}".format(field, getattr(curr_headers, field, "blank")))
+            new = prompt(f"Enter value for {field} or press enter to leave unchanged: ")
+            if len(new) > 0:
+                setattr(curr_headers, field, new)
+        elif "mutopia" in field:
             curr_headers.mutopiaheaders = mutopia_prompt(db, curr_headers)
+        # Logistical commands
+        elif field[0] == 'h':
+            print(help)
+        elif field[0] == 'p':
+            print(curr_headers)
+        elif field[0] == 'd':
+            print("Saving headers")
+            return curr_headers
+        else:
+            print(INVALID)
 
 
 def composer_prompt(db):
@@ -235,9 +267,12 @@ def mutopia_prompt(db, curr_headers):
         "You can also change the source, style, or license"
         "Type \"done\" to save and return to the previous screen."
     )
+    field_completer = WordCompleter(["maintainer", "maintainerEmail", "maintainerWeb", "mutopiatitle",
+                                     "mutopiapoet", "mutopiaopus", "date", "moreinfo",
+                                     "source", "style", "license", "done"])
     print(help)
     while 1:
-        command = prompt("Mutopia Headers> ")
+        command = prompt("Mutopia Headers> ", completer=field_completer)
         if len(command) == 0:
             continue
         elif command.lower() == "done":
@@ -247,9 +282,9 @@ def mutopia_prompt(db, curr_headers):
                          "moreinfo", "style", "license", "source"
                          ]:
             print("{} is {}".format(command, getattr(mu_headers, command, "blank")))
-            new = prompt(f"Enter {command} or enter to leave unchanged: ")
+            new = prompt(f"Enter value for {command} or press enter to leave unchanged: ")
             if len(new) > 0:
                 setattr(mu_headers, command, new)
         else:
-            print("Error: invalid option.")
+            print(INVALID)
 
