@@ -1,9 +1,12 @@
 Lilypond Skeletons
 ==================
-.. image:: https://travis-ci.org/rickh94/lyskel.svg?branch=master
-    :target: https://travis-ci.org/rickh94/lyskel
-.. image:: https://codecov.io/gh/rickh94/lyskel/branch/master/graph/badge.svg
-  :target: https://codecov.io/gh/rickh94/lyskel
+.. image:: https://travis-ci.org/rickh94/lilyyskel.svg?branch=master
+    :target: https://travis-ci.org/rickh94/lilyskel
+.. image:: https://codecov.io/gh/rickh94/lilyskel/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/rickh94/lilyskel
+.. image:: https://codebeat.co/badges/94610ad1-6daf-45ff-9f89-5aede41ceda8
+   :target: https://codebeat.co/projects/github-com-rickh94-lilyskel-master
+
 
 Generate a file/directory skeleton for lilypond projects.
 
