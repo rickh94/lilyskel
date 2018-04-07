@@ -79,7 +79,7 @@ def edit_prompt(piece, config_path, db):
     :return:
     """
     #print(config_path)
-    help = (
+    prompt_help = (
         "\nYou can now add score information. Available modes are:\n"
         f"{BOLD}header:{END}\t\tadd title, composer, etc.\n"
         f"{BOLD}instrument:{END}\tadd/remove/re-order individual instruments "
@@ -104,7 +104,7 @@ def edit_prompt(piece, config_path, db):
     if "opus" not in infodict:
         infodict["opus"] = prompt(
             "Please enter an opus or catalog number or the piece: ")
-    print(help)
+    print(prompt_help)
     while 1:
         # DEBUG LINE
         print(infodict)
@@ -121,13 +121,15 @@ def edit_prompt(piece, config_path, db):
                 pass
             raise SystemExit(0)
         elif command.lower().strip() == "help":
-            print(help)
+            print(prompt_help)
         elif "header" in command.lower():
             if "headers" not in infodict:
                 infodict["headers"] = None
             infodict["headers"] = edit_header(infodict["headers"], db)
         elif command.lower()[0] == 'i':
-            edit_instruments(infodict, db)
+            if "instruments" not in infodict:
+                infodict["instruments"] = []
+            infodict["instruments"] = edit_instruments(infodict["instruments"], db)
         elif command.lower()[0] == 'p':
             print(infodict)
         else:
@@ -135,7 +137,7 @@ def edit_prompt(piece, config_path, db):
 
 
 def edit_header(curr_headers, db):
-    help = (
+    prompt_help = (
         "You may edit any of the following headers:\n"
         "title\t\tcomposer\n"
         "dedication\tsubtitle\n"
@@ -147,7 +149,7 @@ def edit_header(curr_headers, db):
         "Enter \"print\" to print the current headers and \"done\" to finish"
         "and return to the main prompt."
     )
-    print(help)
+    print(prompt_help)
     titlewords = WordCompleter(db_interface.explore_table(
         db.table("titlewords"), search=("word", "")))
     field_completer = WordCompleter(["title", "composer", "subtitle", "subsubtitle",
@@ -190,7 +192,7 @@ def edit_header(curr_headers, db):
             curr_headers.mutopiaheaders = mutopia_prompt(db, curr_headers)
         # Logistical commands
         elif field[0] == 'h':
-            print(help)
+            print(prompt_help)
         elif field[0] == 'p':
             print(curr_headers)
         elif field[0] == 'd':
@@ -256,7 +258,7 @@ def mutopia_prompt(db, curr_headers):
                     print(license_ for license_ in licenses)
                     license = prompt("Enter valid license: ",
                                      completer=license_completer)
-    help = (
+    prompt_help = (
         "You may enter any of the following data or leave blank. "
         "Anything required and "
         "not collected will be filled with defaults or predictions:\n"
@@ -270,14 +272,14 @@ def mutopia_prompt(db, curr_headers):
     field_completer = WordCompleter(["maintainer", "maintainerEmail", "maintainerWeb", "mutopiatitle",
                                      "mutopiapoet", "mutopiaopus", "date", "moreinfo",
                                      "source", "style", "license", "done"])
-    print(help)
+    print(prompt_help)
     while 1:
         command = prompt("Mutopia Headers> ", completer=field_completer)
         if len(command) == 0:
             continue
         elif command.lower() == "done":
             return mu_headers
-        elif command in ["maintainer", "maintainerEmail", "maintainerWeb",
+        elif command.lower() in ["maintainer", "maintainerEmail", "maintainerWeb",
                          "mutopiatitle", "mutopiapoet", "mutopiaopus", "date",
                          "moreinfo", "style", "license", "source"
                          ]:
@@ -285,6 +287,22 @@ def mutopia_prompt(db, curr_headers):
             new = prompt(f"Enter value for {command} or press enter to leave unchanged: ")
             if len(new) > 0:
                 setattr(mu_headers, command, new)
+        elif command[0].lower() == 'h':
+            print(prompt_help)
         else:
             print(INVALID)
 
+
+def edit_instruments(curr_instruments, db):
+    if curr_instruments:
+        print("These instruments are currently in the score: ")
+        for ins in curr_instruments:
+            print(ins)
+    prompt_help = (
+        "Options:\n"
+        f"{BOLD}create{END} a new instrument\n"
+        f"{BOLD}delete{END} an instrument\n"
+        f"{BOLD}reorder{END} instruments\n"
+        f"{BOLD}help{END} to view this message\n"
+        f"{BOLD}done{END} to save and return to main prompt"
+    )
