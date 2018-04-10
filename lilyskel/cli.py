@@ -203,11 +203,21 @@ def edit_header(curr_headers, db):
             print(INVALID)
 
 
+class InsensitiveCompleter(Completer):
+    def __init__(self, word_list):
+        self._word_list = word_list
+
+    def get_completions(self, document, complete_event):
+        start = - len(document.text)
+        for word in self._word_list:
+            if document.text.lower() in word.lower():
+                yield Completion(word, start_position=start)
+
+
 def composer_prompt(db):
     composers = db_interface.explore_table(db.table("composers"),
                                            search=("name", ""))
-    composer_completer = WordCompleter(composers)
-    comp = prompt("Enter Composer: ", completer=composer_completer)
+    comp = prompt("Enter Composer: ", completer=InsensitiveCompleter(composers))
     matches = []
     for item in composers:
         if comp in item:
@@ -294,17 +304,6 @@ def mutopia_prompt(db, curr_headers):
             print(INVALID)
 
 
-class InstrumentCompleter(Completer):
-    def __init__(self, word_list):
-        self._word_list = word_list
-
-    def get_completions(self, document, complete_event):
-        start = - len(document.text)
-        for word in self._word_list:
-            if document.text.lower() in word:
-                yield Completion(word, start_position=start)
-
-
 def edit_instruments(curr_instruments, db):
     if curr_instruments:
         print("These instruments are currently in the score: ")
@@ -330,5 +329,5 @@ def edit_instruments(curr_instruments, db):
             continue
         elif command.lower()[0] == 'c':
             ins_name = prompt("Enter the full instrument name: ",
-                              completer=InstrumentCompleter(instruments))
+                              completer=InsensitiveCompleter(instruments))
             print(ins_name)
