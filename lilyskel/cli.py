@@ -6,6 +6,7 @@ import click
 import tempfile
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter
+from prompt_toolkit.completion import Completer, Completion
 
 from lilyskel import yaml_interface, info, db_interface, mutopia, exceptions
 
@@ -293,11 +294,24 @@ def mutopia_prompt(db, curr_headers):
             print(INVALID)
 
 
+class InstrumentCompleter(Completer):
+    def __init__(self, word_list):
+        self._word_list = word_list
+
+    def get_completions(self, document, complete_event):
+        start = - len(document.text)
+        for word in self._word_list:
+            if document.text.lower() in word:
+                yield Completion(word, start_position=start)
+
+
 def edit_instruments(curr_instruments, db):
     if curr_instruments:
         print("These instruments are currently in the score: ")
         for ins in curr_instruments:
             print(ins)
+    else:
+        print("No instruments currently in score.")
     prompt_help = (
         "Options:\n"
         f"{BOLD}create{END} a new instrument\n"
@@ -306,3 +320,15 @@ def edit_instruments(curr_instruments, db):
         f"{BOLD}help{END} to view this message\n"
         f"{BOLD}done{END} to save and return to main prompt"
     )
+    command_completer = WordCompleter(['create', 'delete', 'reorder', 'help', 'done'])
+    instruments = db_interface.explore_table(db.table("instruments"),
+                                           search=("name", ""))
+    print(prompt_help)
+    while True:
+        command = prompt("Instruments> ", completer=command_completer)
+        if len(command) == 0:
+            continue
+        elif command.lower()[0] == 'c':
+            ins_name = prompt("Enter the full instrument name: ",
+                              completer=InstrumentCompleter(instruments))
+            print(ins_name)
