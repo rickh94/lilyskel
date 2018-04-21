@@ -4,11 +4,13 @@ import os
 from pathlib import Path
 import click
 import tempfile
+from titlecase import titlecase
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter
 from prompt_toolkit.completion import Completer, Completion
 
 from lilyskel import yaml_interface, info, db_interface, mutopia, exceptions
+from lilyskel.lynames import normalize_name, VALID_CLEFS
 
 TEMP = tempfile.gettempdir()
 PATHSAVE = Path(TEMP, "lilyskel_path")
@@ -39,7 +41,7 @@ def init(filename, path):
         shutil.copy2(filepath, Path(str(filepath) + ".bak"))
     filepath.open("w").close()
     with open(PATHSAVE, "w") as savepath:
-        savepath.write(str(filepath))
+        savepath.write(str(filepath.absolute()))
 
 
 @cli.command()
@@ -110,7 +112,7 @@ def edit_prompt(piece, config_path, db):
         # DEBUG LINE
         print(infodict)
         try:
-            command = prompt(piece["headers"].title + "> ")
+            command = prompt(infodict["headers"].title + "> ")
         except (AttributeError, KeyError, TypeError):
             command = prompt("Untitled> ", completer=command_completer)
         if len(command) == 0:
@@ -205,6 +207,7 @@ def edit_header(curr_headers, db):
 
 class InsensitiveCompleter(Completer):
     def __init__(self, word_list):
+
         self._word_list = word_list
 
     def get_completions(self, document, complete_event):
@@ -229,7 +232,7 @@ def composer_prompt(db):
             if len(matches) > 1:
                 for num, match in enumerate(matches):
                     print(f"{num}. {match}")
-                while 1:
+                while True:
                     choice = prompt("Please enter the number of the "
                                     "matching composer or N if none match: ")
                     if len(choice) == 0:
@@ -254,11 +257,11 @@ def mutopia_prompt(db, curr_headers):
         source = prompt("Enter the source: ")
         style = prompt("Enter the style: ")
         print(license_ for license_ in licenses)
-        license = prompt("Enter the license: ", completer=license_completer)
+        license_ = prompt("Enter the license: ", completer=license_completer)
         while 1:
             try:
                 mu_headers = info.MutopiaHeaders(source=source,
-                                                 style=style, license=license)
+                                                 style=style, license=license_)
                 break
             except exceptions.MutopiaError as err:
                 if "style" in str(err):
@@ -267,7 +270,7 @@ def mutopia_prompt(db, curr_headers):
                 if "license" in str(err):
                     print("Invalid license")
                     print(license_ for license_ in licenses)
-                    license = prompt("Enter valid license: ",
+                    license_ = prompt("Enter valid license: ",
                                      completer=license_completer)
     prompt_help = (
         "You may enter any of the following data or leave blank. "
@@ -320,14 +323,116 @@ def edit_instruments(curr_instruments, db):
         f"{BOLD}done{END} to save and return to main prompt"
     )
     command_completer = WordCompleter(['create', 'delete', 'reorder', 'help', 'done'])
-    instruments = db_interface.explore_table(db.table("instruments"),
-                                           search=("name", ""))
+    instrument_names = db_interface.explore_table(db.table("instruments"),
+                                                  search=("name", ""))
+    instruments = [titlecase(' '.join(name.split('_')))
+                   for name in instrument_names]
     print(prompt_help)
     while True:
+        # DEBUG LINE
+        print(curr_instruments)
         command = prompt("Instruments> ", completer=command_completer)
         if len(command) == 0:
             continue
         elif command.lower()[0] == 'c':
-            ins_name = prompt("Enter the full instrument name: ",
-                              completer=InsensitiveCompleter(instruments))
-            print(ins_name)
+            new_ins = create_instrument(instruments, db)
+            curr_instruments.append(new_ins)
+        elif command.lower()[0:2] == 'de':
+            while True:
+                instruments_with_indexes(curr_instruments)
+                del_idx = prompt("Enter the number of the instrument to delete or [enter] to "
+                                 "finish: ") or None
+                if del_idx is None:
+                    break
+                elif del_idx.isdigit():
+                    curr_instruments.pop(int(del_idx))
+                else:
+                    print("Invalid index")
+        elif command.lower()[0] == 'r':
+            curr_instruments = reorder_instruments(curr_instruments)
+        elif command.lower()[0] == 'h':
+            print(prompt_help)
+        elif command.lower()[0:2] == 'do':
+            return curr_instruments
+
+
+def instruments_with_indexes(instrumentlist):
+    for idx, instrument in enumerate(instrumentlist):
+        print(f"{idx}: {instrument.part_name()}")
+
+
+def create_instrument(instruments, db):
+    ins_name_input = prompt("Enter the full instrument name: ",
+                            completer=InsensitiveCompleter(instruments))
+    while True:
+        number = prompt("If the instrument has a number associated (e.g. Violin 2), "
+                        "enter it or press [enter] to continue. ")or None
+        if number is None:
+            break
+        if number.isdigit():
+            number = int(number)
+            break
+        print("Invalid number")
+    if ins_name_input in instruments:
+        while True:
+            load = prompt(f"{ins_name_input} is in the database, would you like to load it? "
+                          "[Y/n] ", default='Y')
+            if len(load) > 0:
+                break
+        if load.lower()[0] == 'y':
+            new_ins = info.Instrument.load_from_db(normalize_name(ins_name_input), db, number=number)
+    else:
+        print("Please enter instrument information (press enter for default).")
+        insinfo = {}
+        if number:
+            insinfo['number'] = number
+        insinfo['name'] = ins_name_input
+        insinfo['abbr'] = prompt("Abbreviation: ") or None
+        while True:
+            clef = prompt("Clef: ", completer=WordCompleter(VALID_CLEFS)).lower() or None
+            if clef in VALID_CLEFS or clef is None:
+                break
+            print("invalid clef")
+        insinfo['transposition'] = prompt("Transposition: ") or None
+        keyboard_res = prompt("Is it a keyboard (grand staff) instrument? [y/N] ", default='N')
+        insinfo['keyboard'] = False
+        try:
+            if keyboard_res.lower()[0] == 'y':
+                insinfo['keyboard'] = True
+        except IndexError:
+            pass
+        insinfo['midi'] = prompt("Midi instrument name: ").lower() or None
+        insinfo['family'] = normalize_name(prompt("Instrument family: ")) or None
+        new_ins = info.Instrument.load(insinfo)
+    return new_ins
+
+
+def reorder_instruments(curr_instruments):
+    while True:
+        instruments_with_indexes(curr_instruments)
+        tmp_instruments = [instrument for instrument in curr_instruments]
+        old_idx = prompt("Enter the index of the instrument to move or [enter] to finish: ") or None
+        if old_idx is None:
+            break
+        if not old_idx.isdigit():
+            continue
+        move_instrument = tmp_instruments.pop(int(old_idx))
+        instruments_with_indexes(tmp_instruments)
+        while True:
+            new_idx = prompt(f"Enter the index to insert {move_instrument.part_name()}: ")
+            try:
+                if new_idx.isdigit() and int(new_idx) <= len(tmp_instruments):
+                    break
+            except TypeError:
+                pass
+            print("Invalid index.")
+        tmp_instruments.insert(int(new_idx), move_instrument)
+        print("New instrument order: ")
+        instruments_with_indexes(tmp_instruments)
+        while True:
+            correct = prompt("Is this correct? [Y/n] ", default='Y')
+            if len(correct) > 0:
+                break
+        if correct.lower()[0] == 'y':
+            curr_instruments = [instrument for instrument in tmp_instruments]
+    return curr_instruments

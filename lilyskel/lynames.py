@@ -9,7 +9,7 @@ from lilyskel import mutopia
 from lilyskel.db_interface import load_name_from_table, explore_table
 
 
-def _normalize(name):
+def normalize_name(name):
     """Clean up the names."""
     if name is None:
         return None
@@ -22,9 +22,9 @@ def _form_num(num, *, form):
     if form == 'num':
         return str(num)
     elif form == 'word':
-        return _normalize(num2words(num))
+        return normalize_name(num2words(num))
     elif form == 'ord':
-        return _normalize(num2words(num, ordinal=True))
+        return normalize_name(num2words(num, ordinal=True))
     elif form == 'roman':
         return _roman_numeral(num)
     else:
@@ -77,7 +77,7 @@ def _roman_numeral(num):
 @attr.s(slots=True)
 class LyName():
     """Common attributes/names"""
-    name = attr.ib(convert=_normalize)
+    name = attr.ib(convert=normalize_name)
     number = attr.ib(init=False, default=None)
     _numword = attr.ib(init=False, repr=False, default='')
     _roman = attr.ib(init=False, repr=False, default='')
@@ -134,6 +134,12 @@ class LyName():
         return prefix + self._movement(mov_num, form='ord')
 
 
+VALID_CLEFS = ['G', 'treble', 'french', 'tenorG', 'soprano', 'C', 'tenor',
+               'varC', 'tenorvarC', 'varbaritone', 'F', 'subbass', 'G2',
+               'violin', 'GG', 'mezzosoprano', 'alto', 'baritone', 'altovarC',
+               'baritonevarC', 'baritonevarF', 'bass']
+
+
 @attr.s(slots=True)
 class Instrument(LyName):
     """
@@ -156,8 +162,13 @@ class Instrument(LyName):
     transposition = attr.ib(default=None)
     keyboard = attr.ib(default=False)
     midi = attr.ib(default=None)
-    family = attr.ib(default=None, convert=_normalize)
+    family = attr.ib(default=None, convert=normalize_name)
     mutopianame = attr.ib(default=None)
+
+    @clef.validator
+    def validate_clef(self, attribute, value):
+        if value not in VALID_CLEFS:
+            raise exceptions.InvalidClef("Not a valid clef")
 
     def part_name(self, key=False):
         """
@@ -209,7 +220,7 @@ class Instrument(LyName):
             number: (optional) The number of the instrument in the ensemble.
             (e.g. Violin 1)
         """
-        name = _normalize(name)
+        name = normalize_name(name)
         data = load_name_from_table(name, db, 'instruments')
         if number is not None:
             new_obj = cls.numbered_name(name, number)
@@ -251,7 +262,11 @@ class Instrument(LyName):
     @classmethod
     def load(cls, datadict):
         """Load from a dict."""
-        newins = cls(name=datadict.pop('name'))
+        if 'number' in datadict and datadict['number']:
+            newins = cls.numbered_name(name=datadict.pop('name'),
+                                       number=datadict.pop('number'))
+        else:
+            newins = cls(name=datadict.pop('name'))
         for key, value in datadict.items():
             setattr(newins, key, value)
         return newins
@@ -260,7 +275,7 @@ class Instrument(LyName):
 @attr.s
 class Ensemble():
     """A group of instruments."""
-    name = attr.ib(convert=_normalize)
+    name = attr.ib(convert=normalize_name)
     instruments = attr.ib(default=None)
 
     def add_instrument(self, ins_name, *, db=None, number=None, abbr='',
@@ -310,7 +325,7 @@ class Ensemble():
             name: the name of the ensemble
             db: a TinyDB object
         """
-        name = _normalize(name)
+        name = normalize_name(name)
         data = load_name_from_table(name, db, 'ensembles')
         new_ens = cls(name, instruments=[])
         try:

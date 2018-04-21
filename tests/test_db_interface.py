@@ -42,9 +42,9 @@ def test_init_db(mock_db, mock_exists, mock_makedirs):
     mock_exists.return_value = False
     db_interface.init_db(),
     mock_db.assert_called_once_with(
-        Path(home, '.local', 'lilyskel', 'db.json'))
+        Path(home, '.local', 'share', 'lilyskel', 'db.json'))
     mock_makedirs.assert_called_once_with(
-        Path(home, '.local', 'lilyskel'))
+        Path(home, '.local', 'share', 'lilyskel'))
 
     # test without missing directories
     mock_makedirs.reset_mock()
@@ -52,7 +52,7 @@ def test_init_db(mock_db, mock_exists, mock_makedirs):
     mock_exists.return_value = True
     db_interface.init_db(),
     mock_db.assert_called_once_with(
-        Path(home, '.local', 'lilyskel', 'db.json'))
+        Path(home, '.local', 'share', 'lilyskel', 'db.json'))
     mock_makedirs.assert_not_called()
 
     # test custom
@@ -72,11 +72,11 @@ def test_bootstrap_db(mock_shutil, mock_makedirs):
     # test default db path
     db_interface.bootstrap_db()
     mock_makedirs.assert_called_once_with(
-        Path(home, '.local', 'lilyskel'), exist_ok=True
+        Path(home, '.local', 'share', 'lilyskel'), exist_ok=True
     )
     mock_shutil.copy2.assert_called_once_with(
         Path(srcdir, 'default_db.json'),
-        Path(home, '.local', 'lilyskel', 'db.json')
+        Path(home, '.local', 'share', 'lilyskel', 'db.json')
     )
 
 

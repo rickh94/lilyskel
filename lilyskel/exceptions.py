@@ -14,3 +14,8 @@ class MissingInstrumentError(KeyError):
 class MutopiaError(AttributeError):
     """Raised when a desired mutopia value is not in their lists."""
     pass
+
+
+class InvalidClef(AttributeError):
+    """Raised when an unsupported clef is entered."""
+    pass
