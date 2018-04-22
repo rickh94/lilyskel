@@ -8,8 +8,9 @@ from titlecase import titlecase
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter
 from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.validation import Validator, ValidationError
 
-from lilyskel import yaml_interface, info, db_interface, mutopia, exceptions
+from lilyskel import yaml_interface, info, db_interface, mutopia, exceptions, lynames
 from lilyskel.lynames import normalize_name, VALID_CLEFS
 
 TEMP = tempfile.gettempdir()
@@ -17,6 +18,16 @@ PATHSAVE = Path(TEMP, "lilyskel_path")
 BOLD = "\033[1m"
 END = "\033[0m"
 INVALID = "Command not recognized. Please try again."
+
+
+class YNValidator(Validator):
+    def validate(self, document):
+        text = document.text
+        if not text:
+            raise ValidationError(message="Respose Required", cursor_position=0)
+        if text.lower()[0] not in 'yn':
+            raise ValidationError(message="Response must be [y]es or [n]o",
+                                  cursor_position=0)
 
 
 @click.group()
@@ -35,8 +46,9 @@ def init(filename, path):
         filename = filename + ".yaml"
     filepath = Path(path, filename)
     if filepath.exists():
-        overwrite = prompt("File exists. Overwrite?[y/N] ")
-        if not overwrite:
+        overwrite = prompt("File exists. Overwrite? ", validator=YNValidator(),
+                           default='N')
+        if overwrite.lower()[0] == 'n':
             raise SystemExit(1)
         shutil.copy2(filepath, Path(str(filepath) + ".bak"))
     filepath.open("w").close()
@@ -67,8 +79,8 @@ def edit(file_path, db_path):
         bootstrap = prompt("Lilyskel supports a small database to help with "
                            "commonly used items (such as instruments and "
                            "composers). You do not appear to have one. "
-                           "Would you like to copy the included one? [Y/n]",
-                           default='Y')
+                           "Would you like to copy the included one? ",
+                           default='Y', validator=YNValidator())
         if bootstrap.lower()[0] == 'y':
             db_interface.bootstrap_db(db_path)
     edit_prompt(piece, Path(file_path), db)
@@ -94,8 +106,9 @@ def edit_prompt(piece, config_path, db):
         f"{BOLD}quit:{END}\t\twrite out file and exit\n"
         f"{BOLD}help:{END}\t\tprint this message\n"
     )
-    command_completer = WordCompleter(['header', 'instrument', 'ensemble', 'movement',
-                                       'print', 'quit', 'help'])
+    command_list = ['header', 'instrument', 'ensemble', 'movement', 'print',
+                    'quit', 'help']
+    command_completer = WordCompleter(command_list)
     infodict = {}
     if isinstance(piece, info.Piece):
         infodict = {
@@ -112,9 +125,10 @@ def edit_prompt(piece, config_path, db):
         # DEBUG LINE
         print(infodict)
         try:
-            command = prompt(infodict["headers"].title + "> ")
+            ps1 = infodict["headers"].title
         except (AttributeError, KeyError, TypeError):
-            command = prompt("Untitled> ", completer=command_completer)
+            ps1 = "Untitled"
+        command = prompt(f"{ps1}> ", completer=command_completer)
         if len(command) == 0:
             continue
         if command[0].lower() == 'q':
@@ -179,10 +193,9 @@ def edit_header(curr_headers, db):
             if len(title) != 0:
                 curr_headers.title = title
         elif "comp" in field:
-            yn = prompt("Current composer is {}. Would you like to change it? "
-                        "[y/N] ".format(
-                curr_headers.composer.name
-            ), default='N')
+            yn = prompt("Current composer is {}. Would you like to change "
+                        "it? ".format(curr_headers.composer.name), default='N',
+                        validator=YNValidator())
             if yn.lower()[0] == 'y':
                 curr_headers.composer = composer_prompt(db)
         elif field in ["dedication", "subtitle", "subsubtitle", "poet",
@@ -217,6 +230,25 @@ class InsensitiveCompleter(Completer):
                 yield Completion(word, start_position=start)
 
 
+class IndexValidator(Validator):
+    def __init__(self, max_len, allow_empty=True):
+        self.max = max_len
+        self.allow_empty = allow_empty
+
+    def validate(self, document):
+        text = document.text
+        if not text and self.allow_empty:
+            return
+        try:
+            idx = int(text)
+        except ValueError:
+            raise ValidationError(message="Input must be number",
+                                  cursor_position=0)
+        if idx > self.max:
+            raise ValidationError(message="Index out of range",
+                                  cursor_position=0)
+
+
 def composer_prompt(db):
     composers = db_interface.explore_table(db.table("composers"),
                                            search=("name", ""))
@@ -226,27 +258,41 @@ def composer_prompt(db):
         if comp in item:
             matches.append(item)
     if matches:
-        load = prompt(f"{comp} is in the database, would you like to load it? "
-                      "[Y/n] ", default='Y')
+        load = prompt(f"Would you like to load {comp} from the database? ",
+                      default='Y', validator=YNValidator())
         if load.lower()[0] == 'y':
             if len(matches) > 1:
                 for num, match in enumerate(matches):
                     print(f"{num}. {match}")
-                while True:
-                    choice = prompt("Please enter the number of the "
-                                    "matching composer or N if none match: ")
-                    if len(choice) == 0:
-                        continue
-                    if choice[0].isdigit():
-                        match = matches[int(choice[0])]
-                        break
-                    elif choice[0].lower() == 'n':
-                        return info.Composer(comp)
+                choice = prompt("Please enter the number of the "
+                                "matching composer or press [enter] if none match: ",
+                                validator=IndexValidator(len(matches) - 1, allow_empty=True))
+                if choice:
+                    found = matches[int(choice[0])]
             else:
-                match = matches[0]
-            return info.Composer.load_from_db(match, db)
-    # TODO: add guessing of mutopianame etc.
-    return info.Composer(comp)
+                found = matches[0]
+            try:
+                return info.Composer.load_from_db(found, db)
+            except NameError:
+                pass
+    new_comp = info.Composer(comp)
+    guess_short_name = new_comp.get_short_name()
+    try:
+        guess_mutopia_name = new_comp.get_mutopia_name(guess=True)
+    except AttributeError:
+        guess_mutopia_name = ''
+    new_comp.shortname = prompt("Enter the abbreviated name of the composer: ",
+                                default=guess_short_name)
+    new_comp.mutopianame = prompt("Enter the mutopia formatted name of the composer "
+                                  "or [enter] for none: ", default=guess_mutopia_name)
+    while True:
+        add_to_db = prompt("Would you like to add this composer to the database for easy usage next time? ",
+                           default='Y')
+        if len(add_to_db) > 0:
+            break
+    if add_to_db.lower()[0] == 'y':
+        new_comp.add_to_db(db)
+    return new_comp
 
 
 def mutopia_prompt(db, curr_headers):
@@ -380,30 +426,40 @@ def create_instrument(instruments, db):
             if len(load) > 0:
                 break
         if load.lower()[0] == 'y':
-            new_ins = info.Instrument.load_from_db(normalize_name(ins_name_input), db, number=number)
-    else:
-        print("Please enter instrument information (press enter for default).")
-        insinfo = {}
-        if number:
-            insinfo['number'] = number
-        insinfo['name'] = ins_name_input
-        insinfo['abbr'] = prompt("Abbreviation: ") or None
-        while True:
-            clef = prompt("Clef: ", completer=WordCompleter(VALID_CLEFS)).lower() or None
-            if clef in VALID_CLEFS or clef is None:
-                break
-            print("invalid clef")
-        insinfo['transposition'] = prompt("Transposition: ") or None
-        keyboard_res = prompt("Is it a keyboard (grand staff) instrument? [y/N] ", default='N')
-        insinfo['keyboard'] = False
-        try:
-            if keyboard_res.lower()[0] == 'y':
-                insinfo['keyboard'] = True
-        except IndexError:
-            pass
-        insinfo['midi'] = prompt("Midi instrument name: ").lower() or None
-        insinfo['family'] = normalize_name(prompt("Instrument family: ")) or None
-        new_ins = info.Instrument.load(insinfo)
+            return lynames.Instrument.load_from_db(normalize_name(ins_name_input), db, number=number)
+    return manual_instrument(number=number, db=db, name=ins_name_input)
+
+
+def manual_instrument(name, number, db):
+    print("Please enter instrument information (press enter for default).")
+    insinfo = {}
+    if number:
+        insinfo['number'] = number
+    insinfo['name'] = name
+    insinfo['abbr'] = prompt("Abbreviation: ") or None
+    while True:
+        clef = prompt("Clef: ", completer=WordCompleter(VALID_CLEFS)).lower() or None
+        if clef in VALID_CLEFS or clef is None:
+            break
+        print("invalid clef")
+    insinfo['transposition'] = prompt("Transposition: ") or None
+    keyboard_res = prompt("Is it a keyboard (grand staff) instrument? [y/N] ", default='N')
+    insinfo['keyboard'] = False
+    try:
+        if keyboard_res.lower()[0] == 'y':
+            insinfo['keyboard'] = True
+    except IndexError:
+        pass
+    insinfo['midi'] = prompt("Midi instrument name: ").lower() or None
+    insinfo['family'] = normalize_name(prompt("Instrument family: ")) or None
+    new_ins = lynames.Instrument.load(insinfo)
+    while True:
+        add_to_db = prompt("Would you like to add this instrument to the database for"
+                           "easy use next time? ", default='Y')
+        if len(add_to_db) > 0:
+            break
+    if add_to_db.lower()[0] == 'y':
+        new_ins.add_to_db(db)
     return new_ins
 
 
@@ -411,26 +467,19 @@ def reorder_instruments(curr_instruments):
     while True:
         instruments_with_indexes(curr_instruments)
         tmp_instruments = [instrument for instrument in curr_instruments]
-        old_idx = prompt("Enter the index of the instrument to move or [enter] to finish: ") or None
+        old_idx = prompt("Enter the index of the instrument to move or [enter] to finish: ",
+                         validator=IndexValidator(len(tmp_instruments) - 1)) or None
         if old_idx is None:
             break
-        if not old_idx.isdigit():
-            continue
         move_instrument = tmp_instruments.pop(int(old_idx))
         instruments_with_indexes(tmp_instruments)
-        while True:
-            new_idx = prompt(f"Enter the index to insert {move_instrument.part_name()}: ")
-            try:
-                if new_idx.isdigit() and int(new_idx) <= len(tmp_instruments):
-                    break
-            except TypeError:
-                pass
-            print("Invalid index.")
+        new_idx = prompt(f"Enter the index to insert {move_instrument.part_name()}: ",
+                         validator=IndexValidator(len(tmp_instruments), allow_empty=False))
         tmp_instruments.insert(int(new_idx), move_instrument)
         print("New instrument order: ")
         instruments_with_indexes(tmp_instruments)
         while True:
-            correct = prompt("Is this correct? [Y/n] ", default='Y')
+            correct = prompt("Is this correct? [Y/n] ", default='Y', validator=YNValidator())
             if len(correct) > 0:
                 break
         if correct.lower()[0] == 'y':

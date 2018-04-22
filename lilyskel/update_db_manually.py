@@ -2,13 +2,21 @@ from pathlib import Path
 import better_exceptions
 import click
 from tinydb import TinyDB
+from titlecase import titlecase
 from lilyskel.lynames import Instrument
+from lilyskel.lynames import Ensemble
+from lilyskel.lynames import normalize_name
 from lilyskel.info import Composer
 from lilyskel.exceptions import MutopiaError
 from lilyskel import db_interface
+from lilyskel.cli import InsensitiveCompleter, instruments_with_indexes, \
+    manual_instrument, YNValidator, reorder_instruments
+
+from prompt_toolkit import prompt
 
 
 db = TinyDB(Path("/home/rick/repositories/lilyskel/lilyskel/default_db.json"))
+
 
 @click.group()
 def cli():
@@ -93,6 +101,68 @@ def addfromfile(table, infile):
 
     print(table_obj.all())
 
+
+@cli.command()
+@click.argument("name", required=True)
+@click.option("-i", "--instrument", multiple=True)
+def ensemble(name, instrument):
+    instrument_names = db_interface.explore_table(db.table("instruments"),
+                                                  search=("name", ""))
+    instruments = [titlecase(' '.join(name.split('_')))
+                   for name in instrument_names]
+    ins_list = []
+    new_ens = Ensemble(name)
+    for ins in instrument:
+        ins_name = ins
+        num = None
+        for group in ins.split():
+            if group.isdigit():
+                num = int(group)
+                ins_name = ins.replace(f" {group}", '')
+        if normalize_name(ins_name) in instrument_names:
+            ins_list.append(Instrument.load_from_db(normalize_name(ins_name), db,
+                            number=num))
+        else:
+            print(f"{ins_name} not in db")
+    done = False
+    if ins_list:
+        instruments_with_indexes(ins_list)
+        more_ins = prompt("Any more instruments? ", validator=YNValidator(), default='N')
+        if more_ins.lower()[0] == 'n':
+            done = True
+    if not done:
+        ins_list = db_instrument_prompt(instruments, ins_list)
+        instruments_with_indexes(ins_list)
+    reorder = prompt("Would you like to reorder the instruments? ", default='N',
+                     validator=YNValidator())
+    if reorder.lower()[0] == 'y':
+        ins_list = reorder_instruments(ins_list)
+    for ins in ins_list:
+        new_ens.add_instrument_from_obj(ins)
+    print(new_ens)
+    yn = prompt("Add to database? ", validator=YNValidator(), default='Y')
+    if yn.lower()[0] == 'y':
+        new_ens.add_to_db(db)
+
+
+def db_instrument_prompt(instruments, ins_list):
+    ins_completer = InsensitiveCompleter(instruments)
+    while True:
+        new_ins_name = prompt("Enter an instrument, blank to finish: ", completer=ins_completer)
+        if len(new_ins_name) == 0:
+            break
+        ins_number = prompt("Enter associated number (e.g. Violin 2) or [enter] for none: ") or None
+        load = 'N'
+        if new_ins_name in instruments:
+            load = prompt(f"{new_ins_name} is in the database, load it? ", default='Y',
+                          validator=YNValidator())
+        if load.lower()[0] == 'y':
+            new_ins = Instrument.load_from_db(normalize_name(new_ins_name),
+                                              db, number=ins_number)
+        else:
+            new_ins = manual_instrument(new_ins_name, ins_number, db)
+        ins_list.append(new_ins)
+    return ins_list
 
 
 @cli.command()
