@@ -153,6 +153,18 @@ def ensemble(ctx, name, instrument):
     if yn.lower()[0] == 'y':
         new_ens.add_to_db(db_)
 
+class IsNumberValidator(Validator):
+    def validate(self, document):
+        text = document.text
+        if not text:
+            return
+        if not text.isdigit():
+            raise ValidationError(message="Must be integer")
+        try:
+            int(text)
+        except ValueError as err:
+            raise ValidationError(message=err)
+
 
 def db_instrument_prompt(instruments, ins_list, db_):
     ins_completer = InsensitiveCompleter(instruments)
@@ -160,7 +172,10 @@ def db_instrument_prompt(instruments, ins_list, db_):
         new_ins_name = prompt("Enter an instrument, blank to finish: ", completer=ins_completer)
         if len(new_ins_name) == 0:
             break
-        ins_number = prompt("Enter associated number (e.g. Violin 2) or [enter] for none: ") or None
+        ins_number = prompt("Enter associated number (e.g. Violin 2) or [enter] for none: ",
+                            validator=IsNumberValidator()) or None
+        if ins_number:
+            ins_number = int(ins_number)
         load = 'N'
         if new_ins_name in instruments:
             load = prompt(f"{new_ins_name} is in the database, load it? ", default='Y',

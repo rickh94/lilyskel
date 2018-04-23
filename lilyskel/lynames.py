@@ -179,11 +179,11 @@ class Instrument(LyName):
         # pylint: disable=no-member
         name = titlecase(' '.join(self.name.split('_')))
         # _roman is only needed if self was initialized with a number.
-        if self._roman != '':
-            name += ' ' + self._roman
         if not key:
             if ' in ' in name:
                 name = re.sub(' in .*', '', name)
+        if self._roman != '':
+            name += ' ' + self._roman
         return name
 
     @classmethod
