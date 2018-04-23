@@ -1,4 +1,3 @@
-import atexit
 import shutil
 import os
 from pathlib import Path
@@ -7,27 +6,18 @@ import tempfile
 from titlecase import titlecase
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter
-from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.validation import Validator, ValidationError
 
 from lilyskel import yaml_interface, info, db_interface, mutopia, exceptions, lynames
+from lilyskel.interface.common import instruments_with_indexes, InsensitiveCompleter, YNValidator
 from lilyskel.lynames import normalize_name, VALID_CLEFS
+from .update_db_manually import db
 
 TEMP = tempfile.gettempdir()
 PATHSAVE = Path(TEMP, "lilyskel_path")
 BOLD = "\033[1m"
 END = "\033[0m"
 INVALID = "Command not recognized. Please try again."
-
-
-class YNValidator(Validator):
-    def validate(self, document):
-        text = document.text
-        if not text:
-            raise ValidationError(message="Respose Required", cursor_position=0)
-        if text.lower()[0] not in 'yn':
-            raise ValidationError(message="Response must be [y]es or [n]o",
-                                  cursor_position=0)
 
 
 @click.group()
@@ -42,6 +32,7 @@ def cli():
 @click.option("--path", "-p", default=".", help=(
         "path to new directory, defaults to current working directory."))
 def init(filename, path):
+    """Create the configuration file and set the directory"""
     if ".yaml" not in filename:
         filename = filename + ".yaml"
     filepath = Path(path, filename)
@@ -62,6 +53,7 @@ def init(filename, path):
 @click.option("-d", "--db-path", required=False, default=None,
               help="Path to tinydb.")
 def edit(file_path, db_path):
+    """Create and edit piece information"""
     if not file_path:
         try:
             with open(PATHSAVE, "r") as savepath:
@@ -216,18 +208,6 @@ def edit_header(curr_headers, db):
             return curr_headers
         else:
             print(INVALID)
-
-
-class InsensitiveCompleter(Completer):
-    def __init__(self, word_list):
-
-        self._word_list = word_list
-
-    def get_completions(self, document, complete_event):
-        start = - len(document.text)
-        for word in self._word_list:
-            if document.text.lower() in word.lower():
-                yield Completion(word, start_position=start)
 
 
 class IndexValidator(Validator):
@@ -402,11 +382,6 @@ def edit_instruments(curr_instruments, db):
             return curr_instruments
 
 
-def instruments_with_indexes(instrumentlist):
-    for idx, instrument in enumerate(instrumentlist):
-        print(f"{idx}: {instrument.part_name()}")
-
-
 def create_instrument(instruments, db):
     ins_name_input = prompt("Enter the full instrument name: ",
                             completer=InsensitiveCompleter(instruments))
@@ -485,3 +460,7 @@ def reorder_instruments(curr_instruments):
         if correct.lower()[0] == 'y':
             curr_instruments = [instrument for instrument in tmp_instruments]
     return curr_instruments
+
+
+# adding commands from other files
+cli.add_command(db)

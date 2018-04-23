@@ -353,7 +353,7 @@ class Ensemble():
         """
         ens_table = db.table('ensembles')
         ins_table = db.table('instruments')
-        data = {'name': self.name}
+        data = dict(name=self.name)
         data['instruments'] = []
         for instrument in self.instruments:
             # if the instrument isn't in the database

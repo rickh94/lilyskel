@@ -373,7 +373,6 @@ class TestEnsemble():
         test_ens.add_instrument(ins_name='violin', number=1, db=livedb)
         assert violin1 in test_ens.instruments, ("Should have loaded 'violin' "
                                                  "object from the database")
-
         test_ens.add_instrument(ins_name='glockenSPiel', number=1, abbr='Gl.',
                                 clef='treble', keyboard=False,
                                 midi='glockenspiel', family='PERCUSsion')

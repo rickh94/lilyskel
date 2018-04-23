@@ -9,27 +9,17 @@ here = Path(__file__).parents[0]
 def_path = Path(os.path.expanduser('~'), '.local', 'share', 'lilyskel', 'db.json')
 
 
-def pathify(in_path):
-    """
-    Normalize paths as Path objects.
-    Arguments:
-        in_path: a pathlike string or Path object
-    """
-    return Path(in_path)
-
-
 def init_db(path=None):
     """
     Initializes the database.
     :param path: (optional) the path of the database.
     :return: TinyDB of common instruments and composers
     """
-    if path is None:
-        path = def_path
-    path = pathify(path)
-    if not path.parents[0].exists():
-        os.makedirs(path.parents[0])
-    return TinyDB(path)
+    db_path = path or def_path
+    db_path = Path(db_path)
+    if not db_path.parents[0].exists():
+        os.makedirs(db_path.parents[0])
+    return TinyDB(db_path)
 
 
 def bootstrap_db(path=None):
@@ -39,7 +29,7 @@ def bootstrap_db(path=None):
     """
     if path is None:
         path = def_path
-    path = pathify(path)
+    path = Path(path)
     os.makedirs(path.parents[0], exist_ok=True)
     # grab the included default database
     default = Path(here, 'default_db.json')
