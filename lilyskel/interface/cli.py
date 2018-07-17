@@ -1,14 +1,16 @@
-import atexit
 import shutil
 import os
 from pathlib import Path
 import click
 import tempfile
+from titlecase import titlecase
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter
-from prompt_toolkit.completion import Completer, Completion
 
 from lilyskel import yaml_interface, info, db_interface, mutopia, exceptions
+from lilyskel.interface.common import instruments_with_indexes, InsensitiveCompleter, YNValidator, reorder_instruments, IndexValidator, \
+    create_instrument
+from .update_db_manually import db
 
 TEMP = tempfile.gettempdir()
 PATHSAVE = Path(TEMP, "lilyskel_path")
@@ -29,17 +31,19 @@ def cli():
 @click.option("--path", "-p", default=".", help=(
         "path to new directory, defaults to current working directory."))
 def init(filename, path):
+    """Create the configuration file and set the directory"""
     if ".yaml" not in filename:
         filename = filename + ".yaml"
     filepath = Path(path, filename)
     if filepath.exists():
-        overwrite = prompt("File exists. Overwrite?[y/N] ")
-        if not overwrite:
+        overwrite = prompt("File exists. Overwrite? ", validator=YNValidator(),
+                           default='N')
+        if overwrite.lower()[0] == 'n':
             raise SystemExit(1)
         shutil.copy2(filepath, Path(str(filepath) + ".bak"))
     filepath.open("w").close()
     with open(PATHSAVE, "w") as savepath:
-        savepath.write(str(filepath))
+        savepath.write(str(filepath.absolute()))
 
 
 @cli.command()
@@ -48,6 +52,7 @@ def init(filename, path):
 @click.option("-d", "--db-path", required=False, default=None,
               help="Path to tinydb.")
 def edit(file_path, db_path):
+    """Create and edit piece information"""
     if not file_path:
         try:
             with open(PATHSAVE, "r") as savepath:
@@ -65,8 +70,8 @@ def edit(file_path, db_path):
         bootstrap = prompt("Lilyskel supports a small database to help with "
                            "commonly used items (such as instruments and "
                            "composers). You do not appear to have one. "
-                           "Would you like to copy the included one? [Y/n]",
-                           default='Y')
+                           "Would you like to copy the included one? ",
+                           default='Y', validator=YNValidator())
         if bootstrap.lower()[0] == 'y':
             db_interface.bootstrap_db(db_path)
     edit_prompt(piece, Path(file_path), db)
@@ -92,8 +97,9 @@ def edit_prompt(piece, config_path, db):
         f"{BOLD}quit:{END}\t\twrite out file and exit\n"
         f"{BOLD}help:{END}\t\tprint this message\n"
     )
-    command_completer = WordCompleter(['header', 'instrument', 'ensemble', 'movement',
-                                       'print', 'quit', 'help'])
+    command_list = ['header', 'instrument', 'ensemble', 'movement', 'print',
+                    'quit', 'help']
+    command_completer = WordCompleter(command_list)
     infodict = {}
     if isinstance(piece, info.Piece):
         infodict = {
@@ -110,9 +116,10 @@ def edit_prompt(piece, config_path, db):
         # DEBUG LINE
         print(infodict)
         try:
-            command = prompt(piece["headers"].title + "> ")
+            ps1 = infodict["headers"].title
         except (AttributeError, KeyError, TypeError):
-            command = prompt("Untitled> ", completer=command_completer)
+            ps1 = "Untitled"
+        command = prompt(f"{ps1}> ", completer=command_completer)
         if len(command) == 0:
             continue
         if command[0].lower() == 'q':
@@ -177,10 +184,9 @@ def edit_header(curr_headers, db):
             if len(title) != 0:
                 curr_headers.title = title
         elif "comp" in field:
-            yn = prompt("Current composer is {}. Would you like to change it? "
-                        "[y/N] ".format(
-                curr_headers.composer.name
-            ), default='N')
+            yn = prompt("Current composer is {}. Would you like to change "
+                        "it? ".format(curr_headers.composer.name), default='N',
+                        validator=YNValidator())
             if yn.lower()[0] == 'y':
                 curr_headers.composer = composer_prompt(db)
         elif field in ["dedication", "subtitle", "subsubtitle", "poet",
@@ -203,17 +209,6 @@ def edit_header(curr_headers, db):
             print(INVALID)
 
 
-class InsensitiveCompleter(Completer):
-    def __init__(self, word_list):
-        self._word_list = word_list
-
-    def get_completions(self, document, complete_event):
-        start = - len(document.text)
-        for word in self._word_list:
-            if document.text.lower() in word.lower():
-                yield Completion(word, start_position=start)
-
-
 def composer_prompt(db):
     composers = db_interface.explore_table(db.table("composers"),
                                            search=("name", ""))
@@ -223,27 +218,41 @@ def composer_prompt(db):
         if comp in item:
             matches.append(item)
     if matches:
-        load = prompt(f"{comp} is in the database, would you like to load it? "
-                      "[Y/n] ", default='Y')
+        load = prompt(f"Would you like to load {comp} from the database? ",
+                      default='Y', validator=YNValidator())
         if load.lower()[0] == 'y':
             if len(matches) > 1:
                 for num, match in enumerate(matches):
                     print(f"{num}. {match}")
-                while 1:
-                    choice = prompt("Please enter the number of the "
-                                    "matching composer or N if none match: ")
-                    if len(choice) == 0:
-                        continue
-                    if choice[0].isdigit():
-                        match = matches[int(choice[0])]
-                        break
-                    elif choice[0].lower() == 'n':
-                        return info.Composer(comp)
+                choice = prompt("Please enter the number of the "
+                                "matching composer or press [enter] if none match: ",
+                                validator=IndexValidator(len(matches) - 1, allow_empty=True))
+                if choice:
+                    found = matches[int(choice[0])]
             else:
-                match = matches[0]
-            return info.Composer.load_from_db(match, db)
-    # TODO: add guessing of mutopianame etc.
-    return info.Composer(comp)
+                found = matches[0]
+            try:
+                return info.Composer.load_from_db(found, db)
+            except NameError:
+                pass
+    new_comp = info.Composer(comp)
+    guess_short_name = new_comp.get_short_name()
+    try:
+        guess_mutopia_name = new_comp.get_mutopia_name(guess=True)
+    except AttributeError:
+        guess_mutopia_name = ''
+    new_comp.shortname = prompt("Enter the abbreviated name of the composer: ",
+                                default=guess_short_name)
+    new_comp.mutopianame = prompt("Enter the mutopia formatted name of the composer "
+                                  "or [enter] for none: ", default=guess_mutopia_name)
+    while True:
+        add_to_db = prompt("Would you like to add this composer to the database for easy usage next time? ",
+                           default='Y')
+        if len(add_to_db) > 0:
+            break
+    if add_to_db.lower()[0] == 'y':
+        new_comp.add_to_db(db)
+    return new_comp
 
 
 def mutopia_prompt(db, curr_headers):
@@ -254,11 +263,11 @@ def mutopia_prompt(db, curr_headers):
         source = prompt("Enter the source: ")
         style = prompt("Enter the style: ")
         print(license_ for license_ in licenses)
-        license = prompt("Enter the license: ", completer=license_completer)
+        license_ = prompt("Enter the license: ", completer=license_completer)
         while 1:
             try:
                 mu_headers = info.MutopiaHeaders(source=source,
-                                                 style=style, license=license)
+                                                 style=style, license=license_)
                 break
             except exceptions.MutopiaError as err:
                 if "style" in str(err):
@@ -267,7 +276,7 @@ def mutopia_prompt(db, curr_headers):
                 if "license" in str(err):
                     print("Invalid license")
                     print(license_ for license_ in licenses)
-                    license = prompt("Enter valid license: ",
+                    license_ = prompt("Enter valid license: ",
                                      completer=license_completer)
     prompt_help = (
         "You may enter any of the following data or leave blank. "
@@ -320,14 +329,38 @@ def edit_instruments(curr_instruments, db):
         f"{BOLD}done{END} to save and return to main prompt"
     )
     command_completer = WordCompleter(['create', 'delete', 'reorder', 'help', 'done'])
-    instruments = db_interface.explore_table(db.table("instruments"),
-                                           search=("name", ""))
+    instrument_names = db_interface.explore_table(db.table("instruments"),
+                                                  search=("name", ""))
+    instruments = [titlecase(' '.join(name.split('_')))
+                   for name in instrument_names]
     print(prompt_help)
     while True:
+        # DEBUG LINE
+        print(curr_instruments)
         command = prompt("Instruments> ", completer=command_completer)
         if len(command) == 0:
             continue
         elif command.lower()[0] == 'c':
-            ins_name = prompt("Enter the full instrument name: ",
-                              completer=InsensitiveCompleter(instruments))
-            print(ins_name)
+            new_ins = create_instrument(instruments, db, instrument_names)
+            curr_instruments.append(new_ins)
+        elif command.lower()[0:2] == 'de':
+            while True:
+                instruments_with_indexes(curr_instruments)
+                del_idx = prompt("Enter the number of the instrument to delete or [enter] to "
+                                 "finish: ") or None
+                if del_idx is None:
+                    break
+                elif del_idx.isdigit():
+                    curr_instruments.pop(int(del_idx))
+                else:
+                    print("Invalid index")
+        elif command.lower()[0] == 'r':
+            curr_instruments = reorder_instruments(curr_instruments)
+        elif command.lower()[0] == 'h':
+            print(prompt_help)
+        elif command.lower()[0:2] == 'do':
+            return curr_instruments
+
+
+# adding commands from other files
+cli.add_command(db)

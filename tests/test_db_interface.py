@@ -1,7 +1,6 @@
 """Tests db interaction functions."""
 from pathlib import Path
 import os
-import shutil
 import pytest
 from unittest import mock
 from tinydb import TinyDB
@@ -12,25 +11,6 @@ home = os.path.join(os.path.expanduser('~'))
 here = Path(__file__)
 basedir = here.parents[1]
 srcdir = Path(basedir, 'lilyskel')
-
-
-class TestPathify():
-    """Test the pathify function."""
-    def test_is_path(self):
-        """Test that it stays a Path object."""
-        assert db_interface.pathify(Path('/tmp', 'test', 'dir')) ==\
-            Path('/tmp', 'test', 'dir'), ("Path object doesn't return Path "
-                                          "object.")
-
-    def test_is_str(self):
-        """Test that we get a path object from a string."""
-        assert db_interface.pathify('/tmp/test/dir') ==\
-            Path('/tmp', 'test', 'dir'), ("Unix path doesn't return proper "
-                                          "path object.")
-
-        assert db_interface.pathify('c:/tmp/test/dir') ==\
-            Path('c:/tmp', 'test', 'dir'), ("Windows path doesn't return "
-                                            "proper path object.")
 
 
 @mock.patch('lilyskel.db_interface.os.makedirs')

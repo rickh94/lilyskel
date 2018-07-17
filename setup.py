@@ -36,7 +36,7 @@ setup(
     package=find_packages(),
     entry_points={
         'console_scripts': [
-                       'lilyskel=lilyskel.cli:cli',
+                       'lilyskel=lilyskel.interface.cli:cli',
         ],
     },
 )
