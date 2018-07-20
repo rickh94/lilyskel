@@ -1,4 +1,3 @@
-add tests for Composer.load and Headers.load
 write data out to config file (yaml)
 read data in from config file
 build directory from config file

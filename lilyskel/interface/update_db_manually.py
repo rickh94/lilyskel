@@ -5,9 +5,6 @@ from prompt_toolkit import prompt
 from tinydb import Query
 
 
-from lilyskel.lynames import Instrument
-from lilyskel.lynames import Ensemble
-from lilyskel.lynames import normalize_name
 from lilyskel.info import Composer
 from lilyskel.exceptions import MutopiaError
 from lilyskel import db_interface
@@ -116,39 +113,7 @@ def fromfile(ctx, table, infile):
 def ensemble(ctx, name, instrument):
     """Add an ensemble to the database"""
     db_ = ctx.obj['DB']
-    instrument_names = db_interface.explore_table(db_.table("instruments"),
-                                                  search=("name", ""))
-    instruments = [titlecase(' '.join(name.split('_')))
-                   for name in instrument_names]
-    ins_list = []
-    new_ens = Ensemble(name)
-    for ins in instrument:
-        ins_name = ins
-        num = None
-        for group in ins.split():
-            if group.isdigit():
-                num = int(group)
-                ins_name = ins.replace(f" {group}", '')
-        if normalize_name(ins_name) in instrument_names:
-            ins_list.append(Instrument.load_from_db(normalize_name(ins_name), db_,
-                            number=num))
-        else:
-            print(f"{ins_name} not in db")
-    done = False
-    if ins_list:
-        instruments_with_indexes(ins_list)
-        more_ins = prompt("Any more instruments? ", validator=YNValidator(), default='N')
-        if more_ins.lower()[0] == 'n':
-            done = True
-    if not done:
-        ins_list = db_instrument_prompt(instruments, ins_list, db_)
-        instruments_with_indexes(ins_list)
-    reorder = prompt("Would you like to reorder the instruments? ", default='N',
-                     validator=YNValidator())
-    if reorder.lower()[0] == 'y':
-        ins_list = reorder_instruments(ins_list)
-    for ins in ins_list:
-        new_ens.add_instrument_from_obj(ins)
+    new_ens = create_ensemble(name, db_, instrument)
     print(new_ens)
     yn = prompt("Add to database? ", validator=YNValidator(), default='Y')
     if yn.lower()[0] == 'y':

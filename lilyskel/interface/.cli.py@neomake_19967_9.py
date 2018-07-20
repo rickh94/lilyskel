@@ -8,7 +8,7 @@ from titlecase import titlecase
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter
 
-from lilyskel import yaml_interface, info, db_interface, mutopia, exceptions
+from lilyskel import yaml_interface, info, db_interface, mutopia, exceptions,
 from lilyskel.interface.common import instruments_with_indexes, InsensitiveCompleter, YNValidator, reorder_instruments, IndexValidator, \
     create_instrument
 from .update_db_manually import db

@@ -75,7 +75,7 @@ def _roman_numeral(num):
 
 
 @attr.s(slots=True)
-class LyName():
+class LyName:
     """Common attributes/names"""
     name = attr.ib(convert=normalize_name)
     number = attr.ib(init=False, default=None)

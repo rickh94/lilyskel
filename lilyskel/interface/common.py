@@ -2,9 +2,10 @@ from prompt_toolkit import prompt
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.contrib.completers import WordCompleter
 from prompt_toolkit.validation import Validator, ValidationError
+from titlecase import titlecase
 
-from lilyskel import lynames
-from lilyskel.lynames import VALID_CLEFS, normalize_name
+from lilyskel import lynames, db_interface
+from lilyskel.lynames import VALID_CLEFS, normalize_name, Instrument, Ensemble
 
 
 def instruments_with_indexes(instrumentlist):
@@ -91,6 +92,43 @@ def reorder_instruments(curr_instruments):
     return curr_instruments
 
 
+def create_ensemble(name, db, instruments_to_add):
+    instrument_names = db_interface.explore_table(db.table("instruments"),
+                                                  search=("name", ""))
+    instruments = [titlecase(' '.join(name.split('_')))
+                   for name in instrument_names]
+    ins_list = []
+    new_ens = Ensemble(name)
+    for ins in instruments_to_add:
+        ins_name = ins
+        num = None
+        for group in ins.split():
+            if group.isdigit():
+                num = int(group)
+                ins_name = ins.replace(f" {group}", '')
+        if normalize_name(ins_name) in instrument_names:
+            ins_list.append(Instrument.load_from_db(normalize_name(ins_name), db,
+                                                    number=num))
+        else:
+            print(f"{ins_name} not in db")
+    if not ins_list:
+        ins_list.append(create_instrument(instruments, db, instrument_names))
+    while True:
+        instruments_with_indexes(ins_list)
+        more_ins = prompt("Any more instruments? ", validator=YNValidator(), default='N')
+        if more_ins.lower()[0] == 'n':
+            break
+        ins_list.append(create_instrument(instruments, db, instrument_names))
+    instruments_with_indexes(ins_list)
+    reorder = prompt("Would you like to reorder the instruments? ", default='N',
+                     validator=YNValidator())
+    if reorder.lower()[0] == 'y':
+        ins_list = reorder_instruments(ins_list)
+    for ins in ins_list:
+        new_ens.add_instrument_from_obj(ins)
+    return new_ens
+
+
 class IndexValidator(Validator):
     def __init__(self, max_len, allow_empty=True):
         self.max = max_len
@@ -108,3 +146,28 @@ class IndexValidator(Validator):
         if idx > self.max:
             raise ValidationError(message="Index out of range",
                                   cursor_position=0)
+
+
+def create_instrument(instruments, db, instrument_names_standardized):
+    ins_name_input = prompt("Enter the full instrument name: ",
+                            completer=InsensitiveCompleter(instruments))
+    while True:
+        number = prompt("If the instrument has a number associated (e.g. Violin 2), "
+                        "enter it or press [enter] to continue. ")or None
+        if number is None:
+            break
+        if number.isdigit():
+            number = int(number)
+            break
+        print("Invalid number")
+    if '_'.join(ins_name_input.lower().split()) in \
+            instrument_names_standardized:
+        while True:
+            load = prompt(f"{ins_name_input} is in the database, would you like to load it? "
+                    "[Y/n] ", default='Y')
+            if len(load) > 0:
+                break
+        if load.lower()[0] == 'y':
+            return lynames.Instrument.load_from_db(
+                    normalize_name(ins_name_input), db, number=number)
+    return manual_instrument(number=number, db=db, name=ins_name_input)
