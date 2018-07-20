@@ -15,7 +15,7 @@ def instruments_with_indexes(instrumentlist):
 class InsensitiveCompleter(Completer):
     def __init__(self, word_list):
 
-        self._word_list = word_list
+        self._word_list = set(word_list)
 
     def get_completions(self, document, complete_event):
         start = - len(document.text)

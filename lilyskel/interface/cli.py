@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import click
 import tempfile
+from tinydb import Query
 from titlecase import titlecase
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter
@@ -375,14 +376,27 @@ def create_instrument(instruments, db):
             number = int(number)
             break
         print("Invalid number")
-    if ins_name_input in instruments:
-        while True:
-            load = prompt(f"{ins_name_input} is in the database, would you like to load it? "
-                          "[Y/n] ", default='Y')
-            if len(load) > 0:
-                break
+    q = Query()
+    matches = db.table('instruments').search(q['name'].test(lambda val: normalize_name(ins_name_input) in val))
+    if matches:
+        load = prompt(f"{ins_name_input} is in the database, would you like to load it? "
+                      "[Y/n] ", default='Y', validator=YNValidator())
         if load.lower()[0] == 'y':
-            return lynames.Instrument.load_from_db(normalize_name(ins_name_input), db, number=number)
+            if len(matches) < 2:
+                return lynames.Instrument.load_from_db(normalize_name(ins_name_input), db, number=number)
+            else:
+                for num, ins in enumerate(matches):
+                    # print(ins)
+                    print(f"{num}: {ins['name']}, clef: {ins['clef']}, "
+                          f"transposition: {ins['transposition']}")
+                choice = prompt("Please enter the number of the "
+                                "matching instrument or press [enter] if none match: ",
+                                validator=IndexValidator(len(matches) - 1, allow_empty=True))
+                if choice:
+                    new_ins = matches[int(choice)]
+                    if number:
+                        new_ins['number'] = number
+                    return lynames.Instrument.load(new_ins)
     return manual_instrument(number=number, db=db, name=ins_name_input)
 
 

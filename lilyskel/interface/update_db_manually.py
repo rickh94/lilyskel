@@ -2,6 +2,7 @@ import better_exceptions
 import click
 from titlecase import titlecase
 from prompt_toolkit import prompt
+from tinydb import Query
 
 
 from lilyskel.lynames import Instrument
@@ -153,6 +154,7 @@ def ensemble(ctx, name, instrument):
     if yn.lower()[0] == 'y':
         new_ens.add_to_db(db_)
 
+
 class IsNumberValidator(Validator):
     def validate(self, document):
         text = document.text
@@ -198,6 +200,26 @@ def search(ctx, table, field, term):
     """Search the database"""
     db_ = ctx.obj['DB']
     print(db_interface.explore_table(db_.table(table), search=(field, term)))
+
+
+@db.command()
+@click.argument("table", required=True)
+@click.argument("field", default="name")
+@click.argument("search_term")
+@click.pass_context
+def delete(ctx, table, field, search_term):
+    """Find and delete an item from a table"""
+    table = ctx.obj['DB'].table(table)
+    if not search_term:
+        search_term = prompt(f"Enter a search term for table {table}")
+    q = Query()
+    try:
+        items = table.search(q[field].test(lambda val: search_term in val))
+    except AttributeError as err:
+        print("Invalid table or db.")
+    for num, item in enumerate(items):
+        print(f"{num}: {item}")
+    # TODO: finish delete function
 
 
 if __name__ == '__main__':

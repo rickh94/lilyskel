@@ -66,11 +66,11 @@ def explore_table(table, search=None):
         if not isinstance(search, tuple):
             raise TypeError('search must be a tuple (field, value)')
         field, term = search
-        Search = Query()
+        q = Query()
         # Search[field]: look specified field, lambda val: return the value
         # from the db if the term is found in it.
         try:
-            items = table.search(Search[field].test(lambda val: term in val))
+            items = table.search(q[field].test(lambda val: term in val))
         except AttributeError as err:
             raise TypeError("table may not be a tinydb table ", err)
     for item in items:
@@ -81,19 +81,22 @@ def explore_table(table, search=None):
     return founditems
 
 
-def load_name_from_table(name, db, tablename):
+def load_name_from_table(name, db, tablename, extra_searches=None):
     """
     Load data with specified 'name' from the specified 'db' table.
 
-    Arguments:
-        name: the name of the item to be retrieved.
-        db: a TinyDB object.
-        tablename: the name of the table to search.
+    :param: name: the name of the item to be retrieved.
+    :param: db: a TinyDB object
+    :param: tablename: the name of the table to search
+    :param: extra_searches: an additional filter in case of
+        multiple of the same name
+
+    :return: dict of data from database
     """
-    Search = Query()
+    q = Query()
     # get an object matching name from the db.
     dbtable = db.table(tablename)
-    data = dbtable.get(Search.name == name)
+    data = dbtable.get(q.name == name)
     if data is None:
         raise exceptions.DataNotFoundError(
             "'{name}' is not in the '{table}' table.".format(name=name,
