@@ -39,8 +39,7 @@ def bootstrap_db(path=None):
 def explore_db(db):
     """
     Explore what tables are available in the database.
-    Arguments:
-        db: a TinyDB instance.
+    :param db: a TinyDB instance.
     """
     if not isinstance(db, TinyDB):
         raise ValueError("'db' must be a TinyDB instance.")
@@ -54,8 +53,8 @@ def explore_table(table, search=None):
     """
     Explore a table in the database.
 
-     :param table: the tinydb table object to search.
-     :param search: (optional) a tuple of (field, search_term) to search for in the
+    :param table: the tinydb table object to search.
+    :param search: (optional) a tuple of (field, search_term) to search for in the
         table.
     :return: results of the search
     """

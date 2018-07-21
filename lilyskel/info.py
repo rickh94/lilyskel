@@ -42,8 +42,7 @@ class Composer:
     def get_mutopia_name(self, guess=False):
         """
         Get the mutopia name for a composer.
-        Arugments:
-            guess: if True, a guess will be made at the mutopia name of a
+        :param guess: if True, a guess will be made at the mutopia name of a
             composer.
         """
         if self.mutopianame is not None:
@@ -65,9 +64,8 @@ class Composer:
         """
         Loads a composer from the database.
 
-        Arguments:
-            name: part or all of a composer's name
-            db: a TinyDB instance
+        :param name: part or all of a composer's name
+        :param db: a TinyDB instance
         """
         table = db.table('composers')
         name_parts = name.split(' ')
@@ -98,8 +96,7 @@ class Composer:
         This should only be called after load_from_db fails or the databse is
         otherwise checked so duplicates aren't added to the database.
 
-        Arguments:
-            db: a tinydb instance to insert into.
+        :param db: a tinydb instance to insert into.
         """
         comp_table = db.table('composers')
         data = attr.asdict(self)
@@ -143,9 +140,8 @@ class Headers(object):
                             instruments=None):
         """
         Add mutopia headers.
-        Arguments:
-            mu_headers: a MutopiaHeaders object
-            guess_composer: Whether to guess at the mutopiacomposer if not set.
+        :param mu_headers: a MutopiaHeaders object
+        :param guess_composer: Whether to guess at the mutopiacomposer if not set.
 
         Note: This will overwrite the copyright to match the license.
         """

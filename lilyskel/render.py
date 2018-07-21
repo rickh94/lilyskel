@@ -17,15 +17,15 @@ def make_instrument(instrument, lyglobal, piece, flags=FLAGS,
     """
     Create all the files related to an instrument.
 
-    Arguments:
-        instrument: An lynames.Instrument object.
-        lyglobal: An lynames.LyName object with the 'global' name.
-        piece: An info.Piece object (with movement info).
-        flags: a dict of the options for rendering the instrument part:
+   :param instrument: An lynames.Instrument object.
+   :param lyglobal: An lynames.LyName object with the 'global' name.
+   :param piece: An info.Piece object (with movement info).
+   :param flags: a dict of the options for rendering the instrument part:
             key_in_partname: bool, compress_full_bar_rests: bool.
             If not supplied, both will default to false.
-        prefix: path prefix for generation of the directory structure. Defaults
+   :param prefix: path prefix for generation of the directory structure. Defaults
             to current working directory. Relative paths are prefered.
+   :returns: paths to include in an instrument includes file
     """
     instemplate = ENV.get_template('ins_part.ly')
 
@@ -77,12 +77,11 @@ def render_includes(includepaths, piece, extra_includes=[],
     """
     Renders the includes file for the piece.
 
-    Arguments:
-        includepaths: The auto defined includes from generation of notes files
+    :param includepaths: The auto defined includes from generation of notes files
         a list of Path objects, relative to the prefix path
         extra_includes: more includes defined by the user. a list of Path
         objects
-        piece: a Piece object
+    :param piece: a Piece object
     """
     old_dir = os.getcwd()
     os.chdir(location)

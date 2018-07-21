@@ -363,6 +363,5 @@ def edit_instruments(curr_instruments, db):
             return curr_instruments
 
 
-
 # adding commands from other files
 cli.add_command(db)

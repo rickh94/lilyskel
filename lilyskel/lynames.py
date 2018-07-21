@@ -85,9 +85,8 @@ class LyName:
     def _movement(self, mov_num, *, form):
         """
         Returns name and movement as number or word.
-        Arguments:
-            mov_num: an int that is the number of the movement.
-            form: required keyword arg. 'num' for numeral, 'ord' for ordinal.
+        :param mov_num: an int that is the number of the movement.
+        :param form: required keyword arg. 'num' for numeral, 'ord' for ordinal.
         """
         if not isinstance(mov_num, int):
             raise TypeError("'mov_num' must be an integer")
@@ -173,8 +172,7 @@ class Instrument(LyName):
     def part_name(self, key=False):
         """
         Returns the name for printing on a part.
-        Arguments:
-            key: (bool) Specifies whether to include key/transposition in name.
+        :param key: (bool) Specifies whether to include key/transposition in name.
         """
         # pylint: disable=no-member
         name = titlecase(' '.join(self.name.split('_')))
@@ -193,11 +191,10 @@ class Instrument(LyName):
         """
         Returns a numbered Instrument class. (e.g. Violin 1, Violin 2)
 
-        Arguments:
-            name: the name of the class.
-            number: an int describing the number of the instrument (supports up
+        :param name: the name of the class.
+        :param number: an int describing the number of the instrument (supports up
             to 89)
-            *: optional attributes to set on instance. (See Instrument() for
+        :param *: optional attributes to set on instance. (See Instrument() for
             details). Must be keyword args.
         """
         new_obj = cls(name, abbr=abbr, clef=clef,
@@ -214,10 +211,9 @@ class Instrument(LyName):
         Returns an instance with data from a tinydb database or raises an
         Exception.
 
-        Arguments:
-            name: the name of the instrument to retrieve.
-            db: A tinydb database that has an instruments table.
-            number: (optional) The number of the instrument in the ensemble.
+        :param name: the name of the instrument to retrieve.
+        :param db: A tinydb database that has an instruments table.
+        :param number: (optional) The number of the instrument in the ensemble.
             (e.g. Violin 1)
         """
         name = normalize_name(name)
@@ -238,8 +234,7 @@ class Instrument(LyName):
         This should only be called after load_from_db fails or the databse is
         otherwise checked so duplicates aren't added to the database.
 
-        Arguments:
-            db: a tinydb instance to insert into.
+        :param db: a tinydb instance to insert into.
         """
         ins_table = db.table('instruments')
         data = attr.asdict(self,
@@ -284,10 +279,9 @@ class Ensemble():
         """
         Add an instrument to the ensemble.
 
-        Arguments:
-            ins_name: the name of the desired instrument.
-            number: the number of the instrument. (see Instrument for details.)
-            db: the database to load instruments from. (if the instrument is
+        :param ins_name: the name of the desired instrument.
+        :param number: the number of the instrument. (see Instrument for details.)
+        :param db: the database to load instruments from. (if the instrument is
             not present, it will cause DataNotFoundError.
         """
         if self.instruments is None:
@@ -321,9 +315,8 @@ class Ensemble():
         of its instruments MUST be in the database. If they are not, it will
         fail to create.
 
-        Arguments:
-            name: the name of the ensemble
-            db: a TinyDB object
+        :param name: the name of the ensemble
+        :param db: a TinyDB object
         """
         name = normalize_name(name)
         data = load_name_from_table(name, db, 'ensembles')
@@ -348,8 +341,7 @@ class Ensemble():
         This should only be called after load_from_db fails or the databse is
         otherwise checked so duplicates aren't added to the database.
 
-        Arguments:
-            db: a tinydb instance to insert into.
+        :param db: a tinydb instance to insert into.
         """
         ens_table = db.table('ensembles')
         ins_table = db.table('instruments')

@@ -9,11 +9,13 @@ from lilyskel.lynames import VALID_CLEFS, normalize_name, Instrument, Ensemble
 
 
 def instruments_with_indexes(instrumentlist):
+    """Print a list of instruments numbered by their position in the list."""
     for idx, instrument in enumerate(instrumentlist):
         print(f"{idx}: {instrument.part_name()}")
 
 
 class InsensitiveCompleter(Completer):
+    """Complete without caring about case."""
     def __init__(self, word_list):
 
         self._word_list = set(word_list)
@@ -26,6 +28,7 @@ class InsensitiveCompleter(Completer):
 
 
 class YNValidator(Validator):
+    """Validates Yes/No responses in prompt_toolkit"""
     def validate(self, document):
         text = document.text
         if not text:
@@ -35,7 +38,15 @@ class YNValidator(Validator):
                                   cursor_position=0)
 
 
-def manual_instrument(name, number, db):
+def manual_instrument(name, number, db=None):
+    """
+    Manually create an instrument by entering all the information.
+
+    :param name: name of the instrument
+    :param number: A Number associated with the instrument (e.g. Violin 2)
+    :param db: Optional, database to add instrument to.
+    :return:
+    """
     print("Please enter instrument information (press enter for default).")
     insinfo = {}
     if number:
@@ -58,17 +69,23 @@ def manual_instrument(name, number, db):
     insinfo['midi'] = prompt("Midi instrument name: ").lower() or None
     insinfo['family'] = normalize_name(prompt("Instrument family: ")) or None
     new_ins = lynames.Instrument.load(insinfo)
-    while True:
-        add_to_db = prompt("Would you like to add this instrument to the database for"
-                           "easy use next time? ", default='Y')
-        if len(add_to_db) > 0:
-            break
-    if add_to_db.lower()[0] == 'y':
-        new_ins.add_to_db(db)
+    if db is not None:
+        while True:
+            add_to_db = prompt("Would you like to add this instrument to the database for"
+                               "easy use next time? ", default='Y')
+            if len(add_to_db) > 0:
+                break
+        if add_to_db.lower()[0] == 'y':
+            new_ins.add_to_db(db)
     return new_ins
 
 
 def reorder_instruments(curr_instruments):
+    """
+    Dialog to remove and add instruments at certain indexes.
+    :param curr_instruments: initial list of instruments
+    :return: The list of instruments in the new order
+    """
     while True:
         instruments_with_indexes(curr_instruments)
         tmp_instruments = [instrument for instrument in curr_instruments]
@@ -92,7 +109,15 @@ def reorder_instruments(curr_instruments):
     return curr_instruments
 
 
-def create_ensemble(name, db, instruments_to_add):
+def create_ensemble(name, db, instruments_to_add=[]):
+    """
+    Create an ensemble from new or old instruments
+    :param name: The name of the ensemble
+    :param db: the database to add the ensemble to and load instruments from.
+    :param instruments_to_add: (Optional) existing instrument objects to add to
+    the ensemble
+    :return: ensemble object created by the dialog
+    """
     instrument_names = db_interface.explore_table(db.table("instruments"),
                                                   search=("name", ""))
     instruments = [titlecase(' '.join(name.split('_')))
@@ -130,6 +155,7 @@ def create_ensemble(name, db, instruments_to_add):
 
 
 class IndexValidator(Validator):
+    """Validates indexes of lists."""
     def __init__(self, max_len, allow_empty=True):
         self.max = max_len
         self.allow_empty = allow_empty
@@ -149,6 +175,14 @@ class IndexValidator(Validator):
 
 
 def create_instrument(instruments, db, instrument_names_standardized):
+    """
+    Dialog for creating instruments
+    :param instruments: instrument names for completion
+    :param db: database to load or insert instruments
+    :param instrument_names_standardized: standardized versions of instrument names
+    for checking
+    :return: new instrument object
+    """
     ins_name_input = prompt("Enter the full instrument name: ",
                             completer=InsensitiveCompleter(instruments))
     while True:
