@@ -1,6 +1,10 @@
 """Classes for files and file info."""
+import itertools
 from collections import namedtuple
+
+import bs4
 import re
+import requests
 import subprocess
 from pathlib import Path
 import sys
@@ -13,6 +17,9 @@ from lilyskel import db_interface
 
 ENCODING = sys.stdout.encoding
 KeySignature = namedtuple('KeySignature', ['note', 'mode'])
+ALLOWED_NOTES = None
+ALLOWED_MODES = None
+LANGUAGES = None
 
 
 @attr.s
@@ -257,6 +264,59 @@ def convert_key(keyinfo):
     return KeySignature(keyinfo[0], keyinfo[1])
 
 
+def get_allowed_notes():
+    global ALLOWED_NOTES
+    if ALLOWED_NOTES:
+        return ALLOWED_NOTES
+    docpage = requests.get('http://lilypond.org/doc/v2.18/Documentation/notation/writing-pitches')
+    soup = bs4.BeautifulSoup(docpage.text, 'html.parser')
+    tables = soup.find_all('table')
+    note_name_table = None
+    for table in tables:
+        if "Note Names" in table.text:
+            note_name_table = table
+            break
+    note_name_p = note_name_table.find_all('p')
+    base_note_names = []
+    for item in note_name_p:
+        item_as_list = item.text.strip().split(' ')
+        if len(item_as_list) == 8:
+            base_note_names.extend(item_as_list)
+    base_note_names = list(set(base_note_names))
+    for table in tables:
+        if "sharp" in table.text:
+            curr_table = table
+            break
+    note_suffixes_p = curr_table.find_all('p')
+    note_suffixes_table = []
+    for item in note_suffixes_p:
+        if '-' in item.text:
+            # print('item found')
+            clean = item.text.strip().replace('-', '').split('/')
+            note_suffixes_table.extend(clean)
+    note_suffixes_table = list(set(note_suffixes_table))
+    note_suffixes_table.append('')
+    ALLOWED_NOTES = [pair[0] + pair[1] for pair in itertools.product(base_note_names, note_suffixes_table)]
+    return ALLOWED_NOTES
+
+
+def get_allowed_modes():
+    global ALLOWED_MODES
+    if ALLOWED_MODES:
+        return ALLOWED_MODES
+    docpage2 = requests.get('http://lilypond.org/doc/v2.18/Documentation/notation/displaying-pitches')
+    soup = bs4.BeautifulSoup(docpage2.text, "html.parser")
+    all_ps = soup.find_all('p')
+    curr_p = None
+    for a_p in all_ps:
+        if 'mode' in a_p.text and 'key signature' in a_p.text:
+            curr_p = a_p
+            break
+    mode_ps = curr_p.find_all('code')
+    ALLOWED_MODES = [item.text.replace('\\', '') for item in mode_ps if '\\' in item.text]
+    return ALLOWED_MODES
+
+
 @attr.s(slots=True)
 class Movement:
     num = attr.ib(validator=attr.validators.instance_of(int))
@@ -272,14 +332,9 @@ class Movement:
         err = AttributeError("'key' must be tuple of note and major or minor")
         if not isinstance(value, KeySignature):
             raise err
-        if value.note[0] not in ['a', 'b', 'c', 'd', 'e', 'f', 'g']:
+        if value.note not in get_allowed_notes():
             raise err
-        try:
-            if value.note[1] not in ['f', 'b']:
-                raise err
-        except IndexError:
-            pass
-        if value.mode not in ['major', 'minor']:
+        if value.mode not in get_allowed_modes():
             raise err
 
     @classmethod
@@ -292,6 +347,27 @@ class Movement:
     def dump(self):
         return attr.asdict(self)
 
+
+def get_valid_languages():
+    global LANGUAGES
+    if LANGUAGES:
+        return LANGUAGES
+    langfile = Path('/usr', 'share', 'lilypond', get_vers(), 'scm',
+                    'define-note-names.scm')
+    with open(langfile, 'rb') as file_:
+        content = file_.read()
+    langs = re.findall(r'Language: ([^\s]*)', content.decode(ENCODING),
+                       re.M | re.I)
+    LANGUAGES = [lang.lower() for lang in langs]
+    return LANGUAGES
+
+
+def get_vers():
+    run_ly = subprocess.run(['lilypond', '--version'],
+                            stdout=subprocess.PIPE)
+    matchvers = re.search(r'LilyPond ([^\n]*)',
+                          run_ly.stdout.decode(ENCODING))
+    return matchvers.group(1)
 
 @attr.s
 class Piece:
@@ -317,14 +393,9 @@ class Piece:
     @language.validator
     def validate_language(self, _attribute, value):
         """Check for a valid language."""
-        langfile = Path('/usr', 'share', 'lilypond', self.version, 'scm',
-                        'define-note-names.scm')
-        with open(langfile, 'rb') as file_:
-            content = file_.read()
-        langs = re.findall(r'Language: ([^\s]*)', content.decode(ENCODING),
-                           re.M | re.I)
-        languages = [lang.lower() for lang in langs]
-        if value.lower() not in languages:
+        if value is None:
+            return
+        if value.lower() not in get_valid_languages():
             raise AttributeError("Language is not valid. Must be one of "
                                  "{}".format(', '.join(languages)))
 
@@ -354,13 +425,8 @@ class Piece:
                      movements=None):
         """Automatically gets the version number from the system."""
         if movements is None:
-            movements=[Movement(num=1)]
-        run_ly = subprocess.run(['lilypond', '--version'],
-                                stdout=subprocess.PIPE)
-        matchvers = re.search(r'LilyPond ([^\n]*)',
-                              run_ly.stdout.decode(ENCODING))
-        vers = matchvers.group(1)
-        return cls(headers=headers, version=vers, language=language,
+            movements = [Movement(num=1)]
+        return cls(headers=headers, version=get_vers(), language=language,
                    opus=opus, movements=movements, instruments=instruments)
 
     def dump(self):

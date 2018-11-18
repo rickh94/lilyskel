@@ -4,7 +4,7 @@ from prompt_toolkit.contrib.completers import WordCompleter
 from prompt_toolkit.validation import Validator, ValidationError
 from titlecase import titlecase
 
-from lilyskel import lynames, db_interface
+from lilyskel import lynames, db_interface, info
 from lilyskel.lynames import VALID_CLEFS, normalize_name, Instrument, Ensemble
 
 
@@ -32,10 +32,12 @@ class YNValidator(Validator):
     def validate(self, document):
         text = document.text
         if not text:
-            raise ValidationError(message="Respose Required", cursor_position=0)
+            raise ValidationError(message="Response Required", cursor_position=0)
         if text.lower()[0] not in 'yn':
             raise ValidationError(message="Response must be [y]es or [n]o",
                                   cursor_position=0)
+
+
 
 
 def answered_yes(answer):
@@ -151,12 +153,12 @@ def create_ensemble(name, db, instruments_to_add=[]):
         print("You will need to create some instruments to add to the ensemble.")
         ins_list.append(create_instrument(instruments, db, instrument_names))
     prompt_help = ("You can:\n"
-                   f"{BOLD}reorder{END}, {BOLD}add{END}, {BOLD}delete{END},"
+                   f"{BOLD}reorder{END}, {BOLD}add{END}, {BOLD}delete{END}, {BOLD}print{END}"
                    f"\nor {BOLD}continue{END} if you are satisfied with the instruments.")
     print(prompt_help)
+    instruments_with_indexes(ins_list)
     while True:
-        instruments_with_indexes(ins_list)
-        choice = prompt("Ensemble> ", completer=WordCompleter(['reorder', 'add', 'delete', 'continue']), )
+        choice = prompt("Ensemble> ", completer=WordCompleter(['reorder', 'add', 'delete', 'continue', 'print']), )
         if len(choice) == 0:
             continue
         elif choice.lower()[0] == 'r':
@@ -174,6 +176,9 @@ def create_ensemble(name, db, instruments_to_add=[]):
                     ins_list.pop(int(del_idx))
                 else:
                     print("Invalid index")
+        elif choice.loser()[0] == 'p':
+            print(name + ':')
+            instruments_with_indexes(ins_list)
         elif choice.lower()[0] == 'c':
             break
     for ins in ins_list:

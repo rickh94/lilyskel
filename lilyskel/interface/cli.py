@@ -1,8 +1,11 @@
+import bs4
+import requests
 import shutil
 import os
 from pathlib import Path
 import click
 import tempfile
+from prompt_toolkit.validation import ValidationError, Validator
 from titlecase import titlecase
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter, PathCompleter
@@ -17,6 +20,7 @@ from .update_db_manually import db
 TEMP = tempfile.gettempdir()
 PATHSAVE = Path(TEMP, "lilyskel_path")
 INVALID = "Command not recognized. Please try again."
+TEMPO_WORDS = []
 
 
 @click.group()
@@ -93,6 +97,7 @@ def edit_prompt(piece, config_path, db):
         f"{BOLD}ensemble:{END}\tadd an ensemble to the score\n"
         f"{BOLD}movement:{END}\tadd/remove movements (including time, key, "
         f"and tempo info\n"
+        f"{BOLD}language:{END} set the region language for lilypond\n"
         f"{BOLD}print:{END}\t\t print the current state of the score info.\n"
         f"{BOLD}quit:{END}\t\twrite out file and exit\n"
         f"{BOLD}help:{END}\t\tprint this message\n"
@@ -123,13 +128,20 @@ def edit_prompt(piece, config_path, db):
         if len(command) == 0:
             continue
         if command[0].lower() == 'q':
-            # piece = info.Piece.load(infodict)
-            # with open(config_path, 'w') as configfile:
-            #     configfile.write(piece.dump())
-            # try:
-            #     os.remove(PATHSAVE)
-            # except FileNotFoundError:
-            #     pass
+            save = prompt("Save file before exiting? ", default='Y', validator=YNValidator())
+            if save:
+                new_piece = info.Piece.init_version(
+                    headers=infodict['headers'],
+                    instruments=infodict['instruments'],
+                    language=infodict.get('language', None),
+                    opus=infodict["opus"],
+                    movements=infodict.get('movements', None)
+                )
+                yaml_interface.write_config(config_path, new_piece)
+            try:
+                os.remove(PATHSAVE)
+            except FileNotFoundError:
+                pass
             raise SystemExit(0)
         elif command.lower().strip() == "help":
             print(prompt_help)
@@ -145,11 +157,26 @@ def edit_prompt(piece, config_path, db):
             if "instruments" not in infodict:
                 infodict["instruments"] = []
             infodict["instruments"] = existing_instruments(infodict["instruments"], db, ensemble_prompt)
-
+        elif command.lower()[0] == 'm':
+            if "movements" not in infodict:
+                infodict["movements"] = []
+            infodict["movements"] = movement_prompt(infodict["movements"])
+        elif command.lower()[0] == 'l':
+            infodict["language"] = prompt("Enter Lilypond Language: ",
+                                          completer=WordCompleter(info.get_valid_languages()),
+                                          validator=LanguageValidator())
         elif command.lower()[0] == 'p':
             print(infodict)
         else:
             print(INVALID)
+
+
+class LanguageValidator(Validator):
+    def validate(self, document):
+        if not document.text:
+            raise ValidationError(message="Response Required", cursor_position=0)
+        if document.text not in info.get_valid_languages():
+            raise ValidationError(message="Invalid language", cursor_position=0)
 
 
 def header_prompt(curr_headers, db):
@@ -325,6 +352,12 @@ def mutopia_prompt(db, curr_headers):
 
 
 def instrument_prompt(curr_instruments, db_):
+    """
+    Prompt for creating instruments in the score.
+    :param curr_instruments: list of existing instruments
+    :param db_: database to laod to/from
+    :return:
+    """
     prompt_help = (
         "Options:\n"
         f"{BOLD}print{END} instruments\n"
@@ -334,7 +367,7 @@ def instrument_prompt(curr_instruments, db_):
         f"{BOLD}help{END} to view this message\n"
         f"{BOLD}done{END} to save and return to main prompt"
     )
-    command_completer = WordCompleter(['create', 'delete', 'reorder', 'help', 'done'])
+    command_completer = WordCompleter(['create', 'delete', 'reorder', 'help', 'done', 'print'])
     instrument_names = db_interface.explore_table(db_.table("instruments"),
                                                   search=("name", ""))
     instruments = [titlecase(' '.join(name.split('_')))
@@ -369,9 +402,12 @@ def instrument_prompt(curr_instruments, db_):
             print(prompt_help)
         elif command.lower()[0:2] == 'do':
             return curr_instruments
+        else:
+            print(INVALID)
 
 
 def existing_instruments(curr_instruments, db_, prompt_choice):
+    """Deals with existing instruments/ensembles"""
     if isinstance(curr_instruments, lynames.Ensemble):
         print('Instruments have been entered as an ensemble: ')
         print(curr_instruments.pretty_name())
@@ -403,6 +439,13 @@ def existing_instruments(curr_instruments, db_, prompt_choice):
 
 
 def ensemble_prompt(curr_instruments, db_):
+    """
+    Prompt for creating ensembles.
+
+    :param curr_instruments: Current list of instruments.
+    :param db_: database to load to/from
+    :return: lynames.Ensemble object
+    """
     ensemble_names = db_interface.explore_table(db_.table("ensembles"),
                                                 search=("name", ""))
     ensembles = [titlecase(' '.join(name.split('_')))
@@ -426,6 +469,108 @@ def ensemble_prompt(curr_instruments, db_):
             if not answered_yes(retry):
                 break
     return new_ens
+
+
+def print_movements(mov_list):
+    for mov in mov_list:
+        print(f"{mov.num}. {mov.tempo} in {mov.key.note} {mov.key.mode}")
+
+
+def get_tempo_words():
+    global TEMPO_WORDS
+    if TEMPO_WORDS:
+        return TEMPO_WORDS
+    wiki = requests.get('https://en.wikipedia.org/wiki/Tempo')
+    wiki_soup = bs4.BeautifulSoup(wiki.text, "html.parser")
+    tempos = []
+    for title in ['Basic_tempo_markings', 'French_tempo_markings',
+                  'German_tempo_markings']:
+        title = wiki_soup.find(id=title)
+        tempos_soup = title.find_next('ul')
+        tempos_temp = []
+        for item in tempos_soup.find_all('i'):
+            tempos_temp.extend(titlecase(item.text).split(' '))
+        tempos.extend(tempos_temp)
+    TEMPO_WORDS = tempos
+    return TEMPO_WORDS
+
+
+class ModeValidator(Validator):
+    def validate(self, document):
+        if not document.text:
+            raise ValidationError(message="Response Required", cursor_position=0)
+        if document.text not in info.get_allowed_modes():
+            raise ValidationError(message="Invalid mode", cursor_position=0)
+
+
+class NoteValidator(Validator):
+    def validate(self, document):
+        if not document.text:
+            raise ValidationError(message="Response Required", cursor_position=0)
+        if document.text not in info.get_allowed_notes():
+            raise ValidationError(message="Invalid note", cursor_position=0)
+
+
+def movement_prompt(curr_movements):
+    if curr_movements:
+        print("Movements in piece: ")
+        print_movements(curr_movements)
+    prompt_help = (
+        "Options:\n"
+        f"{BOLD}print{END} movements\n"
+        f"{BOLD}create{END} a new movement\n"
+        f"{BOLD}edit{END} a movement\n"
+        f"{BOLD}delete{END} a movement\n"
+        f"{BOLD}help{END} to view this message\n"
+        f"{BOLD}done{END} to save and return to main prompt"
+    )
+    print(prompt_help)
+    command_completer = WordCompleter(['create', 'delete', 'print', 'edit', 'help', 'done'])
+    tempo_completer = InsensitiveCompleter(get_tempo_words())
+    mode_completer = WordCompleter(info.get_allowed_modes())
+    while True:
+        command = prompt("Movements> ", completer=command_completer)
+        if len(command) == 0:
+            continue
+        elif command.lower()[0] == 'h':
+            print(prompt_help)
+        elif command.lower()[0] == 'p':
+            print_movements(curr_movements)
+        elif command.lower()[0] == 'c':
+            new_mov_num = len(curr_movements) + 1
+            new_mov_tempo = prompt("Enter tempo (optional): ", completer=tempo_completer)
+            new_mov_time = prompt("Enter time signature (optional): ")
+            new_mov_key_note = prompt("Enter key note: ", validator=NoteValidator())
+            new_mov_key_mode = prompt("Enter key mode: ", completer=mode_completer, validator=ModeValidator())
+            new_mov_key = info.KeySignature(note=new_mov_key_note, mode=new_mov_key_mode)
+            curr_movements.append(info.Movement(num=new_mov_num, tempo=new_mov_tempo, time=new_mov_time,
+                                                key=new_mov_key))
+        elif command.lower()[0] == 'e':
+            print_movements(curr_movements)
+            mov_num = int(prompt("Enter movement number to edit: ", validator=IndexValidator(
+                len(curr_movements), allow_empty=False)))
+            working_mov = curr_movements[mov_num-1]
+            curr_movements[mov_num-1].tempo = prompt("Enter tempo (optional): ", completer=tempo_completer,
+                                                     default=working_mov.tempo)
+            curr_movements[mov_num-1].time = prompt("Enter time signature (optional): ", default=working_mov.time)
+            new_key_note = prompt("Enter key note: ", validator=NoteValidator(),
+                                                        default=working_mov.key.note)
+            new_key_mode = prompt("Enter key mode: ", completer=mode_completer,
+                                                        validator=ModeValidator(), default=working_mov.key.mode)
+            new_key = info.KeySignature(note=new_key_note, mode=new_key_mode)
+            curr_movements[mov_num-1].key = new_key
+        elif command.lower()[0:2] == 'de':
+            print_movements(curr_movements)
+            mov_num = int(prompt("Enter movement number to delete: ", validator=IndexValidator(
+                len(curr_movements), allow_empty=False)))
+            delete_index = mov_num - 1
+            curr_movements.pop(delete_index)
+            for i in range(delete_index, len(curr_movements)):
+                curr_movements[i].num = curr_movements[i].num - 1
+        elif command.lower()[0:2] == 'do':
+            return curr_movements
+        else:
+            print(INVALID)
 
 
 # adding commands from other files

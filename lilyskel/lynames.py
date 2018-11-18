@@ -255,14 +255,16 @@ class Instrument(LyName):
         return choice
 
     @classmethod
-    def load(cls, datadict):
+    def load(cls, input_):
         """Load from a dict."""
-        if 'number' in datadict and datadict['number']:
-            newins = cls.numbered_name(name=datadict.pop('name'),
-                                       number=datadict.pop('number'))
+        if isinstance(input_, cls):
+            return input_
+        if 'number' in input_ and input_['number']:
+            newins = cls.numbered_name(name=input_.pop('name'),
+                                       number=input_.pop('number'))
         else:
-            newins = cls(name=datadict.pop('name'))
-        for key, value in datadict.items():
+            newins = cls(name=input_.pop('name'))
+        for key, value in input_.items():
             setattr(newins, key, value)
         return newins
 

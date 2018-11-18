@@ -2,6 +2,9 @@
 import re
 import attr
 import pytest
+import requests
+from unittest import mock
+
 from lilyskel import info
 from lilyskel import lynames
 from lilyskel import exceptions
@@ -162,6 +165,7 @@ def test_validate_instruments(mutopiaheader1):
                        message=('Expect TypeError when not a list of '
                                 'instruments')):
         mutopiaheader1.validate_instruments('instrument_list', ['not',
+
                                                                 'an',
                                                                 'instrument'])
 
@@ -215,7 +219,37 @@ def test_movement_load(six_movs):
         assert mov.key == new_mov.key, "keys should match"
 
 
-class TestPiece():
+def test_get_allowed_notes(monkeypatch):
+    monkeypatch.setattr(info, 'ALLOWED_NOTES', None)
+    # print(info.ALLOWED_NOTES)
+    allowed_notes = info.get_allowed_notes()
+    # print(allowed_notes)
+    for note in ['a', 'b', 'c', 'd', 'e', 'f', 'g']:
+        assert note in allowed_notes
+    assert 'bf' in allowed_notes
+    assert 'ges' in allowed_notes
+    assert 'fisis' in allowed_notes
+    # test that the global variable is set and data is not downloaded again.
+    with monkeypatch.context() as m:
+        m.delattr("requests.sessions.Session.request")
+        allowed_notes2 = info.get_allowed_notes()
+        assert allowed_notes2
+
+
+def test_get_allowed_modes(monkeypatch):
+    monkeypatch.setattr(info, 'ALLOWED_MODES', None)
+    allowed_modes = info.get_allowed_modes()
+    assert 'major' in allowed_modes
+    assert 'minor' in allowed_modes
+    assert 'mixolydian' in allowed_modes
+    # test that the global variable is set and data is not downloaded again.
+    with monkeypatch.context() as m:
+        m.delattr("requests.sessions.Session.request")
+        allowed_modes2 = info.get_allowed_modes()
+        assert allowed_modes2
+
+
+class TestPiece:
     """Test piece methods."""
     def test_init_version(self, headers1, instrument_list1):
         """Test getting the version number from the system."""
