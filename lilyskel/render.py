@@ -11,6 +11,7 @@ FLAGS = {
     'compress_full_bar_rests': False,
 }
 
+# TODO: function that renders global file for inclusion and use in other files.
 
 def make_instrument(instrument, lyglobal, piece, flags=FLAGS,
                     location=Path('.')):
@@ -23,7 +24,7 @@ def make_instrument(instrument, lyglobal, piece, flags=FLAGS,
    :param flags: a dict of the options for rendering the instrument part:
             key_in_partname: bool, compress_full_bar_rests: bool.
             If not supplied, both will default to false.
-   :param prefix: path prefix for generation of the directory structure. Defaults
+   :param location: path prefix for generation of the directory structure. Defaults
             to current working directory. Relative paths are prefered.
    :returns: paths to include in an instrument includes file
     """
@@ -55,7 +56,7 @@ def make_instrument(instrument, lyglobal, piece, flags=FLAGS,
     with open(partpath, 'w') as partfile:
         partfile.write(partrender)
 
-    include_paths.append(partpath)
+    # include_paths.append(partpath)
     # return the paths for including in the includes.ily
     os.chdir(old_dir)
     return include_paths
@@ -79,9 +80,10 @@ def render_includes(includepaths, piece, extra_includes=[],
 
     :param includepaths: The auto defined includes from generation of notes files
         a list of Path objects, relative to the prefix path
-        extra_includes: more includes defined by the user. a list of Path
-        objects
     :param piece: a Piece object
+    :param optional extra_includes: more includes defined by the user. a list of Path
+        objects
+    :param optional location: the location to put the files
     """
     old_dir = os.getcwd()
     os.chdir(location)
@@ -108,9 +110,9 @@ def render_defs(piece, location=Path('.')):
 def make_name_prefix(piece):
     """Make the correct filename prefix from the opus or title."""
     if piece.opus:
-        name_prefix = re.sub(r'[\,\.po ]', '', piece.opus)
+        name_prefix = re.sub(r'[,.po ]', '', piece.opus)
     else:
-        name_prefix_tmp = re.sub(r'[\,\.]', '', piece.headers.title).lower()
+        name_prefix_tmp = re.sub(r'[,.]', '', piece.headers.title).lower()
         name_prefix = re.sub(r'\s', '_', name_prefix_tmp)
     return name_prefix
 

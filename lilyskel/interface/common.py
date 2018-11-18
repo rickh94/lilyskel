@@ -245,3 +245,4 @@ def create_instrument(instruments, db, instrument_names_standardized):
 
 BOLD = "\033[1m"
 END = "\033[0m"
+INVALID = "Command not recognized. Please try again."
