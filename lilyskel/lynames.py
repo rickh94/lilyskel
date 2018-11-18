@@ -268,10 +268,13 @@ class Instrument(LyName):
 
 
 @attr.s
-class Ensemble():
+class Ensemble:
     """A group of instruments."""
     name = attr.ib(convert=normalize_name)
     instruments = attr.ib(default=None)
+
+    def pretty_name(self):
+        return titlecase(' '.join(self.name.split('_')))
 
     def add_instrument(self, ins_name, *, db=None, number=None, abbr='',
                        clef='treble', keyboard=False, midi=None,

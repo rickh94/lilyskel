@@ -115,9 +115,6 @@ def ensemble(ctx, name, instrument):
     db_ = ctx.obj['DB']
     new_ens = create_ensemble(name, db_, instrument)
     print(new_ens)
-    yn = prompt("Add to database? ", validator=YNValidator(), default='Y')
-    if yn.lower()[0] == 'y':
-        new_ens.add_to_db(db_)
 
 
 class IsNumberValidator(Validator):
@@ -184,8 +181,9 @@ def delete(ctx, table, field, search_term):
         print("Invalid table or db.")
     for num, item in enumerate(items):
         print(f"{num}: {item}")
-    # TODO: finish delete function
+    while True:
+        choice = prompt("Type number to delete or [enter] to finish: ", validator=IndexValidator(len(items)))
+        if not choice:
+            return
+        table.remove(doc_ids=[items[int(choice)].doc_id])
 
-
-if __name__ == '__main__':
-    cli()

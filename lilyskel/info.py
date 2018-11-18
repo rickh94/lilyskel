@@ -294,7 +294,7 @@ class Movement:
 
 
 @attr.s
-class Piece():
+class Piece:
     """
     Info for the entire piece.
     """
@@ -306,7 +306,7 @@ class Piece():
     movements = attr.ib(default=[Movement(num=1)])
 
     @version.validator
-    def validate_version(self, attribute, value):
+    def validate_version(self, _attribute, value):
         """Check that the version number makes sense."""
         try:
             assert re.match(r'[0-9]', value)
@@ -315,7 +315,7 @@ class Piece():
                                  " be valid. Check you installation.")
 
     @language.validator
-    def validate_language(self, attribute, value):
+    def validate_language(self, _attribute, value):
         """Check for a valid language."""
         langfile = Path('/usr', 'share', 'lilypond', self.version, 'scm',
                         'define-note-names.scm')
@@ -329,7 +329,7 @@ class Piece():
                                  "{}".format(', '.join(languages)))
 
     @movements.validator
-    def movements_validator(self, attribute, value):
+    def movements_validator(self, _attribute, value):
         """Check for valid movements."""
         err = AttributeError("Movements are not valid, Must be a list of "
                              "Movement objects.")
@@ -339,7 +339,7 @@ class Piece():
             raise err
 
     @instruments.validator
-    def validate_instrument_list(self, attribute, value):
+    def validate_instrument_list(self, _attribute, value):
         if isinstance(value, Ensemble):
             return
         if not isinstance(value, list):

@@ -3,20 +3,19 @@ import os
 from pathlib import Path
 import click
 import tempfile
-from tinydb import Query
 from titlecase import titlecase
 from prompt_toolkit import prompt
-from prompt_toolkit.contrib.completers import WordCompleter
+from prompt_toolkit.contrib.completers import WordCompleter, PathCompleter
 
-from lilyskel import yaml_interface, info, db_interface, mutopia, exceptions
-from lilyskel.interface.common import instruments_with_indexes, InsensitiveCompleter, YNValidator, reorder_instruments, IndexValidator, \
-    create_instrument
+from lilyskel import yaml_interface, info, db_interface, mutopia, exceptions, lynames
+from lilyskel.interface import common
+from lilyskel.interface.common import instruments_with_indexes, InsensitiveCompleter, YNValidator, reorder_instruments, \
+    IndexValidator, \
+    create_instrument, answered_yes, BOLD, END
 from .update_db_manually import db
 
 TEMP = tempfile.gettempdir()
 PATHSAVE = Path(TEMP, "lilyskel_path")
-BOLD = "\033[1m"
-END = "\033[0m"
 INVALID = "Command not recognized. Please try again."
 
 
@@ -60,7 +59,7 @@ def edit(file_path, db_path):
                 file_path = Path(savepath.read())
         except FileNotFoundError:
             file_path = prompt("No path specified or saved. Please enter the path "
-                   "to the config file. ")
+                   "to the config file. ", completer=PathCompleter())
     try:
         piece = yaml_interface.read_config(Path(file_path))
     except (ValueError, FileNotFoundError, AttributeError):
@@ -124,28 +123,36 @@ def edit_prompt(piece, config_path, db):
         if len(command) == 0:
             continue
         if command[0].lower() == 'q':
-            try:
-                os.remove(PATHSAVE)
-            except FileNotFoundError:
-                pass
+            # piece = info.Piece.load(infodict)
+            # with open(config_path, 'w') as configfile:
+            #     configfile.write(piece.dump())
+            # try:
+            #     os.remove(PATHSAVE)
+            # except FileNotFoundError:
+            #     pass
             raise SystemExit(0)
         elif command.lower().strip() == "help":
             print(prompt_help)
         elif "header" in command.lower():
             if "headers" not in infodict:
                 infodict["headers"] = None
-            infodict["headers"] = edit_header(infodict["headers"], db)
+            infodict["headers"] = header_prompt(infodict["headers"], db)
         elif command.lower()[0] == 'i':
             if "instruments" not in infodict:
                 infodict["instruments"] = []
-            infodict["instruments"] = edit_instruments(infodict["instruments"], db)
+            infodict["instruments"] = existing_instruments(infodict["instruments"], db, instrument_prompt)
+        elif command.lower()[0] == 'e':
+            if "instruments" not in infodict:
+                infodict["instruments"] = []
+            infodict["instruments"] = existing_instruments(infodict["instruments"], db, ensemble_prompt)
+
         elif command.lower()[0] == 'p':
             print(infodict)
         else:
             print(INVALID)
 
 
-def edit_header(curr_headers, db):
+def header_prompt(curr_headers, db):
     prompt_help = (
         "You may edit any of the following headers:\n"
         "title\t\tcomposer\n"
@@ -154,7 +161,7 @@ def edit_header(curr_headers, db):
         "meter\t\tarranger\n"
         "tagline\t\tcopyright\n"
         "You may also enter \"mutopia\" to enter headers for submission"
-        "to the mutopia project."
+        "to the mutopia project.\n"
         "Enter \"print\" to print the current headers and \"done\" to finish"
         "and return to the main prompt."
     )
@@ -204,6 +211,9 @@ def edit_header(curr_headers, db):
         elif field[0] == 'p':
             print(curr_headers)
         elif field[0] == 'd':
+            print("Saving headers")
+            return curr_headers
+        elif field[0] == 'save':
             print("Saving headers")
             return curr_headers
         else:
@@ -314,15 +324,10 @@ def mutopia_prompt(db, curr_headers):
             print(INVALID)
 
 
-def edit_instruments(curr_instruments, db):
-    if curr_instruments:
-        print("These instruments are currently in the score: ")
-        for ins in curr_instruments:
-            print(ins)
-    else:
-        print("No instruments currently in score.")
+def instrument_prompt(curr_instruments, db_):
     prompt_help = (
         "Options:\n"
+        f"{BOLD}print{END} instruments\n"
         f"{BOLD}create{END} a new instrument\n"
         f"{BOLD}delete{END} an instrument\n"
         f"{BOLD}reorder{END} instruments\n"
@@ -330,7 +335,7 @@ def edit_instruments(curr_instruments, db):
         f"{BOLD}done{END} to save and return to main prompt"
     )
     command_completer = WordCompleter(['create', 'delete', 'reorder', 'help', 'done'])
-    instrument_names = db_interface.explore_table(db.table("instruments"),
+    instrument_names = db_interface.explore_table(db_.table("instruments"),
                                                   search=("name", ""))
     instruments = [titlecase(' '.join(name.split('_')))
                    for name in instrument_names]
@@ -341,8 +346,11 @@ def edit_instruments(curr_instruments, db):
         command = prompt("Instruments> ", completer=command_completer)
         if len(command) == 0:
             continue
+        elif command.lower()[0] == 'p':
+            for ins in curr_instruments:
+                print(ins.part_name(key=True))
         elif command.lower()[0] == 'c':
-            new_ins = create_instrument(instruments, db, instrument_names)
+            new_ins = create_instrument(instruments, db_, instrument_names)
             curr_instruments.append(new_ins)
         elif command.lower()[0:2] == 'de':
             while True:
@@ -361,6 +369,63 @@ def edit_instruments(curr_instruments, db):
             print(prompt_help)
         elif command.lower()[0:2] == 'do':
             return curr_instruments
+
+
+def existing_instruments(curr_instruments, db_, prompt_choice):
+    if isinstance(curr_instruments, lynames.Ensemble):
+        print('Instruments have been entered as an ensemble: ')
+        print(curr_instruments.pretty_name())
+        for ins in curr_instruments.instruments:
+            print(ins.part_name())
+        while True:
+            print(f"You can:\n{BOLD}break{END} the ensemble\n"
+                  f"{BOLD}create{END} a new ensemble or\n"
+                  f"{BOLD}edit{END} the ensemble or\n"
+                  f"be {BOLD}done{END} and change nothing")
+            choice = prompt('>')
+            if choice.lower()[0] == 'b':
+                return instrument_prompt(curr_instruments.instruments, db_)
+            if choice.lower()[0] == 'c':
+                return ensemble_prompt([], db_)
+            if choice.lower()[0] == 'e':
+                return ensemble_prompt(curr_instruments.instruments, db_)
+            if choice.lower()[0] == 'd':
+                return curr_instruments
+            else:
+                print(INVALID)
+    elif curr_instruments:
+        print("These instruments are currently in the score: ")
+        for ins in curr_instruments:
+            print(ins.part_name())
+    else:
+        print("No instruments currently in score.")
+    return prompt_choice(curr_instruments, db_)
+
+
+def ensemble_prompt(curr_instruments, db_):
+    ensemble_names = db_interface.explore_table(db_.table("ensembles"),
+                                                search=("name", ""))
+    ensembles = [titlecase(' '.join(name.split('_')))
+                 for name in ensemble_names]
+    ensemble_name = prompt("Please enter a name for the ensemble: ",
+                           completer=InsensitiveCompleter(ensembles))
+    ensemble_name_normal = lynames.normalize_name(ensemble_name)
+    new_ens = None
+    if ensemble_name_normal in ensemble_names:
+        load = prompt(f"{ensemble_name} is in the database, would you like to load it? "
+                      "[Y/n] ", default='Y', validator=YNValidator())
+        if answered_yes(load):
+            return lynames.Ensemble.load_from_db(ensemble_name, db_)
+    while True:
+        new_ens = common.create_ensemble(ensemble_name, db_, curr_instruments)
+        if isinstance(new_ens, lynames.Ensemble):
+            break
+        else:
+            retry = prompt(f"No new ensemble was created. Try again? ", validator=YNValidator(),
+                           default='Y')
+            if not answered_yes(retry):
+                break
+    return new_ens
 
 
 # adding commands from other files

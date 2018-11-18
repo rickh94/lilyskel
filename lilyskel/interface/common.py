@@ -38,6 +38,12 @@ class YNValidator(Validator):
                                   cursor_position=0)
 
 
+def answered_yes(answer):
+    if answer.lower()[0] == 'y':
+        return True
+    return False
+
+
 def manual_instrument(name, number, db=None):
     """
     Manually create an instrument by entering all the information.
@@ -112,10 +118,12 @@ def reorder_instruments(curr_instruments):
 def create_ensemble(name, db, instruments_to_add=[]):
     """
     Create an ensemble from new or old instruments
+
     :param name: The name of the ensemble
     :param db: the database to add the ensemble to and load instruments from.
     :param instruments_to_add: (Optional) existing instrument objects to add to
     the ensemble
+
     :return: ensemble object created by the dialog
     """
     instrument_names = db_interface.explore_table(db.table("instruments"),
@@ -125,6 +133,9 @@ def create_ensemble(name, db, instruments_to_add=[]):
     ins_list = []
     new_ens = Ensemble(name)
     for ins in instruments_to_add:
+        if isinstance(ins, Instrument):
+            ins_list.append(ins)
+            continue
         ins_name = ins
         num = None
         for group in ins.split():
@@ -137,20 +148,43 @@ def create_ensemble(name, db, instruments_to_add=[]):
         else:
             print(f"{ins_name} not in db")
     if not ins_list:
+        print("You will need to create some instruments to add to the ensemble.")
         ins_list.append(create_instrument(instruments, db, instrument_names))
+    prompt_help = ("You can:\n"
+                   f"{BOLD}reorder{END}, {BOLD}add{END}, {BOLD}delete{END},"
+                   f"\nor {BOLD}continue{END} if you are satisfied with the instruments.")
+    print(prompt_help)
     while True:
         instruments_with_indexes(ins_list)
-        more_ins = prompt("Any more instruments? ", validator=YNValidator(), default='N')
-        if more_ins.lower()[0] == 'n':
+        choice = prompt("Ensemble> ", completer=WordCompleter(['reorder', 'add', 'delete', 'continue']), )
+        if len(choice) == 0:
+            continue
+        elif choice.lower()[0] == 'r':
+            ins_list = reorder_instruments(ins_list)
+        elif choice.lower()[0] == 'a':
+            ins_list.append(create_instrument(instruments, db, instrument_names))
+        elif choice.lower()[0] == 'd':
+            while True:
+                instruments_with_indexes(ins_list)
+                del_idx = prompt("Enter the number of the instrument to delete or [enter] to "
+                                 "finish: ") or None
+                if del_idx is None:
+                    break
+                elif del_idx.isdigit():
+                    ins_list.pop(int(del_idx))
+                else:
+                    print("Invalid index")
+        elif choice.lower()[0] == 'c':
             break
-        ins_list.append(create_instrument(instruments, db, instrument_names))
-    instruments_with_indexes(ins_list)
-    reorder = prompt("Would you like to reorder the instruments? ", default='N',
-                     validator=YNValidator())
-    if reorder.lower()[0] == 'y':
-        ins_list = reorder_instruments(ins_list)
     for ins in ins_list:
         new_ens.add_instrument_from_obj(ins)
+    print(new_ens)
+    good = prompt("Save?", validator=YNValidator(), default='Y')
+    if not good.lower()[0] == 'y':
+        return ins_list
+    yn = prompt("Add to database for future use? ", validator=YNValidator(), default='Y')
+    if yn.lower()[0] == 'y':
+        new_ens.add_to_db(db)
     return new_ens
 
 
@@ -196,12 +230,13 @@ def create_instrument(instruments, db, instrument_names_standardized):
         print("Invalid number")
     if '_'.join(ins_name_input.lower().split()) in \
             instrument_names_standardized:
-        while True:
-            load = prompt(f"{ins_name_input} is in the database, would you like to load it? "
-                    "[Y/n] ", default='Y')
-            if len(load) > 0:
-                break
+        load = prompt(f"{ins_name_input} is in the database, would you like to load it? "
+                      "[Y/n] ", default='Y', validator=YNValidator())
         if load.lower()[0] == 'y':
             return lynames.Instrument.load_from_db(
                     normalize_name(ins_name_input), db, number=number)
     return manual_instrument(number=number, db=db, name=ins_name_input)
+
+
+BOLD = "\033[1m"
+END = "\033[0m"
