@@ -22,8 +22,6 @@ before_install:
   - pip install pipenv
   - pipenv install --dev
   - pip install codecov
-  - pip install pytest
-  - pip install pytest-cov
   - pip install -e .
 
 script: python setup.py test
