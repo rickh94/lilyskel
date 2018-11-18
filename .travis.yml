@@ -19,12 +19,12 @@ addons:
       - lilypond
 
 before_install:
+  - pip install pipenv
+  - pipenv install --dev
   - pip install codecov
   - pip install pytest
   - pip install pytest-cov
   - pip install -e .
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew upgrade; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install lilypond; fi
 
 script: python setup.py test
 
