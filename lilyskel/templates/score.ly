@@ -63,6 +63,14 @@
     >>
     {%- endif %}
     {%- endfor %}
+  \layout {
+    {%- block layout %}
+    {%- endblock %}
+  }
+  \midi {
+    {%- block midi %}
+    {%- endblock %}
+  }
   }
 {% endfor %}
 {%- endblock %}

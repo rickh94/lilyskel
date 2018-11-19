@@ -11,7 +11,34 @@ FLAGS = {
     'compress_full_bar_rests': False,
 }
 
-# TODO: function that renders global file for inclusion and use in other files.
+
+def make_global(lyglobal, piece, location=Path('.')):
+    # global_template = ENV.get_template('global.ily')
+
+    # name_prefix = make_name_prefix(piece)
+    # partfilename = instrument.part_file_name(prefix=name_prefix)
+    #
+    # if not os.path.exists(location):
+    #     os.makedirs(location)
+    old_dir = os.getcwd()
+    os.chdir(location)
+
+    dirpath = Path(lyglobal.dir_name())
+    os.makedirs(dirpath)
+
+    # notes files that need to be included
+    global_template = ENV.get_template('global.ily')
+    include_paths = []
+    for movement in piece.movements:
+        render = global_template.render(piece=piece, lyglobal=lyglobal, movement=movement)
+        mov_path = Path(dirpath, lyglobal.mov_file_name(movement.num))
+        with open(mov_path, 'w') as outfile:
+            outfile.write(render)
+        include_paths.append(mov_path)
+
+    os.chdir(old_dir)
+    return include_paths
+
 
 def make_instrument(instrument, lyglobal, piece, flags=FLAGS,
                     location=Path('.')):

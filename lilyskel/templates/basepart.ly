@@ -16,14 +16,6 @@
 \book {
   {%- block book %}
   {%- endblock %}
-  \layout {
-    {%- block layout %}
-    {%- endblock %}
-  }
-  \midi {
-    {%- block midi %}
-    {%- endblock %}
-  }
   \paper {
     {%- block paper %}
     {%- endblock %}

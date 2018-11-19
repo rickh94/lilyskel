@@ -14,13 +14,13 @@
 {%- block book %}
 {%- for mov in piece.movements %}
   \score { % Movement {{ mov.num }}
-  {%- if not instrument.keyboard %}
-    \new Staff {
       {%- if mov.num == 1 and piece.opus %}
       \header {
         opus = "{{ piece.opus }}"
       }
       {%- endif %}
+  {%- if not instrument.keyboard %}
+    \new Staff {
       \new Voice {
         <<
           {{ lyglobal.var_name(mov.num) }}
@@ -50,6 +50,14 @@
       }
     >>
     {%- endif %}
+  \layout {
+    {%- block layout %}
+    {%- endblock %}
+  }
+  \midi {
+    {%- block midi %}
+    {%- endblock %}
+  }
   }
 {%- endfor %}
 {%- endblock %}

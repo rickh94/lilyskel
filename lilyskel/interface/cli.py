@@ -104,6 +104,8 @@ def build(file_path, target_dir, extra_includes, key_in_partname, compress_full_
     lyglobal = lynames.LyName('global')
     include_paths = []
     flags = {"key_in_partname": key_in_partname, "compress_full_bar_rests": compress_full_bar_rests}
+    global_file = render.make_global(lyglobal, piece, location=target_dir)
+    include_paths.extend(global_file)
     for instrument in piece.instruments:
         new_includes = render.make_instrument(instrument=instrument, lyglobal=lyglobal,
                                               piece=piece, location=target_dir, flags=flags)
