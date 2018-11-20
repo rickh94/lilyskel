@@ -24,7 +24,7 @@ setup(
         'attrs',
         'titlecase',
         'bs4',
-        'requests',
+        'requests>=2.20',
         'fuzzywuzzy[speedup]',
         'jinja2',
         'ruamel.yaml',
