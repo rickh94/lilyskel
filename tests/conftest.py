@@ -1,5 +1,9 @@
 """Global pytest fixtures."""
+import sys
+
+import re
 import shutil
+import subprocess
 from pathlib import Path
 import pytest
 from jinja2 import Environment, PackageLoader
@@ -35,9 +39,21 @@ def prompt_commands():
 
 
 @pytest.fixture
-def good_beethoven():
+def good_beethoven(lily_version):
     with Path(basedir, 'tests', 'good_beethoven_5.yaml').open('r') as beethoven_file:
-        return beethoven_file.read()
+        beethoven_data = beethoven_file.read()
+
+    correct_data = beethoven_data.replace('2.18.2', lily_version)
+    return correct_data
+
+
+@pytest.fixture
+def lily_version():
+    ly_vers = subprocess.run(['lilypond', '--version'],
+                          stdout=subprocess.PIPE)
+    matchvers = re.search(r'LilyPond ([^\n]*)',
+                          ly_vers.stdout.decode(sys.stdout.encoding))
+    return matchvers.group(1)
 
 
 @pytest.fixture
