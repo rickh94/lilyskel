@@ -18,7 +18,7 @@ fuzzywuzzy = {extras = ["speedup"]}
 "jinja2" = "*"
 "ruamel.yaml" = "*"
 click = "*"
-prompt-toolkit = ">=2.0"
+prompt-toolkit = ">=2.0.1"
 
 
 [dev-packages]

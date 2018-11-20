@@ -29,7 +29,7 @@ setup(
         'jinja2',
         'ruamel.yaml',
         'click',
-        'prompt-toolkit',
+        'prompt-toolkit>=2.0.1',
         'better_exceptions'
     ],
     tests_require=['pytest', 'pytest-cov'],
