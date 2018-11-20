@@ -21,6 +21,25 @@ def livedb(tmpdir_factory):
     return TinyDB(Path(tmpdir_, 'test_db.json'))
 
 
+@pytest.fixture(scope='module')
+def defaultdb(tmpdir_factory):
+    tmpdir_ = tmpdir_factory.mktemp('defaultdb')
+    shutil.copy(Path(srcdir, 'default_db.json'), Path(tmpdir_))
+    return TinyDB(Path(tmpdir_, 'default_db.json'))
+
+
+@pytest.fixture
+def prompt_commands():
+    with Path(basedir, 'tests', 'lilyskel_command.txt').open('r') as commandfile:
+        return [line.strip() for line in commandfile.readlines()]
+
+
+@pytest.fixture
+def good_beethoven():
+    with Path(basedir, 'tests', 'good_beethoven_5.yaml').open('r') as beethoven_file:
+        return beethoven_file.read()
+
+
 @pytest.fixture
 def mockdb(monkeypatch, tmpdir):
     """Returns a monkeypatched db."""

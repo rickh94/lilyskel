@@ -1,0 +1,135 @@
+Op. 67
+ensemble
+Classical Orchestra
+Flute
+1
+Y
+add
+Flute
+2
+Y
+add
+Oboe
+1
+Y
+add
+Oboe
+2
+Y
+add
+Clarinet in Bb
+1
+Y
+add
+Clarinet in Bb
+2
+Y
+add
+Bassoon
+1
+Y
+add
+Bassoon
+2
+Y
+add
+French Horn
+1
+Y
+add
+French Horn
+2
+Y
+add
+Trumpet in C
+1
+Y
+add
+Trumpet in C
+2
+Y
+add
+Timpani
+
+N
+Timp
+bass
+
+N
+timpani
+percussion
+N
+add
+Violin
+1
+Y
+add
+Violin
+2
+N
+Vln.
+treble
+
+N
+violin
+strings
+N
+add
+Viola
+
+Y
+add
+Violoncello
+
+Y
+add
+Contrabass
+
+Y
+done
+Y
+N
+header
+Ludwig van Beethoven
+Y
+Symphony No. 5
+copyright
+Public Domain
+done
+mutopia
+Breitkopf und Hartel
+Classical
+Public Domain
+maintainer
+Jane Smith
+date
+1804-1808
+maitaineremail
+janesmith@example.com
+done
+language
+english
+movement
+create
+Allegro
+2/4
+c
+minor
+create
+Andante con moto
+3/8
+af
+major
+create
+Scherzo. Allegro
+3/4
+c
+minor
+create
+Allegro
+4/4
+c
+major
+done
+quit
+Y

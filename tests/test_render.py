@@ -43,6 +43,16 @@ def test_make_instrument(test_ins, test_ins2, test_ins3, piece1, piece2,
     assert Path('clarinet_in_bb', 'clarinet_in_bb_3.ily') in test3_includes
 
 
+def test_make_global(piece1, tmpdir, lyglobal):
+    test_includes = render.make_global(lyglobal=lyglobal, piece=piece1, location=tmpdir)
+    assert os.path.exists(Path(tmpdir, 'global', 'global_1.ily'))
+    assert os.path.exists(Path(tmpdir, 'global', 'global_2.ily'))
+    assert os.path.exists(Path(tmpdir, 'global', 'global_3.ily'))
+    assert Path('global', 'global_1.ily') in test_includes
+    assert Path('global', 'global_2.ily') in test_includes
+    assert Path('global', 'global_3.ily') in test_includes
+
+
 def test_render_includes(piece1, tmpdir):
     """Test rendering the include file."""
     includes = [

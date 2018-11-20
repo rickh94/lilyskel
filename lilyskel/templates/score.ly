@@ -15,9 +15,10 @@
       opus = "{{ piece.opus }}"
     }
     {%- endif %}
+    <<
     {%- for ins in instruments %}
-    \new Staff = "{{ ins.name }}" \with {
       {%- if not ins.keyboard %}
+    \new Staff = "{{ ins.name }}" \with {
       instrumentName = "{{ ins.part_name() }}"
       {%- if ins.abbr %}
       shortInstrumentName = "{{ ins.abbr }}"
@@ -63,6 +64,7 @@
     >>
     {%- endif %}
     {%- endfor %}
+    >>
   \layout {
     {%- block layout %}
     {%- endblock %}

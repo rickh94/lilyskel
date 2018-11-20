@@ -96,6 +96,29 @@ def global_ins():
     return lynames.LyName(name='global')
 
 
+def test_global(tmpdir, jinja_env, global_ins, piece1):
+    globalpath = Path(tmpdir, 'global')
+    dirpath = Path(tmpdir, global_ins.dir_name())
+    os.makedirs(dirpath)
+    template = jinja_env.get_template('global.ily')
+    for mov in piece1.movements:
+        render = template.render(piece=piece1, lyglobal=global_ins, movement=mov)
+        with Path(dirpath, global_ins.mov_file_name(mov.num)).open('w') as out:
+            out.write(render)
+
+    with open(Path(globalpath, 'global_1.ily'), 'r') as file1:
+        global1 = file1.read()
+    with open(Path(globalpath, 'global_2.ily'), 'r') as file2:
+        global2 = file2.read()
+    with open(Path(globalpath, 'global_3.ily'), 'r') as file3:
+        global3 = file3.read()
+
+    assert 'global_first_mov' in global1, "should have variable"
+    assert 'Allegro' in global1, "global should have tempo"
+    assert 'global_second_mov' in global2, "should have variable"
+    assert 'global_third_mov' in global3, "should have variable"
+
+
 def test_notes(tmpdir, jinja_env, test_ins, test_ins2, three_movs,
                piece1, global_ins, piano):
     """Test generating the notes template parts."""
@@ -109,17 +132,10 @@ def test_notes(tmpdir, jinja_env, test_ins, test_ins2, three_movs,
             with open(Path(dirpath, ins.mov_file_name(mov.num)), 'w') as out:
                 out.write(render)
 
-    # globalpath = Path(tmpdir, 'global')
     test_ins_path = Path(tmpdir, 'violin1')
     test_ins2_path = Path(tmpdir, 'violoncello2')
     piano_path = Path(tmpdir, 'piano')
 
-    # with open(Path(globalpath, 'global_1.ily'), 'r') as file1:
-    #     global1 = file1.read()
-    # with open(Path(globalpath, 'global_2.ily'), 'r') as file2:
-    #     global2 = file2.read()
-    # with open(Path(globalpath, 'global_3.ily'), 'r') as file3:
-    #     global3 = file3.read()
     with open(Path(test_ins_path, 'violin1_1.ily'), 'r') as file4:
         test_ins_1 = file4.read()
     with open(Path(test_ins_path, 'violin1_2.ily'), 'r') as file5:
@@ -139,10 +155,6 @@ def test_notes(tmpdir, jinja_env, test_ins, test_ins2, three_movs,
     with open(Path(piano_path, 'piano_3.ily'), 'r') as file12:
         piano_3 = file12.read()
 
-    # assert 'global_first_mov' in global1, "should have variable"
-    # assert 'Allegro' in global1, "global should have tempo"
-    # assert 'global_second_mov' in global2, "should have variable"
-    # assert 'global_third_mov' in global3, "should have variable"
     assert 'violin_one_first_mov' in test_ins_1, "should have variable"
     assert '\\clef "treble"' in test_ins_1, "should have clef"
     assert 'violin_one_second_mov' in test_ins_2, "should have variable"
