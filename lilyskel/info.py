@@ -160,10 +160,13 @@ class Headers(object):
             instruments = mu_headers.instrument_list
 
         # converts list of instruments to mutopia friendly string
+        # instruments.sort()
         mutopia_instrument_names =\
             set([instrument.get_mutopia_name() for
              instrument in instruments])
-        instruments = ', '.join(mutopia_instrument_names)
+        mutopia_names_list = list(mutopia_instrument_names)
+        mutopia_names_list.sort()
+        instruments = ', '.join(mutopia_names_list)
         mu_headers.instruments = instruments
         self.copyright = mu_headers.license
         self.mutopiaheaders = mu_headers

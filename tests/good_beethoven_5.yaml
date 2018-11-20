@@ -18,16 +18,16 @@ headers:
     instrument_list: []
     license: Public Domain
     composer: BeethovenLv
-    maintainer: Rick Henry
-    maintainerEmail:
+    maintainer: Jane Smith
+    maintainerEmail: janesmith@example.com
     maintainerWeb:
     mutopiatitle:
     mutopiapoet:
     mutopiaopus:
     date: 1804-1808
     moreinfo:
-    instruments: Oboe, Horn, 'Cello, Violin, Clarinet, Flute, Bassoon, Viola, Basso,
-      Timpani, Trumpet
+    instruments: "'Cello, Basso, Bassoon, Clarinet, Flute, Horn, Oboe, Timpani, Trumpet,\
+      \ Viola, Violin"
 version: 2.18.2
 instruments:
 - name: flute

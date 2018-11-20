@@ -95,6 +95,18 @@ Y
 Symphony No. 5
 copyright
 Public Domain
+help
+invalid command
+title
+
+
+composer
+Y
+Ludwig van Beethoven
+N
+L. van Beethoven
+BeethovenLv
+N
 done
 mutopia
 Breitkopf und Hartel
@@ -104,7 +116,7 @@ maintainer
 Jane Smith
 date
 1804-1808
-maitaineremail
+maintainerEmail
 janesmith@example.com
 done
 language
@@ -131,5 +143,16 @@ Allegro
 c
 major
 done
+ensemble
+edit
+Classical Orchestra
+done
+ensemble
+break
+done
+instrument
+done
+print
+not a valid command
 quit
 Y

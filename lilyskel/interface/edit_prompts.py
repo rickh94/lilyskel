@@ -184,10 +184,7 @@ def header_prompt(curr_headers, db):
             print(prompt_help)
         elif field[0] == 'p':
             print(curr_headers)
-        elif field[0] == 'd':
-            print("Saving headers")
-            return curr_headers
-        elif field[0] == 'save':
+        elif field[0] == 'd' or field == "save":
             print("Saving headers")
             return curr_headers
         else:
@@ -247,7 +244,7 @@ def mutopia_prompt(curr_mutopia_headers):
     if mu_headers is None:
         source = prompt("Enter the source: ")
         style = prompt("Enter the style: ")
-        print(license_ for license_ in licenses)
+        print(license_ for license_ in list(licenses))
         license_ = prompt("Enter the license: ", completer=license_completer)
         while 1:
             try:
@@ -284,8 +281,17 @@ def mutopia_prompt(curr_mutopia_headers):
             continue
         elif command.lower() == "done":
             return mu_headers
-        elif command.lower() in ["maintainer", "maintaineremail", "maintainerweb",
-                         "mutopiatitle", "mutopiapoet", "mutopiaopus", "date",
+        elif command.lower() == 'maintaineremail':
+            print("{} is {}".format(command, getattr(mu_headers, 'maintainerEmail', "blank")))
+            new = prompt(f"Enter value for maintainerEmail or press [enter] to leave unchanged: ")
+            if len(new) > 0:
+                setattr(mu_headers, 'maintainerEmail', new)
+        elif command.lower() == 'maintainerweb':
+            print("{} is {}".format(command, getattr(mu_headers, 'maitainerWeb', "blank")))
+            new = prompt(f"Enter value for maintainerWeb or press [enter] to leave unchanged: ")
+            if len(new) > 0:
+                setattr(mu_headers, 'maintainerWeb', new)
+        elif command.lower() in ["maintainer", "mutopiatitle", "mutopiapoet", "mutopiaopus", "date",
                          "moreinfo", "style", "license", "source"
                          ]:
             print("{} is {}".format(command, getattr(mu_headers, command, "blank")))
