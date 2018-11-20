@@ -19,13 +19,14 @@ addons:
       - lilypond
 
 before_install:
+  - pip install --upgrade pip
   - pip install pipenv
   - pipenv install --dev
   - pipenv install
   - pip install codecov
   - pip install -e .
 
-script: python setup.py test
+script: pytest
 
 after_success:
   - codecov
