@@ -96,6 +96,7 @@ Symphony No. 5
 copyright
 Public Domain
 help
+print
 invalid command
 title
 
@@ -151,8 +152,15 @@ ensemble
 break
 done
 instrument
+reorder
+1
+1
+Y
+
 done
 print
 not a valid command
+save
+help
 quit
 Y
