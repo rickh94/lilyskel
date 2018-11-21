@@ -3,7 +3,7 @@ from pathlib import Path
 import click
 import tempfile
 from prompt_toolkit import prompt
-from prompt_toolkit.contrib.completers import PathCompleter
+from prompt_toolkit.completion import PathCompleter
 import os
 
 from lilyskel import yaml_interface, db_interface, info, lynames, render

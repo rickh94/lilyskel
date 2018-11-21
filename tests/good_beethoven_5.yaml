@@ -1,0 +1,257 @@
+headers:
+  title: Symphony No. 5
+  composer:
+    name: Ludwig van Beethoven
+    mutopianame: BeethovenLv
+    shortname: L. van Beethoven
+  dedication:
+  subtitle:
+  subsubtitle:
+  poet:
+  meter:
+  arranger:
+  tagline:
+  copyright: Public Domain
+  mutopiaheaders:
+    source: Breitkopf und Hartel
+    style: Classical
+    instrument_list: []
+    license: Public Domain
+    composer: BeethovenLv
+    maintainer: Jane Smith
+    maintainerEmail: janesmith@example.com
+    maintainerWeb:
+    mutopiatitle:
+    mutopiapoet:
+    mutopiaopus:
+    date: 1804-1808
+    moreinfo:
+    instruments: "'Cello, Basso, Bassoon, Clarinet, Flute, Horn, Oboe, Timpani, Trumpet,\
+      \ Viola, Violin"
+version: 2.18.2
+instruments:
+- name: flute
+  number: 1
+  _numword: one
+  _roman: I
+  abbr: Fl.
+  clef: treble
+  transposition:
+  keyboard: false
+  midi: flute
+  family: woodwinds
+  mutopianame: Flute
+- name: flute
+  number: 2
+  _numword: two
+  _roman: II
+  abbr: Fl.
+  clef: treble
+  transposition:
+  keyboard: false
+  midi: flute
+  family: woodwinds
+  mutopianame: Flute
+- name: oboe
+  number: 1
+  _numword: one
+  _roman: I
+  abbr: Ob.
+  clef: treble
+  transposition:
+  keyboard: false
+  midi: oboe
+  family: woodwinds
+  mutopianame: Oboe
+- name: oboe
+  number: 2
+  _numword: two
+  _roman: II
+  abbr: Ob.
+  clef: treble
+  transposition:
+  keyboard: false
+  midi: oboe
+  family: woodwinds
+  mutopianame: Oboe
+- name: clarinet_in_bb
+  number: 1
+  _numword: one
+  _roman: I
+  abbr: Cl.
+  clef: treble
+  transposition: Bb
+  keyboard: false
+  midi: clarinet
+  family: woodwinds
+  mutopianame: Clarinet
+- name: clarinet_in_bb
+  number: 2
+  _numword: two
+  _roman: II
+  abbr: Cl.
+  clef: treble
+  transposition: Bb
+  keyboard: false
+  midi: clarinet
+  family: woodwinds
+  mutopianame: Clarinet
+- name: bassoon
+  number: 1
+  _numword: one
+  _roman: I
+  abbr: Bsn.
+  clef: bass
+  transposition:
+  keyboard: false
+  midi: bassoon
+  family: woodwinds
+  mutopianame: Bassoon
+- name: bassoon
+  number: 2
+  _numword: two
+  _roman: II
+  abbr: Bsn.
+  clef: bass
+  transposition:
+  keyboard: false
+  midi: bassoon
+  family: woodwinds
+  mutopianame: Bassoon
+- name: french_horn
+  number: 1
+  _numword: one
+  _roman: I
+  abbr: Hn.
+  clef: treble
+  transposition: F
+  keyboard: false
+  midi: french horn
+  family: brass
+  mutopianame: Horn
+- name: french_horn
+  number: 2
+  _numword: two
+  _roman: II
+  abbr: Hn.
+  clef: treble
+  transposition: F
+  keyboard: false
+  midi: french horn
+  family: brass
+  mutopianame: Horn
+- name: trumpet_in_c
+  number: 1
+  _numword: one
+  _roman: I
+  abbr: Tpt.
+  clef: treble
+  transposition:
+  keyboard: false
+  midi: trumpet
+  family: brass
+  mutopianame: Trumpet
+- name: trumpet_in_c
+  number: 2
+  _numword: two
+  _roman: II
+  abbr: Tpt.
+  clef: treble
+  transposition:
+  keyboard: false
+  midi: trumpet
+  family: brass
+  mutopianame: Trumpet
+- name: timpani
+  number:
+  _numword: ''
+  _roman: ''
+  abbr: Timp
+  clef: treble
+  transposition:
+  keyboard: false
+  midi: timpani
+  family: percussion
+  mutopianame: Timpani
+- name: violin
+  number: 1
+  _numword: one
+  _roman: I
+  abbr: Vln.
+  clef: treble
+  transposition:
+  keyboard: false
+  midi: violin
+  family: strings
+  mutopianame: Violin
+- name: violin
+  number: 2
+  _numword: two
+  _roman: II
+  abbr: Vln.
+  clef: treble
+  transposition:
+  keyboard: false
+  midi: violin
+  family: strings
+  mutopianame: Violin
+- name: viola
+  number:
+  _numword: ''
+  _roman: ''
+  abbr: Vla.
+  clef: alto
+  transposition:
+  keyboard: false
+  midi: viola
+  family: strings
+  mutopianame: Viola
+- name: violoncello
+  number:
+  _numword: ''
+  _roman: ''
+  abbr: Vc.
+  clef: bass
+  transposition:
+  keyboard: false
+  midi: cello
+  family: strings
+  mutopianame: "'Cello"
+- name: contrabass
+  number:
+  _numword: ''
+  _roman: ''
+  abbr: Cb.
+  clef: bass
+  transposition:
+  keyboard: false
+  midi: contrabass
+  family: strings
+  mutopianame: Basso
+language: english
+opus: Op. 67
+movements:
+- num: 1
+  tempo: Allegro
+  time: 2/4
+  key:
+  - c
+  - minor
+- num: 2
+  tempo: Andante con moto
+  time: 3/8
+  key:
+  - af
+  - major
+- num: 3
+  tempo: Scherzo. Allegro
+  time: 3/4
+  key:
+  - c
+  - minor
+- num: 4
+  tempo: Allegro
+  time: 4/4
+  key:
+  - c
+  - major

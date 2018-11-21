@@ -2,7 +2,7 @@ import bs4
 import os
 import requests
 from prompt_toolkit import prompt
-from prompt_toolkit.contrib.completers import WordCompleter
+from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.validation import Validator, ValidationError
 from titlecase import titlecase
 
@@ -25,13 +25,15 @@ def edit_prompt(piece, config_path, db, path_save):
     prompt_help = (
         "\nYou can now add score information. Available modes are:\n"
         f"{BOLD}header:{END}\t\tadd title, composer, etc.\n"
+        f"{BOLD}mutopia:{END}\tAdd information for submitting to the mutopia project\n"
         f"{BOLD}instrument:{END}\tadd/remove/re-order individual instruments "
         "in the score\n"
         f"{BOLD}ensemble:{END}\tadd an ensemble to the score\n"
         f"{BOLD}movement:{END}\tadd/remove movements (including time, key, "
         f"and tempo info\n"
-        f"{BOLD}language:{END} set the region language for lilypond\n"
+        f"{BOLD}language:{END}\tset the region language for lilypond\n"
         f"{BOLD}print:{END}\t\t print the current state of the score info.\n"
+        f"{BOLD}save:{END}\t\t save current state to config file\n"
         f"{BOLD}quit:{END}\t\twrite out file and exit\n"
         f"{BOLD}help:{END}\t\tprint this message\n"
     )
@@ -45,6 +47,7 @@ def edit_prompt(piece, config_path, db, path_save):
             "instruments": piece.instruments,
             "opus": piece.opus,
             "movements": piece.movements,
+            "mutopia_headers": piece.headers.mutopiaheaders
         }
     if "opus" not in infodict:
         infodict["opus"] = prompt(
@@ -52,7 +55,7 @@ def edit_prompt(piece, config_path, db, path_save):
     print(prompt_help)
     while 1:
         # DEBUG LINE
-        print(infodict)
+        # print(infodict)
         try:
             ps1 = infodict["headers"].title
         except (AttributeError, KeyError, TypeError):
@@ -63,19 +66,16 @@ def edit_prompt(piece, config_path, db, path_save):
         if command[0].lower() == 'q':
             save = prompt("Save file before exiting? ", default='Y', validator=YNValidator())
             if save:
-                new_piece = info.Piece.init_version(
-                    headers=infodict['headers'],
-                    instruments=infodict['instruments'],
-                    language=infodict.get('language', None),
-                    opus=infodict["opus"],
-                    movements=infodict.get('movements', None)
-                )
-                yaml_interface.write_config(config_path, new_piece)
+                print('Saving File')
+                save_config(infodict, config_path)
             try:
                 os.remove(path_save)
             except FileNotFoundError:
                 pass
+            print("Exiting")
             raise SystemExit(0)
+        elif command.lower().strip() == "save":
+            save_config(infodict, config_path)
         elif command.lower().strip() == "help":
             print(prompt_help)
         elif "header" in command.lower():
@@ -90,10 +90,14 @@ def edit_prompt(piece, config_path, db, path_save):
             if "instruments" not in infodict:
                 infodict["instruments"] = []
             infodict["instruments"] = existing_instruments(infodict["instruments"], db, ensemble_prompt)
-        elif command.lower()[0] == 'm':
+        elif command.lower()[0:2] == 'mo':
             if "movements" not in infodict:
                 infodict["movements"] = []
             infodict["movements"] = movement_prompt(infodict["movements"])
+        elif command.lower()[0:2] == 'mu':
+            if "mutopia_headers" not in infodict:
+                infodict["mutopia_headers"] = None
+            infodict['mutopia_headers'] = mutopia_prompt(infodict["mutopia_headers"])
         elif command.lower()[0] == 'l':
             infodict["language"] = prompt("Enter Lilypond Language: ",
                                           completer=WordCompleter(info.get_valid_languages()),
@@ -102,6 +106,20 @@ def edit_prompt(piece, config_path, db, path_save):
             print(infodict)
         else:
             print(INVALID)
+
+
+def save_config(infodict, config_path):
+    if 'mutopia_headers' in infodict:
+        infodict['headers'].add_mutopia_headers(infodict['mutopia_headers'],
+                                                instruments=infodict['instruments'])
+    new_piece = info.Piece.init_version(
+        headers=infodict['headers'],
+        instruments=infodict['instruments'],
+        language=infodict.get('language', None),
+        opus=infodict["opus"],
+        movements=infodict.get('movements', None)
+    )
+    yaml_interface.write_config(config_path, new_piece)
 
 
 class LanguageValidator(Validator):
@@ -120,8 +138,6 @@ def header_prompt(curr_headers, db):
         "subsubtitle\tpoet\n"
         "meter\t\tarranger\n"
         "tagline\t\tcopyright\n"
-        "You may also enter \"mutopia\" to enter headers for submission"
-        "to the mutopia project.\n"
         "Enter \"print\" to print the current headers and \"done\" to finish"
         "and return to the main prompt."
     )
@@ -130,14 +146,14 @@ def header_prompt(curr_headers, db):
         db.table("titlewords"), search=("word", "")))
     field_completer = WordCompleter(["title", "composer", "subtitle", "subsubtitle",
                                      "poet", "meter", "arranger", "tagline", "copyright",
-                                     "mutopia", "print", "done"])
+                                     "print", "done"])
     if curr_headers is None:
         composer = composer_prompt(db)
         title = prompt("Enter Title: ", completer=titlewords)
         curr_headers = info.Headers(title=title, composer=composer)
     while 1:
         # DEBUG LINE
-        print(curr_headers)
+        # print(curr_headers)
         command = prompt("Headers> ", completer=field_completer)
         if len(command) == 0:
             continue
@@ -163,17 +179,12 @@ def header_prompt(curr_headers, db):
             new = prompt(f"Enter value for {field} or press enter to leave unchanged: ")
             if len(new) > 0:
                 setattr(curr_headers, field, new)
-        elif "mutopia" in field:
-            curr_headers.mutopiaheaders = mutopia_prompt(db, curr_headers)
         # Logistical commands
         elif field[0] == 'h':
             print(prompt_help)
         elif field[0] == 'p':
             print(curr_headers)
-        elif field[0] == 'd':
-            print("Saving headers")
-            return curr_headers
-        elif field[0] == 'save':
+        elif field[0] == 'd' or field == "save":
             print("Saving headers")
             return curr_headers
         else:
@@ -226,14 +237,14 @@ def composer_prompt(db):
     return new_comp
 
 
-def mutopia_prompt(db, curr_headers):
+def mutopia_prompt(curr_mutopia_headers):
     licenses = mutopia._get_licenses()
     license_completer = WordCompleter(licenses)
-    mu_headers = curr_headers.mutopiaheaders
+    mu_headers = curr_mutopia_headers
     if mu_headers is None:
         source = prompt("Enter the source: ")
         style = prompt("Enter the style: ")
-        print(license_ for license_ in licenses)
+        print(license_ for license_ in list(licenses))
         license_ = prompt("Enter the license: ", completer=license_completer)
         while 1:
             try:
@@ -270,12 +281,21 @@ def mutopia_prompt(db, curr_headers):
             continue
         elif command.lower() == "done":
             return mu_headers
-        elif command.lower() in ["maintainer", "maintainerEmail", "maintainerWeb",
-                         "mutopiatitle", "mutopiapoet", "mutopiaopus", "date",
+        elif command.lower() == 'maintaineremail':
+            print("{} is {}".format(command, getattr(mu_headers, 'maintainerEmail', "blank")))
+            new = prompt(f"Enter value for maintainerEmail or press [enter] to leave unchanged: ")
+            if len(new) > 0:
+                setattr(mu_headers, 'maintainerEmail', new)
+        elif command.lower() == 'maintainerweb':
+            print("{} is {}".format(command, getattr(mu_headers, 'maitainerWeb', "blank")))
+            new = prompt(f"Enter value for maintainerWeb or press [enter] to leave unchanged: ")
+            if len(new) > 0:
+                setattr(mu_headers, 'maintainerWeb', new)
+        elif command.lower() in ["maintainer", "mutopiatitle", "mutopiapoet", "mutopiaopus", "date",
                          "moreinfo", "style", "license", "source"
                          ]:
             print("{} is {}".format(command, getattr(mu_headers, command, "blank")))
-            new = prompt(f"Enter value for {command} or press enter to leave unchanged: ")
+            new = prompt(f"Enter value for {command} or press [enter] to leave unchanged: ")
             if len(new) > 0:
                 setattr(mu_headers, command, new)
         elif command[0].lower() == 'h':

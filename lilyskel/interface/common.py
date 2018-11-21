@@ -1,6 +1,6 @@
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import Completer, Completion
-from prompt_toolkit.contrib.completers import WordCompleter
+from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.validation import Validator, ValidationError
 from titlecase import titlecase
 
@@ -36,7 +36,6 @@ class YNValidator(Validator):
         if text.lower()[0] not in 'yn':
             raise ValidationError(message="Response must be [y]es or [n]o",
                                   cursor_position=0)
-
 
 
 
@@ -79,7 +78,7 @@ def manual_instrument(name, number, db=None):
     new_ins = lynames.Instrument.load(insinfo)
     if db is not None:
         while True:
-            add_to_db = prompt("Would you like to add this instrument to the database for"
+            add_to_db = prompt("Would you like to add this instrument to the database for "
                                "easy use next time? ", default='Y')
             if len(add_to_db) > 0:
                 break
@@ -154,7 +153,7 @@ def create_ensemble(name, db, instruments_to_add=[]):
         ins_list.append(create_instrument(instruments, db, instrument_names))
     prompt_help = ("You can:\n"
                    f"{BOLD}reorder{END}, {BOLD}add{END}, {BOLD}delete{END}, {BOLD}print{END}"
-                   f"\nor {BOLD}continue{END} if you are satisfied with the instruments.")
+                   f"\nor {BOLD}done{END} if you are satisfied with the instruments.")
     print(prompt_help)
     instruments_with_indexes(ins_list)
     while True:
@@ -165,7 +164,7 @@ def create_ensemble(name, db, instruments_to_add=[]):
             ins_list = reorder_instruments(ins_list)
         elif choice.lower()[0] == 'a':
             ins_list.append(create_instrument(instruments, db, instrument_names))
-        elif choice.lower()[0] == 'd':
+        elif choice.lower()[0:2] == 'de':
             while True:
                 instruments_with_indexes(ins_list)
                 del_idx = prompt("Enter the number of the instrument to delete or [enter] to "
@@ -176,15 +175,15 @@ def create_ensemble(name, db, instruments_to_add=[]):
                     ins_list.pop(int(del_idx))
                 else:
                     print("Invalid index")
-        elif choice.loser()[0] == 'p':
+        elif choice.lower()[0] == 'p':
             print(name + ':')
             instruments_with_indexes(ins_list)
-        elif choice.lower()[0] == 'c':
+        elif choice.lower()[0:2] == 'do':
             break
     for ins in ins_list:
         new_ens.add_instrument_from_obj(ins)
     print(new_ens)
-    good = prompt("Save?", validator=YNValidator(), default='Y')
+    good = prompt("Save? ", validator=YNValidator(), default='Y')
     if not good.lower()[0] == 'y':
         return ins_list
     yn = prompt("Add to database for future use? ", validator=YNValidator(), default='Y')

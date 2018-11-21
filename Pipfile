@@ -7,8 +7,18 @@ name = "pypi"
 
 [packages]
 
-"e1839a8" = {path = "."}
 better-exceptions = "*"
+"num2words" = "*"
+tinydb = "*"
+attrs = "*"
+titlecase = "*"
+"bs4" = "*"
+requests = ">=2.20"
+fuzzywuzzy = {extras = ["speedup"]}
+"jinja2" = "*"
+"ruamel.yaml" = "*"
+click = "*"
+prompt-toolkit = ">=2.0.1"
 
 
 [dev-packages]

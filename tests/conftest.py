@@ -1,5 +1,9 @@
 """Global pytest fixtures."""
+import sys
+
+import re
 import shutil
+import subprocess
 from pathlib import Path
 import pytest
 from jinja2 import Environment, PackageLoader
@@ -19,6 +23,37 @@ def livedb(tmpdir_factory):
     tmpdir_ = tmpdir_factory.mktemp('livedb')
     shutil.copy2(Path(basedir, 'tests', 'test_db.json'), Path(tmpdir_))
     return TinyDB(Path(tmpdir_, 'test_db.json'))
+
+
+@pytest.fixture(scope='module')
+def defaultdb(tmpdir_factory):
+    tmpdir_ = tmpdir_factory.mktemp('defaultdb')
+    shutil.copy(Path(srcdir, 'default_db.json'), Path(tmpdir_))
+    return TinyDB(Path(tmpdir_, 'default_db.json'))
+
+
+@pytest.fixture
+def prompt_commands():
+    with Path(basedir, 'tests', 'lilyskel_command.txt').open('r') as commandfile:
+        return [line.strip() for line in commandfile.readlines()]
+
+
+@pytest.fixture
+def good_beethoven(lily_version):
+    with Path(basedir, 'tests', 'good_beethoven_5.yaml').open('r') as beethoven_file:
+        beethoven_data = beethoven_file.read()
+
+    correct_data = beethoven_data.replace('2.18.2', lily_version)
+    return correct_data
+
+
+@pytest.fixture
+def lily_version():
+    ly_vers = subprocess.run(['lilypond', '--version'],
+                          stdout=subprocess.PIPE)
+    matchvers = re.search(r'LilyPond ([^\n]*)',
+                          ly_vers.stdout.decode(sys.stdout.encoding))
+    return matchvers.group(1)
 
 
 @pytest.fixture

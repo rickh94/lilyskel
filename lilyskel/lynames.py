@@ -275,6 +275,9 @@ class Ensemble:
     name = attr.ib(convert=normalize_name)
     instruments = attr.ib(default=None)
 
+    def __iter__(self):
+        yield from self.instruments
+
     def pretty_name(self):
         return titlecase(' '.join(self.name.split('_')))
 
