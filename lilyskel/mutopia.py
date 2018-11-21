@@ -69,13 +69,9 @@ def get_styles():
     if STYLES:
         return STYLES
     text = _get_mutopia_table_data('style')
-    print(text)
     breaktext = text.text.split(':\n')
-    print(breaktext)
     cleantext = breaktext[1]
-    print(cleantext)
     STYLES = [item.strip() for item in cleantext.split(', ')]
-    print(STYLES)
     return STYLES
 
 
