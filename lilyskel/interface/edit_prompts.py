@@ -21,7 +21,6 @@ def edit_prompt(piece, config_path, db, path_save):
     :param config_path: The path to the configuration file being worked on.
     :return:
     """
-    #print(config_path)
     prompt_help = (
         "\nYou can now add score information. Available modes are:\n"
         f"{BOLD}header:{END}\t\tadd title, composer, etc.\n"
@@ -65,7 +64,7 @@ def edit_prompt(piece, config_path, db, path_save):
             continue
         if command[0].lower() == 'q':
             save = prompt("Save file before exiting? ", default='Y', validator=YNValidator())
-            if save:
+            if answered_yes(save):
                 print('Saving File')
                 save_config(infodict, config_path)
             try:
@@ -76,6 +75,7 @@ def edit_prompt(piece, config_path, db, path_save):
             raise SystemExit(0)
         elif command.lower().strip() == "save":
             save_config(infodict, config_path)
+            print("Saved")
         elif command.lower().strip() == "help":
             print(prompt_help)
         elif "header" in command.lower():
@@ -103,7 +103,7 @@ def edit_prompt(piece, config_path, db, path_save):
                                           completer=WordCompleter(info.get_valid_languages()),
                                           validator=LanguageValidator())
         elif command.lower()[0] == 'p':
-            print(infodict)
+            print_piece_info(infodict)
         else:
             print(INVALID)
 
@@ -168,10 +168,10 @@ def header_prompt(curr_headers, db):
             if len(title) != 0:
                 curr_headers.title = title
         elif "comp" in field:
-            yn = prompt("Current composer is {}. Would you like to change "
+            change_comp = prompt("Current composer is {}. Would you like to change "
                         "it? ".format(curr_headers.composer.name), default='N',
                         validator=YNValidator())
-            if yn.lower()[0] == 'y':
+            if answered_yes(change_comp):
                 curr_headers.composer = composer_prompt(db)
         elif field in ["dedication", "subtitle", "subsubtitle", "poet",
                        "meter", "arranger", "tagline", "copyright"]:
@@ -202,7 +202,7 @@ def composer_prompt(db):
     if matches:
         load = prompt(f"Would you like to load {comp} from the database? ",
                       default='Y', validator=YNValidator())
-        if load.lower()[0] == 'y':
+        if answered_yes(load):
             if len(matches) > 1:
                 for num, match in enumerate(matches):
                     print(f"{num}. {match}")
@@ -227,12 +227,9 @@ def composer_prompt(db):
                                 default=guess_short_name)
     new_comp.mutopianame = prompt("Enter the mutopia formatted name of the composer "
                                   "or [enter] for none: ", default=guess_mutopia_name)
-    while True:
-        add_to_db = prompt("Would you like to add this composer to the database for easy usage next time? ",
-                           default='Y')
-        if len(add_to_db) > 0:
-            break
-    if add_to_db.lower()[0] == 'y':
+    add_to_db = prompt("Would you like to add this composer to the database for easy usage next time? ",
+                       default='Y', validator=YNValidator())
+    if answered_yes(add_to_db):
         new_comp.add_to_db(db)
     return new_comp
 
@@ -524,3 +521,8 @@ def movement_prompt(curr_movements):
             return curr_movements
         else:
             print(INVALID)
+
+
+def print_piece_info(piece_info):
+    # TODO: make better
+    print(piece_info)

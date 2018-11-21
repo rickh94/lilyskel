@@ -38,7 +38,6 @@ class YNValidator(Validator):
                                   cursor_position=0)
 
 
-
 def answered_yes(answer):
     if answer.lower()[0] == 'y':
         return True
@@ -66,23 +65,18 @@ def manual_instrument(name, number, db=None):
             break
         print("invalid clef")
     insinfo['transposition'] = prompt("Transposition: ") or None
-    keyboard_res = prompt("Is it a keyboard (grand staff) instrument? [y/N] ", default='N')
-    insinfo['keyboard'] = False
-    try:
-        if keyboard_res.lower()[0] == 'y':
-            insinfo['keyboard'] = True
-    except IndexError:
-        pass
+    keyboard_res = prompt("Is it a keyboard (grand staff) instrument? ", default='N', validator=YNValidator())
+    if answered_yes(keyboard_res):
+        insinfo['keyboard'] = True
+    else:
+        insinfo['keyboard'] = False
     insinfo['midi'] = prompt("Midi instrument name: ").lower() or None
     insinfo['family'] = normalize_name(prompt("Instrument family: ")) or None
     new_ins = lynames.Instrument.load(insinfo)
     if db is not None:
-        while True:
-            add_to_db = prompt("Would you like to add this instrument to the database for "
-                               "easy use next time? ", default='Y')
-            if len(add_to_db) > 0:
-                break
-        if add_to_db.lower()[0] == 'y':
+        add_to_db = prompt("Would you like to add this instrument to the database for "
+                           "easy use next time? ", default='Y', validator=YNValidator())
+        if answered_yes(add_to_db):
             new_ins.add_to_db(db)
     return new_ins
 
@@ -107,11 +101,8 @@ def reorder_instruments(curr_instruments):
         tmp_instruments.insert(int(new_idx), move_instrument)
         print("New instrument order: ")
         instruments_with_indexes(tmp_instruments)
-        while True:
-            correct = prompt("Is this correct? [Y/n] ", default='Y', validator=YNValidator())
-            if len(correct) > 0:
-                break
-        if correct.lower()[0] == 'y':
+        correct = prompt("Is this correct? [Y/n] ", default='Y', validator=YNValidator())
+        if answered_yes(correct):
             curr_instruments = [instrument for instrument in tmp_instruments]
     return curr_instruments
 
@@ -184,10 +175,10 @@ def create_ensemble(name, db, instruments_to_add=[]):
         new_ens.add_instrument_from_obj(ins)
     print(new_ens)
     good = prompt("Save? ", validator=YNValidator(), default='Y')
-    if not good.lower()[0] == 'y':
+    if not answered_yes(good):
         return ins_list
-    yn = prompt("Add to database for future use? ", validator=YNValidator(), default='Y')
-    if yn.lower()[0] == 'y':
+    add_to_db = prompt("Add to database for future use? ", validator=YNValidator(), default='Y')
+    if answered_yes(add_to_db):
         new_ens.add_to_db(db)
     return new_ens
 
@@ -236,7 +227,7 @@ def create_instrument(instruments, db, instrument_names_standardized):
             instrument_names_standardized:
         load = prompt(f"{ins_name_input} is in the database, would you like to load it? "
                       "[Y/n] ", default='Y', validator=YNValidator())
-        if load.lower()[0] == 'y':
+        if answered_yes(load):
             return lynames.Instrument.load_from_db(
                     normalize_name(ins_name_input), db, number=number)
     return manual_instrument(number=number, db=db, name=ins_name_input)
