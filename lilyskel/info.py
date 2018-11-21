@@ -55,7 +55,7 @@ class Composer:
         if self.mutopianame is not None:
             return self.mutopianame
         elif guess:
-            mutopia_composers = mutopia._get_composers()
+            mutopia_composers = mutopia.get_composers()
             namelist = self.name.split()
             lname = namelist.pop()
             name, _ = process.extractOne(self.name, mutopia_composers)

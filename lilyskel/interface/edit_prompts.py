@@ -235,29 +235,34 @@ def composer_prompt(db):
     return new_comp
 
 
+class LicenseValidator(Validator):
+    def validate(self, document):
+        if not document.text:
+            raise ValidationError(message="Response Required", cursor_position=0)
+        if document.text not in mutopia.get_licenses():
+            raise ValidationError(message="Invalid license", cursor_position=0)
+
+
+class StyleValidator(Validator):
+    def validate(self, document):
+        if not document.text:
+            raise ValidationError(message="Response Required", cursor_position=0)
+        if document.text not in mutopia.get_styles():
+            raise ValidationError(message="Invalid style", cursor_position=0)
+
+
 def mutopia_prompt(curr_mutopia_headers):
-    licenses = mutopia._get_licenses()
+    licenses = mutopia.get_licenses()
+    styles = mutopia.get_styles()
     license_completer = WordCompleter(licenses)
+    style_completer = WordCompleter(styles)
     mu_headers = curr_mutopia_headers
     if mu_headers is None:
         source = prompt("Enter the source: ")
-        style = prompt("Enter the style: ")
-        print(license_ for license_ in list(licenses))
-        license_ = prompt("Enter the license: ", completer=license_completer)
-        while 1:
-            try:
-                mu_headers = info.MutopiaHeaders(source=source,
-                                                 style=style, license=license_)
-                break
-            except exceptions.MutopiaError as err:
-                if "style" in str(err):
-                    style = prompt(
-                        f"Style {style} not valid. Enter valid style: ")
-                if "license" in str(err):
-                    print("Invalid license")
-                    print(license_ for license_ in licenses)
-                    license_ = prompt("Enter valid license: ",
-                                     completer=license_completer)
+        style = prompt("Enter the style: ", completer=style_completer, validator=StyleValidator())
+        print([license_ for license_ in licenses])
+        license_ = prompt("Enter the license: ", completer=license_completer, validator=LicenseValidator())
+        mu_headers = info.MutopiaHeaders(source=source, style=style, license=license_)
     prompt_help = (
         "You may enter any of the following data or leave blank. "
         "Anything required and "
@@ -280,12 +285,12 @@ def mutopia_prompt(curr_mutopia_headers):
         elif command.lower() == "done":
             return mu_headers
         elif command.lower() == 'maintaineremail':
-            print("{} is {}".format(command, getattr(mu_headers, 'maintainerEmail', "blank")))
+            print("maintainerEmail is {}".format(getattr(mu_headers, 'maintainerEmail', "blank")))
             new = prompt(f"Enter value for maintainerEmail or press [enter] to leave unchanged: ")
             if len(new) > 0:
                 setattr(mu_headers, 'maintainerEmail', new)
         elif command.lower() == 'maintainerweb':
-            print("{} is {}".format(command, getattr(mu_headers, 'maitainerWeb', "blank")))
+            print("maintainerWeb is {}".format(getattr(mu_headers, 'maitainerWeb', "blank")))
             new = prompt(f"Enter value for maintainerWeb or press [enter] to leave unchanged: ")
             if len(new) > 0:
                 setattr(mu_headers, 'maintainerWeb', new)

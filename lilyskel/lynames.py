@@ -249,7 +249,7 @@ class Instrument(LyName):
         """Gets the mutopia version of the Instrument's name."""
         if self.mutopianame is not None:
             return self.mutopianame
-        instrs = mutopia._get_instruments()
+        instrs = mutopia.get_instruments()
         choice, _ = process.extractOne(self.name, instrs)
         self.mutopianame = choice
         return choice

@@ -61,7 +61,7 @@ def test_get_licenses():
     licenses = {"Creative Commons Attribution 4.0",
                 "Creative Commons Attribution-ShareAlike 4.0",
                 "Public Domain"}
-    assert licenses.issubset(set(mutopia._get_licenses())),\
+    assert licenses.issubset(set(mutopia.get_licenses())),\
         "These licenses should be in the list, and possibly more."
 
 
@@ -69,11 +69,11 @@ def test_get_composers():
     """Test getting list of mutopia formatted composers."""
     assert {'BachJS', 'BeethovenLv', 'HolstGT', 'TchaikovskyPI',
             'Anonymous', 'Traditional'}.issubset(
-                set(mutopia._get_composers()))
+                set(mutopia.get_composers()))
 
 
 def test_get_instruments():
     """Test getting list of instruments from mutopia."""
     assert {'Violin', 'Cello', 'Flute', 'Clarinet', 'Trumpet'}.issubset(
-        set(mutopia._get_instruments())),\
+        set(mutopia.get_instruments())),\
         "These instruments are allowed and should be in the list."

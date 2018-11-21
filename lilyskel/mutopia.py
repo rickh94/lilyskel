@@ -8,6 +8,7 @@ SITE2 = None
 LICENSES = None
 COMPOSERS = None
 INSTRUMENTS = None
+STYLES = None
 
 
 def _scrape_mutopia():
@@ -34,7 +35,7 @@ def validate_mutopia(field, data):
     """Validates mutopia fields against accepted mutopia input."""
     # special case for licenses
     if field == 'license':
-        licenses = _get_licenses()
+        licenses = get_licenses()
         if data not in licenses:
             raise exceptions.MutopiaError(
                 '{data} was not found in {field}'.format(data=data,
@@ -51,7 +52,7 @@ def validate_mutopia(field, data):
         raise exceptions.MutopiaError(f'{data} was not found in {field}')
 
 
-def _get_licenses():
+def get_licenses():
     """Gets allowed licenses from mutopia.org and returns a list."""
     global LICENSES
     if LICENSES:
@@ -59,11 +60,26 @@ def _get_licenses():
     text = _get_mutopia_table_data(field='license')
     licenses = text.find_all('li')
     # some text cleaning
-    LICENSES = [license.get_text().replace('"', '') for license in licenses]
+    LICENSES = [license.text.replace('"', '') for license in licenses]
     return LICENSES
 
 
-def _get_composers():
+def get_styles():
+    global STYLES
+    if STYLES:
+        return STYLES
+    text = _get_mutopia_table_data('style')
+    print(text)
+    breaktext = text.text.split(':\n')
+    print(breaktext)
+    cleantext = breaktext[1]
+    print(cleantext)
+    STYLES = [item.strip() for item in cleantext.split(', ')]
+    print(STYLES)
+    return STYLES
+
+
+def get_composers():
     """Gets allowed licenses from mutopia.org and returns a list."""
     global COMPOSERS
     if COMPOSERS:
@@ -76,7 +92,7 @@ def _get_composers():
     return COMPOSERS
 
 
-def _get_instruments():
+def get_instruments():
     """Gets the allowed instruments from mutopia."""
     global INSTRUMENTS
     if INSTRUMENTS:
