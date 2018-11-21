@@ -1,3 +1,4 @@
+import prompt_toolkit
 import pytest
 from pathlib import Path
 from unittest import mock
@@ -34,8 +35,12 @@ HEADER_PROMPT_HELP = (
 )
 
 
-def test_edit_prompt_empty_config(monkeypatch, tmpdir_factory, defaultdb):
-    path_save = Path(tmpdir_factory.mktemp("pathsave_not_needed"), 'lilyskel_path')
+@pytest.fixture
+def pathsave_not_needed(tmpdir_factory):
+    return Path(tmpdir_factory.mktemp("pathsave_not_needed"), 'lilyskel_path')
+
+
+def test_edit_prompt_empty_config(monkeypatch, tmpdir_factory, defaultdb, pathsave_not_needed):
     config_path1 = Path(tmpdir_factory.mktemp('config_path1'), 'test1.yaml')
     mock_prompt1 = mock.MagicMock()
     mock_prompt1.side_effect = [
@@ -78,7 +83,7 @@ def test_edit_prompt_empty_config(monkeypatch, tmpdir_factory, defaultdb):
         m.setattr('builtins.print', mock_print)
 
         with pytest.raises(SystemExit):
-            lilyskel.interface.edit_prompts.edit_prompt(None, config_path1, defaultdb, path_save)
+            lilyskel.interface.edit_prompts.edit_prompt(None, config_path1, defaultdb, pathsave_not_needed)
 
         mock_prompt1.assert_any_call("Enter Lilypond Language: ", completer=mock.ANY, validator=mock.ANY)
         mock_mutopia_prompt.assert_called_once_with(None)
@@ -91,6 +96,40 @@ def test_edit_prompt_empty_config(monkeypatch, tmpdir_factory, defaultdb):
         mock_print.assert_any_call(EDIT_PROMPT_HELP)
         mock_print.assert_any_call("Saved")
         mock_print.assert_any_call(INVALID)
+
+
+def test_edit_prompt_read_config(tmpdir_factory, piece2, defaultdb, pathsave_not_needed,
+                                 monkeypatch):
+    tmp_config_file = Path(tmpdir_factory.mktemp('test_read_config'), 'test.yml')
+    mock_prompt = mock.MagicMock()
+    mock_prompt.side_effect = ['print', 'quit', 'Y']
+    with monkeypatch.context() as m:
+        m.setattr('lilyskel.interface.edit_prompts.prompt', mock_prompt)
+        with pytest.raises(SystemExit):
+            lilyskel.interface.edit_prompts.edit_prompt(piece2, tmp_config_file, defaultdb, pathsave_not_needed)
+    with tmp_config_file.open('r') as thefile:
+        data = thefile.read()
+    assert 'language: english' in data
+    assert 'opus: Op. 15' in data
+    assert 'tempo: Adagio' in data
+
+
+class TestDocument(object):
+    def __init__(self, text):
+        self.text = text
+
+
+def test_language_validator():
+    test_document_1 = TestDocument('')
+    test_document_2 = TestDocument('klingon')
+    with pytest.raises(prompt_toolkit.validation.ValidationError):
+        lilyskel.interface.edit_prompts.LanguageValidator().validate(test_document_1)
+        lilyskel.interface.edit_prompts.LanguageValidator().validate(test_document_2)
+    for language in ['nederlands', 'catalan', 'deutsch', 'english', 'espanol',
+                     'italiano', 'français', 'norsk', 'portugues', 'suomi', 'svenska', 'vlaams']:
+        test_doc = TestDocument(language)
+        print(language)
+        lilyskel.interface.edit_prompts.LanguageValidator().validate(test_doc)
 
 
 def test_header_prompt(monkeypatch, defaultdb):
@@ -152,5 +191,34 @@ def test_header_prompt(monkeypatch, defaultdb):
         assert test_headers.arranger == "test arranger"
         assert test_headers.tagline == "test tagline"
         assert test_headers.copyright == "test copyright"
+
+
+def test_composer_prompt(monkeypatch, defaultdb, livedb):
+    mock_prompt1 = mock.MagicMock()
+    mock_prompt1.side_effect = ["Bach", "Y", "1"]
+    mock_prompt2 = mock.MagicMock()
+    mock_prompt2.side_effect = ["Test Composer", "T. Composer", "ComposerT", "Y"]
+
+    with monkeypatch.context() as m:
+        m.setattr('lilyskel.interface.edit_prompts.prompt', mock_prompt1)
+
+        test_comp_1 = lilyskel.interface.edit_prompts.composer_prompt(defaultdb)
+        if test_comp_1.name == "Johann Sebastian Bach":
+            assert test_comp_1.shortname == "J.S. Bach"
+            assert test_comp_1.mutopianame == "BachJS"
+        elif test_comp_1.name == "Carl Philipp Emanuel Bach":
+            assert test_comp_1.shortname == "C.P.E. Bach"
+            assert test_comp_1.mutopianame == "BachCPE"
+        else:
+            print(test_comp_1)
+            assert False, "Composer name is not one of expected"
+
+    with monkeypatch.context() as m:
+        m.setattr('lilyskel.interface.edit_prompts.prompt', mock_prompt2)
+
+        test_comp_2 = lilyskel.interface.edit_prompts.composer_prompt(livedb)
+        assert test_comp_2.name == "Test Composer"
+        assert test_comp_2.shortname == "T. Composer"
+        assert test_comp_2.mutopianame == "ComposerT"
 
 

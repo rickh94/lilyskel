@@ -46,7 +46,8 @@ def edit_prompt(piece, config_path, db, path_save):
             "instruments": piece.instruments,
             "opus": piece.opus,
             "movements": piece.movements,
-            "mutopia_headers": piece.headers.mutopiaheaders
+            "mutopia_headers": piece.headers.mutopiaheaders,
+            "language": piece.language
         }
     if "opus" not in infodict:
         infodict["opus"] = prompt(
