@@ -5,6 +5,9 @@ from lilyskel import exceptions
 
 SITE = None
 SITE2 = None
+LICENSES = None
+COMPOSERS = None
+INSTRUMENTS = None
 
 
 def _scrape_mutopia():
@@ -50,30 +53,40 @@ def validate_mutopia(field, data):
 
 def _get_licenses():
     """Gets allowed licenses from mutopia.org and returns a list."""
+    global LICENSES
+    if LICENSES:
+        return LICENSES
     text = _get_mutopia_table_data(field='license')
     licenses = text.find_all('li')
     # some text cleaning
-    return [license.get_text().replace('"', '') for license in licenses]
+    LICENSES = [license.get_text().replace('"', '') for license in licenses]
+    return LICENSES
 
 
 def _get_composers():
     """Gets allowed licenses from mutopia.org and returns a list."""
+    global COMPOSERS
+    if COMPOSERS:
+        return COMPOSERS
     text = _get_mutopia_table_data(field='mutopiacomposer')
     breaktext = text.get_text().split(':\n')
     cleantext = breaktext[1]
-    data_list = [item.strip() for item in cleantext.split(', ')]
+    COMPOSERS = [item.strip() for item in cleantext.split(', ')]
     # some text cleaning
-    return data_list
+    return COMPOSERS
 
 
 def _get_instruments():
     """Gets the allowed instruments from mutopia."""
+    global INSTRUMENTS
+    if INSTRUMENTS:
+        return INSTRUMENTS
     global SITE2
     if not SITE2:
         SITE2 = requests.get("http://www.mutopiaproject.org/advsearch.html")
     html = BeautifulSoup(SITE2.content, 'html.parser')
     inst_elements = html.find(id='adv-instr-sel')
-    instruments = []
+    INSTRUMENTS = []
     for item in inst_elements.find_all('option'):
-        instruments.append(item['value'])
-    return instruments
+        INSTRUMENTS.append(item['value'])
+    return INSTRUMENTS

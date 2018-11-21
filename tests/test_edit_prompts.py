@@ -126,7 +126,7 @@ def test_language_validator():
         lilyskel.interface.edit_prompts.LanguageValidator().validate(test_document_1)
         lilyskel.interface.edit_prompts.LanguageValidator().validate(test_document_2)
     for language in ['nederlands', 'catalan', 'deutsch', 'english', 'espanol',
-                     'italiano', 'français', 'norsk', 'portugues', 'suomi', 'svenska', 'vlaams']:
+                     'italiano', 'norsk', 'portugues', 'suomi', 'svenska', 'vlaams']:
         test_doc = TestDocument(language)
         print(language)
         lilyskel.interface.edit_prompts.LanguageValidator().validate(test_doc)
