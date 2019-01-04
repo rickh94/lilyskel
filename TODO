@@ -1,5 +1,0 @@
-write data out to config file (yaml)
-read data in from config file
-build directory from config file
-add shell for creating yaml file
-add git support

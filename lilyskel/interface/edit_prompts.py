@@ -33,7 +33,7 @@ def edit_prompt(piece, config_path, db, path_save):
         f"{BOLD}language:{END}\tset the region language for lilypond\n"
         f"{BOLD}print:{END}\t\t print the current state of the score info.\n"
         f"{BOLD}save:{END}\t\t save current state to config file\n"
-        f"{BOLD}quit:{END}\t\twrite out file and exit\n"
+        f"{BOLD}quit:{END}\t\texit (option to save)\n"
         f"{BOLD}help:{END}\t\tprint this message\n"
     )
     command_list = ['header', 'instrument', 'ensemble', 'movement', 'print',
@@ -139,7 +139,7 @@ def header_prompt(curr_headers, db):
         "subsubtitle\tpoet\n"
         "meter\t\tarranger\n"
         "tagline\t\tcopyright\n"
-        "Enter \"print\" to print the current headers and \"done\" to finish"
+        f"Enter {BOLD}print{END} to print the current headers and {BOLD}done{END} to finish"
         "and return to the main prompt."
     )
     print(prompt_help)
@@ -260,7 +260,8 @@ def mutopia_prompt(curr_mutopia_headers):
     if mu_headers is None:
         source = prompt("Enter the source: ")
         style = prompt("Enter the style: ", completer=style_completer, validator=StyleValidator())
-        print([license_ for license_ in licenses])
+        for license_ in licenses:
+            print(license_)
         license_ = prompt("Enter the license: ", completer=license_completer, validator=LicenseValidator())
         mu_headers = info.MutopiaHeaders(source=source, style=style, license=license_)
     prompt_help = (
@@ -331,7 +332,7 @@ def instrument_prompt(curr_instruments, db_):
     print(prompt_help)
     while True:
         # DEBUG LINE
-        print(curr_instruments)
+        # print(curr_instruments)
         command = prompt("Instruments> ", completer=command_completer)
         if len(command) == 0:
             continue
