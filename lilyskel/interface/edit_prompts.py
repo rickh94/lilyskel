@@ -6,10 +6,11 @@ from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.validation import Validator, ValidationError
 from titlecase import titlecase
 
-from lilyskel import info, yaml_interface, db_interface, mutopia, exceptions, lynames
+from lilyskel import info, db_interface, mutopia, lynames
 from lilyskel.interface import common
-from lilyskel.interface.common import YNValidator, InsensitiveCompleter, IndexValidator, create_instrument, \
-    instruments_with_indexes, reorder_instruments, answered_yes, INVALID, BOLD, END
+from lilyskel.interface.common import (YNValidator, InsensitiveCompleter, IndexValidator, create_instrument,
+                                       instruments_with_indexes, reorder_instruments, answered_yes, INVALID, BOLD, END,
+                                       save_config)
 
 TEMPO_WORDS = []
 
@@ -32,9 +33,6 @@ def edit_prompt(piece, config_path, db, path_save):
         f"and tempo info\n"
         f"{BOLD}language:{END}\tset the region language for lilypond\n"
         f"{BOLD}print:{END}\t\t print the current state of the score info.\n"
-        f"{BOLD}save:{END}\t\t save current state to config file\n"
-        f"{BOLD}quit:{END}\t\texit (option to save)\n"
-        f"{BOLD}help:{END}\t\tprint this message\n"
     )
     command_list = ['header', 'instrument', 'ensemble', 'movement', 'print',
                     'quit', 'help']
@@ -107,20 +105,6 @@ def edit_prompt(piece, config_path, db, path_save):
             print_piece_info(infodict)
         else:
             print(INVALID)
-
-
-def save_config(infodict, config_path):
-    if 'mutopia_headers' in infodict:
-        infodict['headers'].add_mutopia_headers(infodict['mutopia_headers'],
-                                                instruments=infodict['instruments'])
-    new_piece = info.Piece.init_version(
-        headers=infodict['headers'],
-        instruments=infodict['instruments'],
-        language=infodict.get('language', None),
-        opus=infodict["opus"],
-        movements=infodict.get('movements', None)
-    )
-    yaml_interface.write_config(config_path, new_piece)
 
 
 class LanguageValidator(Validator):

@@ -1,62 +1,40 @@
-import better_exceptions
 import click
-from titlecase import titlecase
-from prompt_toolkit import prompt
+from prompt_toolkit import print_formatted_text
+from prompt_toolkit.shortcuts import confirm, input_dialog
 from tinydb import Query
-
 
 from lilyskel.info import Composer
 from lilyskel.exceptions import MutopiaError
-from lilyskel import db_interface
+from lilyskel.interface import sub_repl
 from lilyskel.interface.common import *
 
 
-@click.group()
+@click.group(invoke_without_command=True)
 @click.option("-p", "--db-path", help="alternate database location")
 @click.pass_context
 def db(ctx, db_path):
     """Directly interface with the database."""
     if not ctx.obj:
-        ctx.obj = {}
-    ctx.obj['DB'] = db_interface.init_db(db_path)
+        ctx.obj = AppState()
+    ctx.obj.db = db_interface.init_db(db_path)
+    # print('invoked db')
+    _db_repl(ctx)
 
 
-@db.group()
-def add():
-    """Add something to the database"""
-    pass
+@db.group(invoke_without_command=True)
+@click.pass_context
+def add(ctx):
+    """Add something to the database."""
+    _add_repl(ctx)
 
 
 @add.command()
 @click.pass_context
 def instrument(ctx):
-    """Add an instrument to the database"""
-    db_ = ctx.obj['DB']
-    name = input("Instrument Name (lower): ")
-    abbr = input("Instrument Abbreviation: ")
-    clef = input("Instrument clef: ") or "treble"
-    if ' ' in clef:
-        clef = clef.split()
-    transposition = input("Transposition: ") or None
-    keyboard = bool(input("Keyboard? ")) or False
-    midi = input("Midi instrument name: ")
-    family = input("Instrument family: ")
-    mutopianame = input("Mutopia name: ") or None
-    new_ins = Instrument(
-        name=name,
-        abbr=abbr,
-        clef=clef,
-        transposition=transposition,
-        keyboard=keyboard,
-        midi=midi,
-        family=family,
-        mutopianame=mutopianame
-    )
-    print(new_ins)
-    add = input("Correct? [y/N] ")
-    if add[0].lower() == 'y':
-        new_ins.add_to_db(db_)
-    return
+    """Add an instrument to the database."""
+    db_ = ctx.obj.db
+    name = prompt("Instrument Name: ")
+    manual_instrument(name, None, db_)
 
 
 @add.command()
@@ -64,20 +42,16 @@ def instrument(ctx):
 @click.pass_context
 def composer(ctx, name):
     """Add composer to the database."""
-    db_ = ctx.obj['DB']
+    db_ = ctx.obj.db
     newcomp = Composer(name)
     try:
-        mutopianame = input(
-            f"Assumed Mutopia Name is {newcomp.get_mutopia_name(guess=True)}"
-            " Is this correct? [Y/n] "
-        ) or "Y"
-        if mutopianame[0].lower() == 'n':
-            newcomp.mutopianame = input("Enter correct Mutopia Name: ")
+        if not confirm(f"Assumed Mutopia Name is {newcomp.get_mutopia_name(guess=True)}"
+                       " Is this correct? "):
+            newcomp.mutopianame = prompt("Enter correct Mutopia Name: ")
     except MutopiaError:
-        newcomp.mutopianame = input("Enter correct Mutopia Name: ")
-    shortname = input(f"Assumed short name is {newcomp.get_short_name()}"
-                      " Correct? [Y/n] ") or "Y"
-    if shortname[0].lower() == 'n':
+        newcomp.mutopianame = prompt("Enter correct Mutopia Name: ")
+    if not confirm(f"Assumed short name is {newcomp.get_short_name()}"
+                   " Correct? [Y/n] "):
         newcomp.shortname = input("Enter correct short name: ")
     newcomp.add_to_db(db_)
     newrec = db_interface.explore_table(
@@ -96,7 +70,7 @@ def fromfile(ctx, table, infile):
     :param infile:
     :return:
     """
-    db_ = ctx.obj['DB']
+    db_ = ctx.obj.db
     with open(infile, "r") as data:
         items = data.readlines()
     table_obj = db_.table(table)
@@ -112,7 +86,7 @@ def fromfile(ctx, table, infile):
 @click.pass_context
 def ensemble(ctx, name, instrument):
     """Add an ensemble to the database"""
-    db_ = ctx.obj['DB']
+    db_ = ctx.obj.db
     new_ens = create_ensemble(name, db_, instrument)
     print(new_ens)
 
@@ -160,7 +134,7 @@ def db_instrument_prompt(instruments, ins_list, db_):
 @click.pass_context
 def search(ctx, table, field, term):
     """Search the database"""
-    db_ = ctx.obj['DB']
+    db_ = ctx.obj.db
     print(db_interface.explore_table(db_.table(table), search=(field, term)))
 
 
@@ -171,7 +145,7 @@ def search(ctx, table, field, term):
 @click.pass_context
 def delete(ctx, table, field, search_term):
     """Find and delete an item from a table"""
-    table = ctx.obj['DB'].table(table)
+    table = ctx.obj.db.table(table)
     if not search_term:
         search_term = prompt(f"Enter a search term for table {table}")
     q = Query()
@@ -187,3 +161,6 @@ def delete(ctx, table, field, search_term):
             return
         table.remove(doc_ids=[items[int(choice)].doc_id])
 
+
+_db_repl = sub_repl.create(db, {'message': 'lilyskel:db> '})
+_add_repl = sub_repl.create(add, {'message': 'lilyskel:db:add> '})

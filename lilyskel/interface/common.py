@@ -1,10 +1,14 @@
+import tempfile
+from pathlib import Path
+
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.shortcuts import confirm
 from prompt_toolkit.validation import Validator, ValidationError
 from titlecase import titlecase
 
-from lilyskel import lynames, db_interface, info
+from lilyskel import lynames, db_interface, info, yaml_interface
 from lilyskel.lynames import VALID_CLEFS, normalize_name, Instrument, Ensemble
 
 
@@ -16,6 +20,7 @@ def instruments_with_indexes(instrumentlist):
 
 class InsensitiveCompleter(Completer):
     """Complete without caring about case."""
+
     def __init__(self, word_list):
 
         self._word_list = set(word_list)
@@ -29,6 +34,7 @@ class InsensitiveCompleter(Completer):
 
 class YNValidator(Validator):
     """Validates Yes/No responses in prompt_toolkit"""
+
     def validate(self, document):
         text = document.text
         if not text:
@@ -64,9 +70,8 @@ def manual_instrument(name, number, db=None):
         if clef in VALID_CLEFS or clef is None:
             break
         print("invalid clef")
-    insinfo['transposition'] = prompt("Transposition: ") or None
-    keyboard_res = prompt("Is it a keyboard (grand staff) instrument? ", default='N', validator=YNValidator())
-    if answered_yes(keyboard_res):
+    insinfo['transposition'] = prompt("Transposition [enter for none]: ") or None
+    if confirm('Is it a keyboard (grand staff) instrument?'):
         insinfo['keyboard'] = True
     else:
         insinfo['keyboard'] = False
@@ -74,9 +79,8 @@ def manual_instrument(name, number, db=None):
     insinfo['family'] = normalize_name(prompt("Instrument family: ")) or None
     new_ins = lynames.Instrument.load(insinfo)
     if db is not None:
-        add_to_db = prompt("Would you like to add this instrument to the database for "
-                           "easy use next time? ", default='Y', validator=YNValidator())
-        if answered_yes(add_to_db):
+        if confirm("Would you like to add this instrument to the database for "
+                   "easy use next time? "):
             new_ins.add_to_db(db)
     return new_ins
 
@@ -185,6 +189,7 @@ def create_ensemble(name, db, instruments_to_add=[]):
 
 class IndexValidator(Validator):
     """Validates indexes of lists."""
+
     def __init__(self, max_len, allow_empty=True):
         self.max = max_len
         self.allow_empty = allow_empty
@@ -216,7 +221,7 @@ def create_instrument(instruments, db, instrument_names_standardized):
                             completer=InsensitiveCompleter(instruments))
     while True:
         number = prompt("If the instrument has a number associated (e.g. Violin 2), "
-                        "enter it or press [enter] to continue. ")or None
+                        "enter it or press [enter] to continue. ") or None
         if number is None:
             break
         if number.isdigit():
@@ -229,10 +234,30 @@ def create_instrument(instruments, db, instrument_names_standardized):
                       "[Y/n] ", default='Y', validator=YNValidator())
         if answered_yes(load):
             return lynames.Instrument.load_from_db(
-                    normalize_name(ins_name_input), db, number=number)
+                normalize_name(ins_name_input), db, number=number)
     return manual_instrument(number=number, db=db, name=ins_name_input)
 
 
 BOLD = "\033[1m"
 END = "\033[0m"
 INVALID = "Command not recognized. Please try again."
+
+
+class AppState:
+    def __init__(self, db=None, piece=None, config_file_path=None, pathsave=None, mutopia_headers=None):
+        self.db = db
+        self.piece = piece
+        self.config_file_path = config_file_path
+        self.pathsave = pathsave
+        self.mutopia_headers = mutopia_headers
+
+
+TEMP = tempfile.gettempdir()
+PATHSAVE = Path(TEMP, "lilyskel_path")
+
+
+def save_config(piece, config_path, mutopia_headers):
+    if mutopia_headers:
+        piece.hedaers.add_mutopia_headers(mutopia_headers,
+                                          instruments=piece.instruments)
+    yaml_interface.write_config(config_path, piece)

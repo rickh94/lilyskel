@@ -10,6 +10,8 @@ from pathlib import Path
 import sys
 import attr
 from fuzzywuzzy import process
+from prompt_toolkit import HTML
+
 from lilyskel.lynames import Instrument, Ensemble
 from lilyskel import mutopia
 from lilyskel import exceptions
@@ -130,7 +132,7 @@ def _validate_mutopia_headers(headers):
 @attr.s
 class Headers(object):
     """Class for storing header info."""
-    title = attr.ib()
+    title = attr.ib(default="Untitled")
     composer = attr.ib(default=Composer('Anonymous'),
                        validator=attr.validators.instance_of(Composer))
     dedication = attr.ib(default=None)
@@ -161,9 +163,9 @@ class Headers(object):
 
         # converts list of instruments to mutopia friendly string
         # instruments.sort()
-        mutopia_instrument_names =\
+        mutopia_instrument_names = \
             set([instrument.get_mutopia_name() for
-             instrument in instruments])
+                 instrument in instruments])
         mutopia_names_list = list(mutopia_instrument_names)
         mutopia_names_list.sort()
         instruments = ', '.join(mutopia_names_list)
@@ -372,14 +374,15 @@ def get_vers():
                           run_ly.stdout.decode(ENCODING))
     return matchvers.group(1)
 
+
 @attr.s
 class Piece:
     """
     Info for the entire piece.
     """
-    headers = attr.ib(validator=attr.validators.instance_of(Headers))
-    version = attr.ib()
-    instruments = attr.ib()
+    headers = attr.ib(validator=attr.validators.instance_of(Headers), default=Headers())
+    version = attr.ib(default=get_vers())
+    instruments = attr.ib(default=[])
     language = attr.ib(default=None)
     opus = attr.ib(default=None)
     movements = attr.ib(default=[Movement(num=1)])
@@ -414,6 +417,8 @@ class Piece:
 
     @instruments.validator
     def validate_instrument_list(self, _attribute, value):
+        if not value:
+            return
         if isinstance(value, Ensemble):
             return
         if not isinstance(value, list):
@@ -435,7 +440,7 @@ class Piece:
     def dump(self):
         """Serialize internal data for writing to config file."""
         return {
-            "headers" : self.headers.dump(),
+            "headers": self.headers.dump(),
             "version": self.version,
             "instruments": [attr.asdict(ins) for ins in self.instruments],
             "language": self.language,
@@ -457,3 +462,28 @@ class Piece:
                        for mov in datadict.pop('movements')],
             language=datadict.pop('language')
         )
+
+    def html(self):
+        lines = []
+        for key, value in {'Opus': self.opus, 'Lilypond Version': self.version, 'Language': self.language}.items():
+            if value:
+                lines.append(f'<b>{key}:</b> {value}')
+        if self.headers:
+            lines.append('<b>Headers:</b>')
+            for key, value in self.headers.dump().items():
+                if key == 'composer':
+                    lines.append(f'  composer: {value["name"]}')
+                    continue
+                if key == 'mutopiaheaders':
+                    # skip mutopia headers for now
+                    continue
+                if value:
+                    lines.append(f'  {key}: {value}')
+        instrument_names = ', '.join([instrument.part_name() for instrument in self.instruments])
+        lines.append(f'<b>Instruments:</b> {instrument_names}')
+        movement_names = '\n  '.join(
+            [f'{movement.num}. {movement.tempo} in {movement.key[0]} {movement.key[1]} Time: {movement.time}' for
+             movement in self.movements])
+        lines.append(f'<b>Movements:</b>\n  {movement_names}')
+
+        return HTML('\n'.join(lines))
