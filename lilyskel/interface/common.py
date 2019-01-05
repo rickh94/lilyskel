@@ -1,6 +1,8 @@
 import tempfile
 from pathlib import Path
+from types import FunctionType
 
+from click import Context
 from prompt_toolkit import prompt, print_formatted_text
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.completion import WordCompleter
@@ -313,13 +315,19 @@ def save_non_interactive(ctx):
         _ask_to_save(ctx)
 
 
-def _ask_to_save(ctx):
+def _ask_to_save(ctx: Context):
     if confirm(f'Would you like to save to {ctx.obj.config_file_path}?'):
         save_piece(ctx.obj)
 
 
-def save_piece(obj):
+def save_piece(obj: AppState):
     piece = obj.piece or Piece()
     config_path = obj.config_file_path or Path('./piece.yml')
     mutopia_headers = obj.mutopia_headers
     save_config(piece, config_path, mutopia_headers)
+
+
+def generate_completer(name: str, obj: AppState, get_completer: FunctionType):
+    new_completer = get_completer(obj.db)
+    obj.completers[name] = new_completer
+    return new_completer

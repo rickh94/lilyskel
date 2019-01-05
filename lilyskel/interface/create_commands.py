@@ -3,7 +3,7 @@ import functools
 import click
 from prompt_toolkit import prompt, HTML
 
-from lilyskel.interface.common import save_non_interactive
+from lilyskel.interface.common import save_non_interactive, generate_completer
 
 
 def rgetattr(obj, attr, *args):
@@ -26,22 +26,19 @@ def add_prompt_commands_from_list(list_of_names, help_prefix, attribute_prefix, 
         )
         group.add_command(new_command)
 
-def create_prompt_command(name, attribute, help_text, *, get_completer=None):
-    def generate_completer(obj):
-        new_completer = get_completer(obj.db)
-        obj.completers[name] = new_completer
-        return new_completer
 
+def create_prompt_command(name, attribute, help_text, *, get_completer=None):
     def _item_prompt():
         ctx = click.get_current_context()
         completer = None
         if get_completer:
             # get the completer from context or generate it
-            completer = ctx.obj.completers.get(name, generate_completer(ctx.obj))
+            completer = ctx.obj.completers.get(name, generate_completer(name, ctx.obj, get_completer))
         piece = ctx.obj.piece
         old_value = rgetattr(piece, attribute) or ''
         new_value = prompt(HTML(f'<b>Enter {name}:</b> '), default=old_value, completer=completer)
         rsetattr(piece, attribute, new_value)
         save_non_interactive(ctx)
     return click.Command(name.lower(), callback=_item_prompt, help=help_text)
+
 
