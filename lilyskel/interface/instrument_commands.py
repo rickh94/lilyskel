@@ -16,7 +16,7 @@ def instruments(ctx):
 @instruments.command(name='print')
 @click.pass_obj
 def print_(obj):
-    """Print the current Piece"""
+    """Print the current instruments"""
     for instrument in obj.piece.instruments:
         print_formatted_text(HTML(f'<b>{instrument.part_name()}</b>'))
 

@@ -14,6 +14,7 @@ from lilyskel.interface.common import (PATHSAVE, save_non_interactive, ask_to_sa
 from lilyskel.interface.create_commands import create_prompt_command
 from lilyskel.interface.headers import headers
 from lilyskel.interface.instrument_commands import instruments
+from lilyskel.interface.movement_commands import movements
 
 
 @click.group(invoke_without_command=True)
@@ -83,3 +84,4 @@ _edit_repl = sub_repl.create(edit, {'message': 'lilyskel:edit> '}, before_done_c
 edit.add_command(headers)
 edit.add_command(language)
 edit.add_command(instruments)
+edit.add_command(movements)

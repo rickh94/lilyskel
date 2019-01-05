@@ -12,6 +12,7 @@ import attr
 from fuzzywuzzy import process
 from prompt_toolkit import HTML
 from tinydb import TinyDB
+from titlecase import titlecase
 
 from lilyskel.lynames import Instrument, Ensemble
 from lilyskel import mutopia
@@ -351,6 +352,9 @@ class Movement:
             setattr(newclass, key, value)
         return newclass
 
+    def __str__(self):
+        return f'{self.num}. {self.tempo} in {titlecase(self.key.note)} {self.key.mode}, Time: {self.time}'
+
     def dump(self):
         return attr.asdict(self)
 
@@ -485,8 +489,7 @@ class Piece:
         instrument_names = ', '.join([instrument.part_name() for instrument in self.instruments])
         lines.append(f'<b>Instruments:</b> {instrument_names}')
         movement_names = '\n  '.join(
-            [f'{movement.num}. {movement.tempo} in {movement.key[0]} {movement.key[1]} Time: {movement.time}' for
-             movement in self.movements])
+            [str(movement) for movement in self.movements])
         lines.append(f'<b>Movements:</b>\n  {movement_names}')
 
         return HTML('\n'.join(lines))

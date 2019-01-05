@@ -1,17 +1,13 @@
-import bs4
-import os
-import requests
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 from titlecase import titlecase
 
 from lilyskel import info, db_interface, mutopia, lynames
 from lilyskel.interface import common
-from lilyskel.interface.common import (create_instrument,
-                                       instruments_with_indexes, reorder_instruments, answered_yes, INVALID, BOLD, END,
-                                       save_config)
+from lilyskel.interface.common import (answered_yes, INVALID, BOLD, END)
 from lilyskel.interface.custom_validators_completers import (InsensitiveCompleter, YNValidator, IndexValidator, LicenseValidator,
                                                              StyleValidator, ModeValidator, NoteValidator)
+from lilyskel.interface.movement_commands import get_tempo_words
 
 TEMPO_WORDS = []
 
@@ -26,11 +22,7 @@ def edit_prompt(piece, config_path, db, path_save):
     prompt_help = (
         "\nYou can now add score information. Available modes are:\n"
         f"{BOLD}mutopia:{END}\tAdd information for submitting to the mutopia project\n"
-        f"{BOLD}instrument:{END}\tadd/remove/re-order individual instruments "
-        "in the score\n"
         f"{BOLD}ensemble:{END}\tadd an ensemble to the score\n"
-        f"{BOLD}movement:{END}\tadd/remove movements (including time, key, "
-        f"and tempo info\n"
     )
     command_list = ['header', 'instrument', 'ensemble', 'movement', 'print',
                     'quit', 'help']
@@ -198,93 +190,3 @@ def ensemble_prompt(curr_instruments, db_):
                 break
     return new_ens
 
-
-def print_movements(mov_list):
-    for mov in mov_list:
-        print(f"{mov.num}. {mov.tempo} in {mov.key.note} {mov.key.mode}")
-
-
-def get_tempo_words():
-    global TEMPO_WORDS
-    if TEMPO_WORDS:
-        return TEMPO_WORDS
-    wiki = requests.get('https://en.wikipedia.org/wiki/Tempo')
-    wiki_soup = bs4.BeautifulSoup(wiki.text, "html.parser")
-    tempos = []
-    for title in ['Basic_tempo_markings', 'French_tempo_markings',
-                  'German_tempo_markings']:
-        title = wiki_soup.find(id=title)
-        tempos_soup = title.find_next('ul')
-        tempos_temp = []
-        for item in tempos_soup.find_all('i'):
-            tempos_temp.extend(titlecase(item.text).split(' '))
-        tempos.extend(tempos_temp)
-    TEMPO_WORDS = tempos
-    return TEMPO_WORDS
-
-
-def movement_prompt(curr_movements):
-    if curr_movements:
-        print("Movements in piece: ")
-        print_movements(curr_movements)
-    prompt_help = (
-        "Options:\n"
-        f"{BOLD}print{END} movements\n"
-        f"{BOLD}create{END} a new movement\n"
-        f"{BOLD}edit{END} a movement\n"
-        f"{BOLD}delete{END} a movement\n"
-        f"{BOLD}help{END} to view this message\n"
-        f"{BOLD}done{END} to save and return to main prompt"
-    )
-    print(prompt_help)
-    command_completer = WordCompleter(['create', 'delete', 'print', 'edit', 'help', 'done'])
-    tempo_completer = InsensitiveCompleter(get_tempo_words())
-    mode_completer = WordCompleter(info.get_allowed_modes())
-    while True:
-        command = prompt("Movements> ", completer=command_completer)
-        if len(command) == 0:
-            continue
-        elif command.lower()[0] == 'h':
-            print(prompt_help)
-        elif command.lower()[0] == 'p':
-            print_movements(curr_movements)
-        elif command.lower()[0] == 'c':
-            new_mov_num = len(curr_movements) + 1
-            new_mov_tempo = prompt("Enter tempo (optional): ", completer=tempo_completer)
-            new_mov_time = prompt("Enter time signature (optional): ")
-            new_mov_key_note = prompt("Enter key note: ", validator=NoteValidator())
-            new_mov_key_mode = prompt("Enter key mode: ", completer=mode_completer, validator=ModeValidator())
-            new_mov_key = info.KeySignature(note=new_mov_key_note, mode=new_mov_key_mode)
-            curr_movements.append(info.Movement(num=new_mov_num, tempo=new_mov_tempo, time=new_mov_time,
-                                                key=new_mov_key))
-        elif command.lower()[0] == 'e':
-            print_movements(curr_movements)
-            mov_num = int(prompt("Enter movement number to edit: ", validator=IndexValidator(
-                len(curr_movements), allow_empty=False)))
-            working_mov = curr_movements[mov_num-1]
-            curr_movements[mov_num-1].tempo = prompt("Enter tempo (optional): ", completer=tempo_completer,
-                                                     default=working_mov.tempo)
-            curr_movements[mov_num-1].time = prompt("Enter time signature (optional): ", default=working_mov.time)
-            new_key_note = prompt("Enter key note: ", validator=NoteValidator(),
-                                  default=working_mov.key.note)
-            new_key_mode = prompt("Enter key mode: ", completer=mode_completer,
-                                  validator=ModeValidator(), default=working_mov.key.mode)
-            new_key = info.KeySignature(note=new_key_note, mode=new_key_mode)
-            curr_movements[mov_num-1].key = new_key
-        elif command.lower()[0:2] == 'de':
-            print_movements(curr_movements)
-            mov_num = int(prompt("Enter movement number to delete: ", validator=IndexValidator(
-                len(curr_movements), allow_empty=False)))
-            delete_index = mov_num - 1
-            curr_movements.pop(delete_index)
-            for i in range(delete_index, len(curr_movements)):
-                curr_movements[i].num = curr_movements[i].num - 1
-        elif command.lower()[0:2] == 'do':
-            return curr_movements
-        else:
-            print(INVALID)
-
-
-def print_piece_info(piece_info):
-    # TODO: make better
-    print(piece_info)
