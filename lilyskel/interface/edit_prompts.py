@@ -25,7 +25,6 @@ def edit_prompt(piece, config_path, db, path_save):
     """
     prompt_help = (
         "\nYou can now add score information. Available modes are:\n"
-        f"{BOLD}header:{END}\t\tadd title, composer, etc.\n"
         f"{BOLD}mutopia:{END}\tAdd information for submitting to the mutopia project\n"
         f"{BOLD}instrument:{END}\tadd/remove/re-order individual instruments "
         "in the score\n"
@@ -60,26 +59,6 @@ def edit_prompt(piece, config_path, db, path_save):
         command = prompt(f"{ps1}> ", completer=command_completer)
         if len(command) == 0:
             continue
-        if command[0].lower() == 'q':
-            save = prompt("Save file before exiting? ", default='Y', validator=YNValidator())
-            if answered_yes(save):
-                print('Saving File')
-                save_config(infodict, config_path)
-            try:
-                os.remove(path_save)
-            except FileNotFoundError:
-                pass
-            print("Exiting")
-            raise SystemExit(0)
-        elif command.lower().strip() == "save":
-            save_config(infodict, config_path)
-            print("Saved")
-        elif command.lower().strip() == "help":
-            print(prompt_help)
-        elif "header" in command.lower():
-            if "headers" not in infodict:
-                infodict["headers"] = None
-            infodict["headers"] = header_prompt(infodict["headers"], db)
         elif command.lower()[0] == 'i':
             if "instruments" not in infodict:
                 infodict["instruments"] = []
@@ -151,61 +130,6 @@ def mutopia_prompt(curr_mutopia_headers):
                 setattr(mu_headers, command, new)
         elif command[0].lower() == 'h':
             print(prompt_help)
-        else:
-            print(INVALID)
-
-
-def instrument_prompt(curr_instruments, db_):
-    """
-    Prompt for creating instruments in the score.
-    :param curr_instruments: list of existing instruments
-    :param db_: database to laod to/from
-    :return:
-    """
-    prompt_help = (
-        "Options:\n"
-        f"{BOLD}print{END} instruments\n"
-        f"{BOLD}create{END} a new instrument\n"
-        f"{BOLD}delete{END} an instrument\n"
-        f"{BOLD}reorder{END} instruments\n"
-        f"{BOLD}help{END} to view this message\n"
-        f"{BOLD}done{END} to save and return to main prompt"
-    )
-    command_completer = WordCompleter(['create', 'delete', 'reorder', 'help', 'done', 'print'])
-    instrument_names = db_interface.explore_table(db_.table("instruments"),
-                                                  search=("name", ""))
-    instruments = [titlecase(' '.join(name.split('_')))
-                   for name in instrument_names]
-    print(prompt_help)
-    while True:
-        # DEBUG LINE
-        # print(curr_instruments)
-        command = prompt("Instruments> ", completer=command_completer)
-        if len(command) == 0:
-            continue
-        elif command.lower()[0] == 'p':
-            for ins in curr_instruments:
-                print(ins.part_name(key=True))
-        elif command.lower()[0] == 'c':
-            new_ins = create_instrument(instruments, db_, instrument_names)
-            curr_instruments.append(new_ins)
-        elif command.lower()[0:2] == 'de':
-            while True:
-                instruments_with_indexes(curr_instruments)
-                del_idx = prompt("Enter the number of the instrument to delete or [enter] to "
-                                 "finish: ") or None
-                if del_idx is None:
-                    break
-                elif del_idx.isdigit():
-                    curr_instruments.pop(int(del_idx))
-                else:
-                    print("Invalid index")
-        elif command.lower()[0] == 'r':
-            curr_instruments = reorder_instruments(curr_instruments)
-        elif command.lower()[0] == 'h':
-            print(prompt_help)
-        elif command.lower()[0:2] == 'do':
-            return curr_instruments
         else:
             print(INVALID)
 

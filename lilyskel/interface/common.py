@@ -1,18 +1,19 @@
 import tempfile
 from pathlib import Path
 from types import FunctionType
-from typing import List
+from typing import List, Any
 
 from click import Context
-from prompt_toolkit import prompt, print_formatted_text
+from prompt_toolkit import prompt, print_formatted_text, HTML
 from prompt_toolkit.completion import WordCompleter, Completer
-from prompt_toolkit.shortcuts import confirm
+from prompt_toolkit.shortcuts import confirm, radiolist_dialog
 from tinydb import TinyDB
 from titlecase import titlecase
 
 from lilyskel import lynames, db_interface, yaml_interface
 from lilyskel.info import Piece, MutopiaHeaders
-from lilyskel.interface.custom_validators_completers import InsensitiveCompleter, YNValidator, IndexValidator
+from lilyskel.interface.custom_validators_completers import (InsensitiveCompleter, YNValidator, IndexValidator,
+                                                             IsNumberValidator)
 from lilyskel.lynames import VALID_CLEFS, normalize_name, Instrument, Ensemble
 
 
@@ -37,29 +38,23 @@ def manual_instrument(name: str, number: int, db=None) -> lynames.Instrument:
     :param db: Optional, database to add instrument to.
     :return:
     """
-    print("Please enter instrument information (press enter for default).")
-    insinfo = {}
-    if number:
-        insinfo['number'] = number
-    insinfo['name'] = name
-    insinfo['abbr'] = prompt("Abbreviation: ") or None
+    new_instrument_info = dict()
+    new_instrument_info['number'] = number or None
+    new_instrument_info['name'] = name
+    new_instrument_info['abbr'] = prompt("Enter Abbreviation: ") or None
     while True:
         clef = prompt("Clef: ", completer=WordCompleter(VALID_CLEFS)).lower() or None
         if clef in VALID_CLEFS or clef is None:
             break
         print("invalid clef")
-    insinfo['transposition'] = prompt("Transposition [enter for none]: ") or None
-    if confirm('Is it a keyboard (grand staff) instrument?'):
-        insinfo['keyboard'] = True
-    else:
-        insinfo['keyboard'] = False
-    insinfo['midi'] = prompt("Midi instrument name: ").lower() or None
-    insinfo['family'] = normalize_name(prompt("Instrument family: ")) or None
-    new_ins = lynames.Instrument.load(insinfo)
-    if db is not None:
-        if confirm("Would you like to add this instrument to the database for "
-                   "easy use next time? "):
-            new_ins.add_to_db(db)
+    new_instrument_info['transposition'] = prompt("Enter Transposition (or nothing): ") or None
+    new_instrument_info['keyboard'] = confirm('Is it a keyboard (grand staff) instrument?')
+    new_instrument_info['midi'] = prompt("Enter midi instrument name (or nothing): ").lower() or None
+    new_instrument_info['family'] = normalize_name(prompt("Enter instrument family (or nothing): ")) or None
+    new_ins = lynames.Instrument.load(new_instrument_info)
+    if db and confirm("Would you like to add this instrument to the database for "
+                      "easy use next time?"):
+        new_ins.add_to_db(db)
     return new_ins
 
 
@@ -69,23 +64,29 @@ def reorder_instruments(curr_instruments) -> List[Instrument]:
     :param curr_instruments: initial list of instruments
     :return: The list of instruments in the new order
     """
-    while True:
-        instruments_with_indexes(curr_instruments)
-        tmp_instruments = [instrument for instrument in curr_instruments]
-        old_idx = prompt("Enter the index of the instrument to move or [enter] to finish: ",
-                         validator=IndexValidator(len(tmp_instruments) - 1)) or None
-        if old_idx is None:
-            break
-        move_instrument = tmp_instruments.pop(int(old_idx))
-        instruments_with_indexes(tmp_instruments)
-        new_idx = prompt(f"Enter the index to insert {move_instrument.part_name()}: ",
-                         validator=IndexValidator(len(tmp_instruments), allow_empty=False))
-        tmp_instruments.insert(int(new_idx), move_instrument)
-        print("New instrument order: ")
-        instruments_with_indexes(tmp_instruments)
-        correct = prompt("Is this correct? [Y/n] ", default='Y', validator=YNValidator())
-        if answered_yes(correct):
-            curr_instruments = [instrument for instrument in tmp_instruments]
+    remove_index = radiolist_dialog(title="Reorder Instruments",
+                                    text="Select instrument to move",
+                                    values=[(index, instrument.part_name) for index, instrument in
+                                            enumerate(curr_instruments)])
+    if remove_index is None:
+        return curr_instruments
+    tmp_instruments = [instrument for instrument in curr_instruments]
+    instrument_to_move = tmp_instruments.pop(remove_index)
+    dialog_values = [(index, instrument.part_name) for index, instrument in enumerate(tmp_instruments)]
+    # add extra option at end for inserting as last instrument
+    dialog_values.append((len(tmp_instruments), 'Insert as Last Instrument'))
+    insert_index = radiolist_dialog(title="Reorder Instruments",
+                                    text=f"Select position to insert {instrument_to_move.part_name()}. It will go "
+                                    f"before the selected instrument",
+                                    values=dialog_values)
+    if insert_index is None:
+        return curr_instruments
+    tmp_instruments.insert(int(insert_index), instrument_to_move)
+    print_formatted_text("New instrument order: ")
+    for instrument in tmp_instruments:
+        print_formatted_text(HTML(f'<b>{instrument.part_name()}</b>'))
+    if confirm("Is this new order correct?"):
+        return tmp_instruments
     return curr_instruments
 
 
@@ -165,34 +166,24 @@ def create_ensemble(name: str, db: TinyDB, instruments_to_add: List[lynames.Inst
     return new_ens
 
 
-def create_instrument(instruments: list, db: TinyDB, instrument_names_standardized: List[str]) -> lynames.Instrument:
+def create_instrument(obj) -> lynames.Instrument:
     """
     Dialog for creating instruments
-    :param instruments: instrument names for completion
-    :param db: database to load or insert instruments
-    :param instrument_names_standardized: standardized versions of instrument names
-    for checking
+
+    :param obj: context AppState object
     :return: new instrument object
     """
+    normalized_instrument_names = return_state_data('normalized_instrument_names', obj, get_normalized_instrument_names)
+    completer = obj.completers.get('instruments', generate_completer('instruments', obj, make_instrument_completer))
     ins_name_input = prompt("Enter the full instrument name: ",
-                            completer=InsensitiveCompleter(instruments))
-    while True:
-        number = prompt("If the instrument has a number associated (e.g. Violin 2), "
-                        "enter it or press [enter] to continue. ") or None
-        if number is None:
-            break
-        if number.isdigit():
-            number = int(number)
-            break
-        print("Invalid number")
-    if '_'.join(ins_name_input.lower().split()) in \
-            instrument_names_standardized:
-        load = prompt(f"{ins_name_input} is in the database, would you like to load it? "
-                      "[Y/n] ", default='Y', validator=YNValidator())
-        if answered_yes(load):
-            return lynames.Instrument.load_from_db(
-                normalize_name(ins_name_input), db, number=number)
-    return manual_instrument(number=number, db=db, name=ins_name_input)
+                            completer=completer)
+    number = prompt("Enter Number (e.g. Violin 2) or [enter] for no number: ", validator=IsNumberValidator())
+    number = int(number) if number else None
+    load_instrument_message = f"{ins_name_input} is in the database, would you like to load it?"
+    if '_'.join(ins_name_input.lower().split()) in normalized_instrument_names and confirm(load_instrument_message):
+        return lynames.Instrument.load_from_db(
+            normalize_name(ins_name_input), obj.db, number=number)
+    return manual_instrument(number=number, db=obj.db, name=ins_name_input)
 
 
 BOLD = "\033[1m"
@@ -202,7 +193,7 @@ INVALID = "Command not recognized. Please try again."
 
 class AppState:
     def __init__(self, db=None, piece=None, config_file_path=None, pathsave=None, mutopia_headers=None, is_repl=False,
-                 completers={}):
+                 completers={}, data: dict = {}):
         self.db = db
         self.piece = piece
         self.config_file_path = config_file_path
@@ -210,10 +201,22 @@ class AppState:
         self.mutopia_headers = mutopia_headers
         self.is_repl = is_repl
         self.completers = completers
+        self.data = {}
 
 
 TEMP = tempfile.gettempdir()
 PATHSAVE = Path(TEMP, "lilyskel_path")
+
+
+def return_state_data(key: str, obj: AppState, generate_data: FunctionType):
+    def add_to_state_data():
+        """Add arbitrary data to app state object"""
+        data = generate_data(obj.db)
+        obj.data[key] = data
+        return data
+
+    # get data from state dict, or generate and add to dict
+    return obj.data.get(key, add_to_state_data())
 
 
 def save_config(piece: Piece, config_path: Path, mutopia_headers: MutopiaHeaders):
@@ -226,10 +229,10 @@ def save_config(piece: Piece, config_path: Path, mutopia_headers: MutopiaHeaders
 def save_non_interactive(ctx: Context):
     if not ctx.obj.is_repl:
         print_formatted_text(ctx.obj.piece.html())
-        _ask_to_save(ctx)
+        ask_to_save(ctx)
 
 
-def _ask_to_save(ctx: Context):
+def ask_to_save(ctx: Context):
     if confirm(f'Would you like to save to {ctx.obj.config_file_path}?'):
         save_piece(ctx.obj)
 
@@ -242,6 +245,24 @@ def save_piece(obj: AppState):
 
 
 def generate_completer(name: str, obj: AppState, get_completer: FunctionType) -> Completer:
-    new_completer = get_completer(obj.db)
+    new_completer = get_completer(obj)
     obj.completers[name] = new_completer
     return new_completer
+
+
+def get_normalized_instrument_names(db_):
+    return db_interface.explore_table(db_.table("instruments"),
+                                      search=("name", ""))
+
+
+def get_instrument_names(obj):
+    normalized_instrument_names = return_state_data('normalized_instrument_names',
+                                                    obj,
+                                                    get_normalized_instrument_names)
+    return [titlecase(' '.join(name.split('_')))
+            for name in normalized_instrument_names]
+
+
+def make_instrument_completer(obj):
+    instrument_names = get_instrument_names(obj)
+    return InsensitiveCompleter(instrument_names)

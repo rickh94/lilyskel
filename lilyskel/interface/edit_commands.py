@@ -8,11 +8,12 @@ from prompt_toolkit.shortcuts import confirm
 from lilyskel import yaml_interface, db_interface, info
 from lilyskel.info import Piece
 from lilyskel.interface import sub_repl
-from lilyskel.interface.common import (PATHSAVE, save_non_interactive, _ask_to_save,
+from lilyskel.interface.common import (PATHSAVE, save_non_interactive, ask_to_save,
                                        save_piece)
-from lilyskel.interface.custom_validators_completers import LanguageValidator
+# from lilyskel.interface.custom_validators_completers import LanguageValidator
 from lilyskel.interface.create_commands import create_prompt_command
-from lilyskel.interface.headers import header
+from lilyskel.interface.headers import headers
+from lilyskel.interface.instrument_commands import instruments
 
 
 @click.group(invoke_without_command=True)
@@ -60,13 +61,6 @@ def get_piece(file_path):
         return Piece()
 
 
-# @edit.command()
-# @click.pass_context
-# def save(ctx):
-#     """Save current options to config file."""
-#     save_piece(ctx.obj)
-
-
 @edit.command(name='print')
 @click.pass_obj
 def print_(obj):
@@ -85,6 +79,7 @@ language = create_prompt_command(
     attribute=f'language',
     get_completer=_make_language_completer
 )
-_edit_repl = sub_repl.create(edit, {'message': 'lilyskel:edit> '}, before_done_callback=_ask_to_save)
-edit.add_command(header)
+_edit_repl = sub_repl.create(edit, {'message': 'lilyskel:edit> '}, before_done_callback=ask_to_save)
+edit.add_command(headers)
 edit.add_command(language)
+edit.add_command(instruments)

@@ -81,9 +81,17 @@ class LyName:
     :param number: Number associated, if any
     """
     name = attr.ib(convert=normalize_name)
-    number = attr.ib(init=False, default=None, validator=attr.validators.instance_of(int))
+    number = attr.ib(init=False, default=None)
     _numword = attr.ib(init=False, repr=False, default='')
     _roman = attr.ib(init=False, repr=False, default='')
+
+    @number.validator
+    def _number_validator(self, _attribute, value):
+        if value is None:
+            return
+        if isinstance(value, int):
+            return
+        raise TypeError('number must be of type int or None')
 
     def _movement(self, mov_num, *, form):
         """

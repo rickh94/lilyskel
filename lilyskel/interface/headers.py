@@ -5,16 +5,15 @@ from prompt_toolkit.shortcuts import confirm, radiolist_dialog
 
 from lilyskel import info, db_interface
 from lilyskel.interface import sub_repl
-from lilyskel.interface.common import generate_completer, save_non_interactive
+from lilyskel.interface.common import generate_completer, save_non_interactive, ask_to_save
 from lilyskel.interface.custom_validators_completers import InsensitiveCompleter
 from lilyskel.interface.create_commands import create_prompt_command, add_prompt_commands_from_list
 
 
 @click.group(invoke_without_command=True)
 @click.pass_context
-def header(ctx):
+def headers(ctx):
     """Change header values """
-    piece = ctx.obj.piece
     _header_repl(ctx)
 
 
@@ -23,11 +22,11 @@ def get_composers_from_db(db_):
                                       search=("name", ""))
 
 
-def _make_composer_completer(db_):
-    return InsensitiveCompleter(get_composers_from_db(db_))
+def _make_composer_completer(obj):
+    return InsensitiveCompleter(get_composers_from_db(obj.db))
 
 
-@header.command()
+@headers.command()
 @click.pass_context
 def composer(ctx):
     piece = ctx.obj.piece
@@ -44,7 +43,7 @@ def composer(ctx):
     # try to load from database
     matches = [item for item in get_composers_from_db(ctx.obj.db) if new_composer_input.lower() in item.lower()]
     if matches and confirm(f"Would you like to load {new_composer_input} from the database? "):
-        found = radiolist_dialog(values=[(match, match) for match in matches]) if len(matches) > 1 else matches[0]
+        found = radiolist_dialog(title="Choose Composer", values=[(match, match) for match in matches]) if len(matches) > 1 else matches[0]
         try:
             piece.headers.composer = info.Composer.load_from_db(found, ctx.obj.db)
             save_non_interactive(ctx)
@@ -70,9 +69,9 @@ def composer(ctx):
     save_non_interactive(ctx)
 
 
-def _make_title_completer(db_):
+def _make_title_completer(obj):
     return WordCompleter(db_interface.explore_table(
-        db_.table("titlewords"), search=("word", "")))
+        obj.db.table("titlewords"), search=("word", "")))
 
 
 # create generic commands for header
@@ -80,7 +79,7 @@ add_prompt_commands_from_list(
     list_of_names=['Subtitle', 'Subsubtitle', 'Poet', 'Meter', 'Arranger', 'Tagline', 'Copyright'],
     help_prefix='Change the piece',
     attribute_prefix='headers',
-    group=header
+    group=headers
 )
 
 title = create_prompt_command(
@@ -90,5 +89,5 @@ title = create_prompt_command(
     get_completer=_make_title_completer
 )
 
-header.add_command(title)
-_header_repl = sub_repl.create(header, {'message': 'lilyskel:edit:header> '})
+headers.add_command(title)
+_header_repl = sub_repl.create(headers, {'message': 'lilyskel:edit:headers> '}, before_done_callback=ask_to_save)

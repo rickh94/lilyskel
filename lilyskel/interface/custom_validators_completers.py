@@ -2,6 +2,8 @@ from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.validation import Validator, ValidationError
 
 from lilyskel import info, mutopia
+from lilyskel.interface import common
+from lilyskel.lynames import VALID_CLEFS
 
 
 class InsensitiveCompleter(Completer):
@@ -91,9 +93,9 @@ class NoteValidator(Validator):
 
 
 class IsNumberValidator(Validator):
-    def validate(self, document):
+    def validate(self, document, allow_empty=True):
         text = document.text
-        if not text:
+        if not text and allow_empty:
             return
         if not text.isdigit():
             raise ValidationError(message="Must be integer")
@@ -101,3 +103,11 @@ class IsNumberValidator(Validator):
             int(text)
         except ValueError as err:
             raise ValidationError(message=err)
+
+
+class ClefValidator(Validator):
+    def validate(self, document):
+        if not document.text:
+            return
+        if document.text not in VALID_CLEFS:
+            raise ValidationError(message="Invalid clef", cursor_position=0)
