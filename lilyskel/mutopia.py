@@ -1,4 +1,4 @@
-"""Functions for scraping mutopia info."""
+"""Functions for scraping mutopia_ info."""
 import requests
 from bs4 import BeautifulSoup
 from lilyskel import exceptions
@@ -12,7 +12,7 @@ STYLES = None
 
 
 def _scrape_mutopia():
-    """Grab the table off mutopia contributing."""
+    """Grab the table off mutopia_ contributing."""
     # pylint: disable=global-statement
     global SITE
     if not SITE:
@@ -22,7 +22,7 @@ def _scrape_mutopia():
 
 
 def _get_mutopia_table_data(field: str):
-    """Get data out of the mutopia contributing table."""
+    """Get data out of the mutopia_ contributing table."""
     table = _scrape_mutopia()
     for index, item in enumerate(table):
         if field in item.get_text():
@@ -32,7 +32,7 @@ def _get_mutopia_table_data(field: str):
 
 
 def validate_mutopia(field: str, data: str):
-    """Validates mutopia fields against accepted mutopia input."""
+    """Validates mutopia_ fields against accepted mutopia_ input."""
     # special case for licenses
     if field == 'license':
         if data not in get_licenses():
@@ -50,7 +50,7 @@ def validate_mutopia(field: str, data: str):
 
 
 def get_licenses():
-    """Gets allowed licenses from mutopia.org and returns a list."""
+    """Gets allowed licenses from mutopia_.org and returns a list."""
     global LICENSES
     if LICENSES:
         return LICENSES
@@ -73,7 +73,7 @@ def get_styles():
 
 
 def get_composers():
-    """Gets allowed licenses from mutopia.org and returns a list."""
+    """Gets allowed licenses from mutopia_.org and returns a list."""
     global COMPOSERS
     if COMPOSERS:
         return COMPOSERS
@@ -86,7 +86,7 @@ def get_composers():
 
 
 def get_instruments():
-    """Gets the allowed instruments from mutopia."""
+    """Gets the allowed instruments from mutopia_."""
     global INSTRUMENTS
     if INSTRUMENTS:
         return INSTRUMENTS

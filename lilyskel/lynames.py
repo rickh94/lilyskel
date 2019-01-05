@@ -161,7 +161,7 @@ class Instrument(LyName):
     :param keyboard: (bool) specifies whether it is a keyboard instrument. (To know whether to create multiple staves.)
     :param midi: the corresponding midi instrument.
     :param family: the family of the instrument (e.g. woodwinds, strings, etc.)
-    :param mutopianame: the name of the instrument as in mutopia
+    :param mutopianame: the name of the instrument as in mutopia_
     """
     # pylint: disable=protected-access
     abbr = attr.ib(default='')
@@ -254,7 +254,7 @@ class Instrument(LyName):
         ins_table.insert(data)
 
     def get_mutopia_name(self):
-        """Gets the mutopia version of the Instrument's name."""
+        """Gets the mutopia_ version of the Instrument's name."""
         if self.mutopianame is not None:
             return self.mutopianame
         instrs = mutopia.get_instruments()

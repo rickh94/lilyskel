@@ -331,7 +331,7 @@ class TestInstrument():
         )
 
     def test_get_mutopia_name(self, test_ins, test_ins2, test_ins3, test_ins4):
-        """Test getting the mutopia name."""
+        """Test getting the mutopia_ name."""
         assert test_ins.get_mutopia_name() == 'Violin', "Should match closest."
         assert test_ins2.get_mutopia_name() == 'Cello', "Should match closest."
         assert test_ins3.get_mutopia_name() == 'Clarinet',\

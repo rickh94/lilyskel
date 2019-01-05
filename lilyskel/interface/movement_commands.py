@@ -16,6 +16,9 @@ from lilyskel.interface.custom_validators_completers import InsensitiveCompleter
 @click.pass_context
 def movements(ctx):
     """Edit piece movements."""
+    piece = ctx.obj.piece
+    if not piece.movements:
+        piece.movements = []
     _movements_repl(ctx)
 
 
@@ -24,8 +27,6 @@ def movements(ctx):
 def create(ctx):
     """Create a new movement"""
     piece = ctx.obj.piece
-    if not piece.movements:
-        piece.movements = []
     tempo_completer = ctx.obj.completers.get('tempo', generate_completer('tempo', ctx.obj, _get_tempo_completer))
     mode_completer = ctx.obj.completers.get('mode', generate_completer('mode', ctx.obj, _get_mode_completer))
     new_mov_num = len(piece.movements) + 1

@@ -192,13 +192,13 @@ INVALID = "Command not recognized. Please try again."
 
 
 class AppState:
-    def __init__(self, db=None, piece=None, config_file_path=None, pathsave=None, mutopia_headers=None, is_repl=False,
+    def __init__(self, db=None, piece=None, config_file_path=None, pathsave=None, mutopiaheaders=None, is_repl=False,
                  completers={}, data: dict = {}):
         self.db = db
         self.piece = piece
         self.config_file_path = config_file_path
         self.pathsave = pathsave
-        self.mutopia_headers = mutopia_headers
+        self.mutopiaheaders = mutopiaheaders
         self.is_repl = is_repl
         self.completers = completers
         self.data = {}
@@ -219,9 +219,9 @@ def return_state_data(key: str, obj: AppState, generate_data: FunctionType):
     return obj.data.get(key, add_to_state_data())
 
 
-def save_config(piece: Piece, config_path: Path, mutopia_headers: MutopiaHeaders):
-    if mutopia_headers:
-        piece.headers.add_mutopia_headers(mutopia_headers,
+def save_config(piece: Piece, config_path: Path, mutopiaheaders: MutopiaHeaders):
+    if mutopiaheaders:
+        piece.headers.add_mutopia_headers(mutopiaheaders,
                                           instruments=piece.instruments)
     yaml_interface.write_config(config_path, piece)
 
@@ -240,8 +240,8 @@ def ask_to_save(ctx: Context):
 def save_piece(obj: AppState):
     piece = obj.piece or Piece()
     config_path = obj.config_file_path or Path('./piece.yml')
-    mutopia_headers = obj.mutopia_headers
-    save_config(piece, config_path, mutopia_headers)
+    mutopiaheaders = obj.mutopiaheaders
+    save_config(piece, config_path, mutopiaheaders)
 
 
 def generate_completer(name: str, obj: AppState, get_completer: FunctionType) -> Completer:

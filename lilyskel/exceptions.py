@@ -12,7 +12,7 @@ class MissingInstrumentError(KeyError):
 
 
 class MutopiaError(AttributeError):
-    """Raised when a desired mutopia value is not in their lists."""
+    """Raised when a desired mutopia_ value is not in their lists."""
     pass
 
 

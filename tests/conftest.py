@@ -118,7 +118,7 @@ def bach():
 
 @pytest.fixture
 def mutopiaheader1(instrument_list1):
-    """Some mutopia Headers."""
+    """Some mutopia_ Headers."""
     return info.MutopiaHeaders(instrument_list=instrument_list1,
                                source='Breitkopf und Hartël',
                                style='Baroque',

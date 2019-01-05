@@ -60,7 +60,7 @@ def composer(ctx):
         guess_mutopia_name = new_composer.get_mutopia_name(guess=True)
     except AttributeError:
         guess_mutopia_name = ''
-    new_composer.mutopianame = prompt("Enter the mutopia formatted name of the composer "
+    new_composer.mutopianame = prompt("Enter the mutopia_ formatted name of the composer "
                                       "or [enter] for none: ", default=guess_mutopia_name)
     if confirm("Would you like to add this composer to the database for easy usage next time?"):
         new_composer.add_to_db(ctx.obj.db)

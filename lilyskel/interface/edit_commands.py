@@ -12,9 +12,10 @@ from lilyskel.interface.common import (PATHSAVE, save_non_interactive, ask_to_sa
                                        save_piece)
 # from lilyskel.interface.custom_validators_completers import LanguageValidator
 from lilyskel.interface.create_commands import create_prompt_command
-from lilyskel.interface.headers import headers
+from lilyskel.interface.header_commands import headers
 from lilyskel.interface.instrument_commands import instruments
 from lilyskel.interface.movement_commands import movements
+from lilyskel.interface.mutopia_commands import mutopia_
 
 
 @click.group(invoke_without_command=True)
@@ -29,6 +30,8 @@ def edit(ctx, file_path, db_path):
         ctx.obj.config_file_path = get_file_path(file_path)
     if not ctx.obj.piece:
         ctx.obj.piece = get_piece(ctx.obj.config_file_path)
+        if ctx.obj.piece.headers.mutopiaheaders:
+            ctx.obj.mutopiaheaders = ctx.obj.piece.headers.mutopiaheaders
     if not ctx.obj.db:
         db_ = db_interface.init_db(db_path)
         tables = db_interface.explore_db(db_)
@@ -85,3 +88,4 @@ edit.add_command(headers)
 edit.add_command(language)
 edit.add_command(instruments)
 edit.add_command(movements)
+edit.add_command(mutopia_)

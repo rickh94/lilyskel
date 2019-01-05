@@ -1,11 +1,11 @@
-"""Tests for functions scraping mutopia."""
+"""Tests for functions scraping mutopia_."""
 import pytest
 from lilyskel import mutopia
 from lilyskel import exceptions
 
 
 def test_scrape_mutopia():
-    """Test mutopia scraping."""
+    """Test mutopia_ scraping."""
     tabledata = mutopia._scrape_mutopia()
     sitefirstrun = mutopia.SITE
     for item in tabledata:
@@ -34,7 +34,7 @@ def test_get_mutopia_table_data():
 
 
 def test_validate_mutopia():
-    """Test validating the mutopia data."""
+    """Test validating the mutopia_ data."""
     # These should simply not raise exceptions
     mutopia.validate_mutopia(field='mutopiacomposer', data='BachJS')
     mutopia.validate_mutopia(field='style', data='Classical')
@@ -66,14 +66,14 @@ def test_get_licenses():
 
 
 def test_get_composers():
-    """Test getting list of mutopia formatted composers."""
+    """Test getting list of mutopia_ formatted composers."""
     assert {'BachJS', 'BeethovenLv', 'HolstGT', 'TchaikovskyPI',
             'Anonymous', 'Traditional'}.issubset(
                 set(mutopia.get_composers()))
 
 
 def test_get_instruments():
-    """Test getting list of instruments from mutopia."""
+    """Test getting list of instruments from mutopia_."""
     assert {'Violin', 'Cello', 'Flute', 'Clarinet', 'Trumpet'}.issubset(
         set(mutopia.get_instruments())),\
         "These instruments are allowed and should be in the list."

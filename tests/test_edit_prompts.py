@@ -10,7 +10,7 @@ INVALID = "Command not recognized. Please try again."
 EDIT_PROMPT_HELP = (
     "\nYou can now add score information. Available modes are:\n"
     f"{BOLD}header:{END}\t\tadd title, composer, etc.\n"
-    f"{BOLD}mutopia:{END}\tAdd information for submitting to the mutopia project\n"
+    f"{BOLD}mutopia_:{END}\tAdd information for submitting to the mutopia_ project\n"
     f"{BOLD}instrument:{END}\tadd/remove/re-order individual instruments "
     "in the score\n"
     f"{BOLD}ensemble:{END}\tadd an ensemble to the score\n"
@@ -49,7 +49,7 @@ def test_edit_prompt_empty_config(monkeypatch, tmpdir_factory, defaultdb, pathsa
         'print',
         'language',
         'english',
-        'mutopia',
+        'mutopia_',
         'movements',
         'instrument',
         'ensemble',

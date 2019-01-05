@@ -52,8 +52,8 @@ class Composer:
 
     def get_mutopia_name(self, guess: bool = False):
         """
-        Get the mutopia name for a composer.
-        :param guess: if True, a guess will be made at the mutopia name of a
+        Get the mutopia_ name for a composer.
+        :param guess: if True, a guess will be made at the mutopia_ name of a
             composer.
         """
         if self.mutopianame is not None:
@@ -68,7 +68,7 @@ class Composer:
             self.mutopianame = name
             return name
         else:
-            raise AttributeError("No mutopia name defined.")
+            raise AttributeError("No mutopia_ name defined.")
 
     @classmethod
     def load_from_db(cls, name: str, db: TinyDB):
@@ -151,7 +151,7 @@ class Headers(object):
     def add_mutopia_headers(self, mu_headers, guess_composer=False,
                             instruments=None):
         """
-        Add mutopia headers.
+        Add mutopia_ headers.
         :param mu_headers: a MutopiaHeaders object
         :param guess_composer: Whether to guess at the mutopiacomposer if not set.
 
@@ -164,7 +164,7 @@ class Headers(object):
         if instruments is None:
             instruments = mu_headers.instrument_list
 
-        # converts list of instruments to mutopia friendly string
+        # converts list of instruments to mutopia_ friendly string
         # instruments.sort()
         mutopia_instrument_names = \
             set([instrument.get_mutopia_name() for
@@ -181,12 +181,9 @@ class Headers(object):
         """Load info from dict."""
         mutopiaheaders = None
         comp = Composer.load(datadict.pop('composer'))
-        try:
-            if datadict['mutopiaheaders']:
-                mutopiaheaders = MutopiaHeaders.load(
-                    datadict.pop('mutopiaheaders'))
-        except KeyError:
-            mutopiaheaders = None
+        if datadict.get('mutopiaheaders', None):
+            mutopiaheaders = MutopiaHeaders.load(
+                datadict.pop('mutopiaheaders'))
         newheaders = cls(title=datadict.pop('title'), composer=comp)
         for key, value in datadict.items():
             setattr(newheaders, key, value)
@@ -205,7 +202,7 @@ class Headers(object):
 
 
 def convert_ensemble(instruments):
-    """Returns list of instruments for mutopia headers."""
+    """Returns list of instruments for mutopia_ headers."""
     if isinstance(instruments, Ensemble):
         return instruments.instruments
     return instruments
@@ -214,7 +211,7 @@ def convert_ensemble(instruments):
 @attr.s
 class MutopiaHeaders:
     """
-    The headers available for Mutopia project submissions. See www.mutopia.org
+    The headers available for Mutopia project submissions. See www.mutopia_.org
     for more details.
     """
     source = attr.ib(validator=attr.validators.instance_of(str))
@@ -252,7 +249,7 @@ class MutopiaHeaders:
     @composer.validator
     def _validate_composer(self, attribute, value):
         """Calls validate_mutopia with field 'mutopiacomposer'"""
-        mutopia.validate_mutopia(data=comp, field='mutopiacomposer')
+        mutopia.validate_mutopia(data=value, field='mutopiacomposer')
 
     @license.validator
     def _validate_license(self, attribute, value):
@@ -266,6 +263,9 @@ class MutopiaHeaders:
         for key, value in datadict.items():
             setattr(new_mutopia_headers, key, value)
         return new_mutopia_headers
+
+    def dump(self):
+        return attr.asdict(self)
 
 
 def convert_key(key_info: tuple):
@@ -482,7 +482,7 @@ class Piece:
                     lines.append(f'  composer: {value["name"]}')
                     continue
                 if key == 'mutopiaheaders':
-                    # skip mutopia headers for now
+                    # skip mutopia_ headers for now
                     continue
                 if value:
                     lines.append(f'  {key}: {value}')

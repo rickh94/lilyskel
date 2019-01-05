@@ -53,7 +53,7 @@ class TestComposer():
 
     def test_mutopia_name(self, bach, beethoven, brahms, debussy, anon,
                           fakecomposer):
-        """Test getting the mutopia name."""
+        """Test getting the mutopia_ name."""
         assert bach.get_mutopia_name() == "BachJS",\
             "Should return manual attribute."
         assert brahms.get_mutopia_name(guess=True) == "BrahmsJ",\
@@ -64,12 +64,12 @@ class TestComposer():
         with pytest.raises(exceptions.MutopiaError,
                            match=".*composer.*",
                            message=("Expect MutopiaError if a matching "
-                                    "composer is not found in mutopia's list")
+                                    "composer is not found in mutopia_'s list")
                            ):
             fakecomposer.get_mutopia_name(guess=True)
 
         with pytest.raises(AttributeError,
-                           match=".*mutopia name.*",
+                           match=".*mutopia_ name.*",
                            message=("Expect AttributeError if attribute is not"
                                     " set and guess is false.")):
             beethoven.get_mutopia_name()
@@ -122,7 +122,7 @@ def random_ens(test_ins, test_ins2, test_ins3, test_ins4):
 
 @pytest.fixture
 def mutopiaheader2(random_ens):
-    """Some mutopia Headers from an ensemble object."""
+    """Some mutopia_ Headers from an ensemble object."""
     return info.MutopiaHeaders(instrument_list=random_ens,
                                source='Breitkopf und Hartël',
                                style='Baroque',
@@ -144,7 +144,7 @@ def test_convert_instruments(mutopiaheader2, test_ins, test_ins2, test_ins3,
 
 
 def test_validate_mutopia_headers(mutopiaheader1):
-    """Test validation of mutopia headers."""
+    """Test validation of mutopia_ headers."""
     # these should not raise exceptions
     info._validate_mutopia_headers(None)
     info._validate_mutopia_headers(mutopiaheader1)
@@ -173,7 +173,7 @@ def test_validate_instruments(mutopiaheader1):
 class TestHeaders():
     """Test methods and initialization."""
     def test_add_mutopia_headers(self, headers1, mutopiaheader1):
-        """Test adding mutopia headers."""
+        """Test adding mutopia_ headers."""
         headers1.add_mutopia_headers(mutopiaheader1, guess_composer=True)
         assert 'Violin' in headers1.mutopiaheaders.instruments,\
             "instruments should have been loaded."
