@@ -1,14 +1,17 @@
 from pathlib import Path
 
 import click
-from prompt_toolkit import prompt, print_formatted_text
-from prompt_toolkit.completion import PathCompleter
+from prompt_toolkit import prompt, print_formatted_text, HTML
+from prompt_toolkit.completion import PathCompleter, WordCompleter
 from prompt_toolkit.shortcuts import confirm
 
-from lilyskel import yaml_interface, db_interface
+from lilyskel import yaml_interface, db_interface, info
 from lilyskel.info import Piece
 from lilyskel.interface import sub_repl
-from lilyskel.interface.common import AppState, PATHSAVE, save_config
+from lilyskel.interface.common import (PATHSAVE, LanguageValidator, save_non_interactive, _ask_to_save,
+                                       save_piece)
+from lilyskel.interface.create_commands import create_prompt_command
+from lilyskel.interface.headers import header
 
 
 @click.group(invoke_without_command=True)
@@ -19,10 +22,10 @@ from lilyskel.interface.common import AppState, PATHSAVE, save_config
 @click.pass_context
 def edit(ctx, file_path, db_path):
     """Create and edit piece information"""
-    if not ctx.obj.piece:
-        ctx.obj.piece = get_piece(file_path)
     if not ctx.obj.config_file_path:
-        ctx.obj.config_file_path = Path(file_path)
+        ctx.obj.config_file_path = get_file_path(file_path)
+    if not ctx.obj.piece:
+        ctx.obj.piece = get_piece(ctx.obj.config_file_path)
     if not ctx.obj.db:
         db_ = db_interface.init_db(db_path)
         tables = db_interface.explore_db(db_)
@@ -38,30 +41,29 @@ def edit(ctx, file_path, db_path):
     _edit_repl(ctx)
 
 
-def get_piece(file_path):
-    if not file_path:
-        try:
-            with open(PATHSAVE, "r") as savepath:
-                file_path = Path(savepath.read())
-        except FileNotFoundError:
-            file_path = prompt("No path specified or saved. Please enter the path "
-                               "to the config file. ", completer=PathCompleter())
-    piece = Piece()
+def get_file_path(file_path):
+    if file_path:
+        return Path(file_path)
     try:
-        piece = yaml_interface.read_config(Path(file_path))
+        with open(PATHSAVE, "r") as savepath:
+            return Path(savepath.read())
+    except FileNotFoundError:
+        return prompt("No path specified or saved. Please enter the path "
+                      "to the config file. ", completer=PathCompleter())
+
+
+def get_piece(file_path):
+    try:
+        return yaml_interface.read_config(Path(file_path))
     except (ValueError, FileNotFoundError, AttributeError):
-        pass
-    return piece
+        return Piece()
 
 
-@edit.command()
-@click.pass_context
-def save(ctx):
-    """Save current options to config file."""
-    piece = ctx.obj.piece or Piece()
-    config_path = ctx.obj.config_file_path or Path('./piece.yml')
-    mutopia_headers = ctx.obj.mutopia_headers
-    save_config(piece, config_path, mutopia_headers)
+# @edit.command()
+# @click.pass_context
+# def save(ctx):
+#     """Save current options to config file."""
+#     save_piece(ctx.obj)
 
 
 @edit.command(name='print')
@@ -71,9 +73,17 @@ def print_(obj):
     print_formatted_text(obj.piece.html())
 
 
-def _ask_to_save(ctx):
-    if confirm('Would you like to save?'):
-        ctx.invoke(save)
+def _make_language_completer(_):
+    return WordCompleter(info.get_valid_languages())
 
 
+# add commands and repls from metacode
+language = create_prompt_command(
+    name=f'language',
+    help_text=f'Change the note input language',
+    attribute=f'language',
+    get_completer=_make_language_completer
+)
 _edit_repl = sub_repl.create(edit, {'message': 'lilyskel:edit> '}, before_done_callback=_ask_to_save)
+edit.add_command(header)
+edit.add_command(language)

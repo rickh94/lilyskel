@@ -1,14 +1,15 @@
 import tempfile
 from pathlib import Path
 
-from prompt_toolkit import prompt
+from prompt_toolkit import prompt, print_formatted_text
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.shortcuts import confirm
 from prompt_toolkit.validation import Validator, ValidationError
 from titlecase import titlecase
 
-from lilyskel import lynames, db_interface, info, yaml_interface
+from lilyskel import lynames, db_interface, info, yaml_interface, mutopia
+from lilyskel.info import Piece
 from lilyskel.lynames import VALID_CLEFS, normalize_name, Instrument, Ensemble
 
 
@@ -244,12 +245,15 @@ INVALID = "Command not recognized. Please try again."
 
 
 class AppState:
-    def __init__(self, db=None, piece=None, config_file_path=None, pathsave=None, mutopia_headers=None):
+    def __init__(self, db=None, piece=None, config_file_path=None, pathsave=None, mutopia_headers=None, is_repl=False,
+                 completers={}):
         self.db = db
         self.piece = piece
         self.config_file_path = config_file_path
         self.pathsave = pathsave
         self.mutopia_headers = mutopia_headers
+        self.is_repl = is_repl
+        self.completers = completers
 
 
 TEMP = tempfile.gettempdir()
@@ -261,3 +265,61 @@ def save_config(piece, config_path, mutopia_headers):
         piece.hedaers.add_mutopia_headers(mutopia_headers,
                                           instruments=piece.instruments)
     yaml_interface.write_config(config_path, piece)
+
+
+class LanguageValidator(Validator):
+    def validate(self, document):
+        if not document.text:
+            raise ValidationError(message="Response Required", cursor_position=0)
+        if document.text not in info.get_valid_languages():
+            raise ValidationError(message="Invalid language", cursor_position=0)
+
+
+class LicenseValidator(Validator):
+    def validate(self, document):
+        if not document.text:
+            raise ValidationError(message="Response Required", cursor_position=0)
+        if document.text not in mutopia.get_licenses():
+            raise ValidationError(message="Invalid license", cursor_position=0)
+
+
+class StyleValidator(Validator):
+    def validate(self, document):
+        if not document.text:
+            raise ValidationError(message="Response Required", cursor_position=0)
+        if document.text not in mutopia.get_styles():
+            raise ValidationError(message="Invalid style", cursor_position=0)
+
+
+class ModeValidator(Validator):
+    def validate(self, document):
+        if not document.text:
+            raise ValidationError(message="Response Required", cursor_position=0)
+        if document.text not in info.get_allowed_modes():
+            raise ValidationError(message="Invalid mode", cursor_position=0)
+
+
+class NoteValidator(Validator):
+    def validate(self, document):
+        if not document.text:
+            raise ValidationError(message="Response Required", cursor_position=0)
+        if document.text not in info.get_allowed_notes():
+            raise ValidationError(message="Invalid note", cursor_position=0)
+
+
+def save_non_interactive(ctx):
+    if not ctx.obj.is_repl:
+        print_formatted_text(ctx.obj.piece.html())
+        _ask_to_save(ctx)
+
+
+def _ask_to_save(ctx):
+    if confirm(f'Would you like to save to {ctx.obj.config_file_path}?'):
+        save_piece(ctx.obj)
+
+
+def save_piece(obj):
+    piece = obj.piece or Piece()
+    config_path = obj.config_file_path or Path('./piece.yml')
+    mutopia_headers = obj.mutopia_headers
+    save_config(piece, config_path, mutopia_headers)

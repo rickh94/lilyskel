@@ -3,14 +3,13 @@ import os
 import requests
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit.validation import Validator, ValidationError
 from titlecase import titlecase
 
 from lilyskel import info, db_interface, mutopia, lynames
 from lilyskel.interface import common
 from lilyskel.interface.common import (YNValidator, InsensitiveCompleter, IndexValidator, create_instrument,
                                        instruments_with_indexes, reorder_instruments, answered_yes, INVALID, BOLD, END,
-                                       save_config)
+                                       save_config, LicenseValidator, StyleValidator, ModeValidator, NoteValidator)
 
 TEMPO_WORDS = []
 
@@ -31,8 +30,6 @@ def edit_prompt(piece, config_path, db, path_save):
         f"{BOLD}ensemble:{END}\tadd an ensemble to the score\n"
         f"{BOLD}movement:{END}\tadd/remove movements (including time, key, "
         f"and tempo info\n"
-        f"{BOLD}language:{END}\tset the region language for lilypond\n"
-        f"{BOLD}print:{END}\t\t print the current state of the score info.\n"
     )
     command_list = ['header', 'instrument', 'ensemble', 'movement', 'print',
                     'quit', 'help']
@@ -97,22 +94,6 @@ def edit_prompt(piece, config_path, db, path_save):
             if "mutopia_headers" not in infodict:
                 infodict["mutopia_headers"] = None
             infodict['mutopia_headers'] = mutopia_prompt(infodict["mutopia_headers"])
-        elif command.lower()[0] == 'l':
-            infodict["language"] = prompt("Enter Lilypond Language: ",
-                                          completer=WordCompleter(info.get_valid_languages()),
-                                          validator=LanguageValidator())
-        elif command.lower()[0] == 'p':
-            print_piece_info(infodict)
-        else:
-            print(INVALID)
-
-
-class LanguageValidator(Validator):
-    def validate(self, document):
-        if not document.text:
-            raise ValidationError(message="Response Required", cursor_position=0)
-        if document.text not in info.get_valid_languages():
-            raise ValidationError(message="Invalid language", cursor_position=0)
 
 
 def header_prompt(curr_headers, db):
@@ -127,8 +108,6 @@ def header_prompt(curr_headers, db):
         "and return to the main prompt."
     )
     print(prompt_help)
-    titlewords = WordCompleter(db_interface.explore_table(
-        db.table("titlewords"), search=("word", "")))
     field_completer = WordCompleter(["title", "composer", "subtitle", "subsubtitle",
                                      "poet", "meter", "arranger", "tagline", "copyright",
                                      "print", "done"])
@@ -217,22 +196,6 @@ def composer_prompt(db):
     if answered_yes(add_to_db):
         new_comp.add_to_db(db)
     return new_comp
-
-
-class LicenseValidator(Validator):
-    def validate(self, document):
-        if not document.text:
-            raise ValidationError(message="Response Required", cursor_position=0)
-        if document.text not in mutopia.get_licenses():
-            raise ValidationError(message="Invalid license", cursor_position=0)
-
-
-class StyleValidator(Validator):
-    def validate(self, document):
-        if not document.text:
-            raise ValidationError(message="Response Required", cursor_position=0)
-        if document.text not in mutopia.get_styles():
-            raise ValidationError(message="Invalid style", cursor_position=0)
 
 
 def mutopia_prompt(curr_mutopia_headers):
@@ -436,22 +399,6 @@ def get_tempo_words():
     return TEMPO_WORDS
 
 
-class ModeValidator(Validator):
-    def validate(self, document):
-        if not document.text:
-            raise ValidationError(message="Response Required", cursor_position=0)
-        if document.text not in info.get_allowed_modes():
-            raise ValidationError(message="Invalid mode", cursor_position=0)
-
-
-class NoteValidator(Validator):
-    def validate(self, document):
-        if not document.text:
-            raise ValidationError(message="Response Required", cursor_position=0)
-        if document.text not in info.get_allowed_notes():
-            raise ValidationError(message="Invalid note", cursor_position=0)
-
-
 def movement_prompt(curr_movements):
     if curr_movements:
         print("Movements in piece: ")
@@ -495,9 +442,9 @@ def movement_prompt(curr_movements):
                                                      default=working_mov.tempo)
             curr_movements[mov_num-1].time = prompt("Enter time signature (optional): ", default=working_mov.time)
             new_key_note = prompt("Enter key note: ", validator=NoteValidator(),
-                                                        default=working_mov.key.note)
+                                  default=working_mov.key.note)
             new_key_mode = prompt("Enter key mode: ", completer=mode_completer,
-                                                        validator=ModeValidator(), default=working_mov.key.mode)
+                                  validator=ModeValidator(), default=working_mov.key.mode)
             new_key = info.KeySignature(note=new_key_note, mode=new_key_mode)
             curr_movements[mov_num-1].key = new_key
         elif command.lower()[0:2] == 'de':
