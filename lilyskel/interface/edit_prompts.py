@@ -7,9 +7,11 @@ from titlecase import titlecase
 
 from lilyskel import info, db_interface, mutopia, lynames
 from lilyskel.interface import common
-from lilyskel.interface.common import (YNValidator, InsensitiveCompleter, IndexValidator, create_instrument,
+from lilyskel.interface.common import (create_instrument,
                                        instruments_with_indexes, reorder_instruments, answered_yes, INVALID, BOLD, END,
-                                       save_config, LicenseValidator, StyleValidator, ModeValidator, NoteValidator)
+                                       save_config)
+from lilyskel.interface.custom_validators_completers import (InsensitiveCompleter, YNValidator, IndexValidator, LicenseValidator,
+                                                             StyleValidator, ModeValidator, NoteValidator)
 
 TEMPO_WORDS = []
 

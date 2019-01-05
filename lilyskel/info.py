@@ -11,6 +11,7 @@ import sys
 import attr
 from fuzzywuzzy import process
 from prompt_toolkit import HTML
+from tinydb import TinyDB
 
 from lilyskel.lynames import Instrument, Ensemble
 from lilyskel import mutopia
@@ -48,7 +49,7 @@ class Composer:
         self.shortname = sname
         return sname
 
-    def get_mutopia_name(self, guess=False):
+    def get_mutopia_name(self, guess: bool = False):
         """
         Get the mutopia name for a composer.
         :param guess: if True, a guess will be made at the mutopia name of a
@@ -69,12 +70,12 @@ class Composer:
             raise AttributeError("No mutopia name defined.")
 
     @classmethod
-    def load_from_db(cls, name, db):
+    def load_from_db(cls, name: str, db: TinyDB):
         """
         Loads a composer from the database.
 
         :param name: part or all of a composer's name
-        :param db: a TinyDB instance
+        :param db: the database to load from
         """
         table = db.table('composers')
         name_parts = name.split(' ')
@@ -85,7 +86,7 @@ class Composer:
         for item in comps:
             if name_parts[0] in item:
                 data = db_interface.load_name_from_table(item, db=db,
-                                                         tablename='composers')
+                                                         table_name='composers')
                 name = data['name']
                 try:
                     mutopianame = data['mutopianame']
@@ -98,28 +99,29 @@ class Composer:
 
         return cls(name=name, mutopianame=mutopianame, shortname=shortname)
 
-    def add_to_db(self, db):
+    def add_to_db(self, db: TinyDB):
         """
         Serializes the Instrument and adds it to the supplied database in the
         'composers' table.
         This should only be called after load_from_db fails or the databse is
         otherwise checked so duplicates aren't added to the database.
 
-        :param db: a tinydb instance to insert into.
+        :param db: the db to add into
         """
         comp_table = db.table('composers')
         data = attr.asdict(self)
         comp_table.insert(data)
 
     @classmethod
-    def load(cls, datadict):
+    def load(cls, datadict: dict):
         """Load info from dict."""
-        newcomp = cls(name=datadict.pop('name'))
+        new_composer = cls(name=datadict.pop('name'))
         for key, value in datadict.items():
-            setattr(newcomp, key, value)
-        return newcomp
+            setattr(new_composer, key, value)
+        return new_composer
 
     def dump(self):
+        """Return data as dictionary"""
         return attr.asdict(self)
 
 
@@ -174,7 +176,7 @@ class Headers(object):
         self.mutopiaheaders = mu_headers
 
     @classmethod
-    def load(cls, datadict, instruments=None):
+    def load(cls, datadict: dict, instruments: list = None):
         """Load info from dict."""
         mutopiaheaders = None
         comp = Composer.load(datadict.pop('composer'))
@@ -257,16 +259,16 @@ class MutopiaHeaders:
         mutopia.validate_mutopia(data=value, field='license')
 
     @classmethod
-    def load(cls, datadict):
-        newclass = cls(source=datadict.pop('source'),
+    def load(cls, datadict: dict):
+        new_mutopia_headers = cls(source=datadict.pop('source'),
                        style=datadict.pop('style'))
         for key, value in datadict.items():
-            setattr(newclass, key, value)
-        return newclass
+            setattr(new_mutopia_headers, key, value)
+        return new_mutopia_headers
 
 
-def convert_key(keyinfo):
-    return KeySignature(keyinfo[0], keyinfo[1])
+def convert_key(key_info: tuple):
+    return KeySignature(key_info[0], key_info[1])
 
 
 def get_allowed_notes():
@@ -357,7 +359,7 @@ def get_valid_languages():
     global LANGUAGES
     if LANGUAGES:
         return LANGUAGES
-    langfile = Path('/usr', 'share', 'lilypond', get_vers(), 'scm',
+    langfile = Path('/usr', 'share', 'lilypond', get_version(), 'scm',
                     'define-note-names.scm')
     with open(langfile, 'rb') as file_:
         content = file_.read()
@@ -367,7 +369,7 @@ def get_valid_languages():
     return LANGUAGES
 
 
-def get_vers():
+def get_version():
     run_ly = subprocess.run(['lilypond', '--version'],
                             stdout=subprocess.PIPE)
     matchvers = re.search(r'LilyPond ([^\n]*)',
@@ -381,7 +383,7 @@ class Piece:
     Info for the entire piece.
     """
     headers = attr.ib(validator=attr.validators.instance_of(Headers), default=Headers())
-    version = attr.ib(default=get_vers())
+    version = attr.ib(default=get_version())
     instruments = attr.ib(default=[])
     language = attr.ib(default=None)
     opus = attr.ib(default=None)
@@ -401,9 +403,10 @@ class Piece:
         """Check for a valid language."""
         if value is None:
             return
-        if value.lower() not in get_valid_languages():
+        valid_languages = get_valid_languages()
+        if value.lower() not in valid_languages:
             raise AttributeError("Language is not valid. Must be one of "
-                                 "{}".format(', '.join(languages)))
+                                 "{}".format(', '.join(valid_languages)))
 
     @movements.validator
     def movements_validator(self, _attribute, value):
@@ -429,12 +432,12 @@ class Piece:
                 'instrument_list must be a list of instruments.')
 
     @classmethod
-    def init_version(cls, headers, instruments, language=None, opus=None,
+    def init_version(cls, headers: Headers, instruments: (list, Ensemble), language=None, opus=None,
                      movements=None):
         """Automatically gets the version number from the system."""
         if movements is None:
             movements = [Movement(num=1)]
-        return cls(headers=headers, version=get_vers(), language=language,
+        return cls(headers=headers, version=get_version(), language=language,
                    opus=opus, movements=movements, instruments=instruments)
 
     def dump(self):

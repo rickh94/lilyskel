@@ -3,13 +3,14 @@ import re
 import attr
 from fuzzywuzzy import process
 from num2words import num2words
+from tinydb import TinyDB
 from titlecase import titlecase
 from lilyskel import exceptions
 from lilyskel import mutopia
 from lilyskel.db_interface import load_name_from_table, explore_table
 
 
-def normalize_name(name):
+def normalize_name(name: str) -> str:
     """Clean up the names."""
     if name is None:
         return None
@@ -17,7 +18,7 @@ def normalize_name(name):
     return clean.lower()
 
 
-def _form_num(num, *, form):
+def _form_num(num: int, *, form: str) -> str:
     """Return either a number or a number word."""
     if form == 'num':
         return str(num)
@@ -31,12 +32,11 @@ def _form_num(num, *, form):
         raise ValueError("'form' must be 'num', 'ord', or 'word'")
 
 
-def _roman_numeral(num):
+def _roman_numeral(num: int) -> str:
     """
     Take an int and return a roman numberal as standard ascii characters.
 
-    Arguments:
-        num: a number to convert. Must be between 1 and 89 (inclusive)
+    :param num: a number to convert. Must be between 1 and 89 (inclusive)
     """
     if not isinstance(num, int):
         raise TypeError("'num' must be an int")
@@ -76,9 +76,12 @@ def _roman_numeral(num):
 
 @attr.s(slots=True)
 class LyName:
-    """Common attributes/names"""
+    """Common attributes/names
+    :param name: Name of the item (string)
+    :param number: Number associated, if any
+    """
     name = attr.ib(convert=normalize_name)
-    number = attr.ib(init=False, default=None)
+    number = attr.ib(init=False, default=None, validator=attr.validators.instance_of(int))
     _numword = attr.ib(init=False, repr=False, default='')
     _roman = attr.ib(init=False, repr=False, default='')
 
@@ -144,16 +147,13 @@ class Instrument(LyName):
     """
     Class for Instruments.
     Inherits from LyName
-    Additional Attributes:
-        abbr: Short abbreviation for the instrument name.
-        clef: The instrument's usual clef
-        transposition: the key in which the instrument plays. Defaults to None
-        for concert pitch.
-        keyboard: (bool) specifies whether it is a keyboard instrument. (To
-        know whether to create multiple staves.)
-        midi: the corresponding midi instrument.
-        family: the family of the instrument (e.g. woodwinds, strings, etc.)
-        mutopianame: the name of the instrument as in mutopia
+    :param abbr: Short abbreviation for the instrument name.
+    :param clef: The instrument's usual clef
+    :param transposition: the key in which the instrument plays. Defaults to None for concert pitch.
+    :param keyboard: (bool) specifies whether it is a keyboard instrument. (To know whether to create multiple staves.)
+    :param midi: the corresponding midi instrument.
+    :param family: the family of the instrument (e.g. woodwinds, strings, etc.)
+    :param mutopianame: the name of the instrument as in mutopia
     """
     # pylint: disable=protected-access
     abbr = attr.ib(default='')
@@ -185,9 +185,9 @@ class Instrument(LyName):
         return name
 
     @classmethod
-    def numbered_name(cls, name, number, *, abbr='', clef='treble',
-                      transposition=None, keyboard=False, midi=None,
-                      family=None):
+    def numbered_name(cls, name: str, number: int, *, abbr: str = '', clef: str = 'treble',
+                      transposition: str = None, keyboard: bool = False, midi: str = None,
+                      family: str = None):
         """
         Returns a numbered Instrument class. (e.g. Violin 1, Violin 2)
 
@@ -206,7 +206,7 @@ class Instrument(LyName):
         return new_obj
 
     @classmethod
-    def load_from_db(cls, name, db, number=None):
+    def load_from_db(cls, name: str, db: TinyDB, number: int = None):
         """
         Returns an instance with data from a tinydb database or raises an
         Exception.
@@ -227,7 +227,7 @@ class Instrument(LyName):
             setattr(new_obj, key, val)
         return new_obj
 
-    def add_to_db(self, db):
+    def add_to_db(self, db: TinyDB):
         """
         Serializes the Instrument and adds it to the supplied database in the
         'instruments' table.
@@ -278,6 +278,7 @@ class Ensemble:
     def __iter__(self):
         yield from self.instruments
 
+    @property
     def pretty_name(self):
         return titlecase(' '.join(self.name.split('_')))
 
@@ -306,7 +307,7 @@ class Ensemble:
                                  keyboard=keyboard, family=family)
         self.instruments.append(new_ins)
 
-    def add_instrument_from_obj(self, instrument):
+    def add_instrument_from_obj(self, instrument: Instrument):
         """Add an instrument from an existing Instrument instance.
         """
         if self.instruments is None:
@@ -316,7 +317,7 @@ class Ensemble:
         self.instruments.append(instrument)
 
     @classmethod
-    def load_from_db(cls, name, db):
+    def load_from_db(cls, name: str, db: TinyDB):
         """
         Load ensemble and instruments from database.
         NOTE: This method enforces that if an ensemble is in the database, all
@@ -342,7 +343,7 @@ class Ensemble:
                     name=name, e=err))
         return new_ens
 
-    def add_to_db(self, db):
+    def add_to_db(self, db: TinyDB):
         """
         Serializes the Ensemble and adds it to the supplied database in the
         'ensembles' table.

@@ -1,23 +1,25 @@
 import functools
+from types import FunctionType
+from typing import Any
 
 import click
 from prompt_toolkit import prompt, HTML
 
-from lilyskel.interface.common import save_non_interactive, generate_completer
+from lilyskel.interface.common import save_non_interactive, generate_completer, AppState
 
 
-def rgetattr(obj, attr, *args):
-    def _getattr(obj, attr):
+def rgetattr(obj: Any, attr: str, *args):
+    def _getattr(obj: Any, attr: str):
         return getattr(obj, attr, *args)
     return functools.reduce(_getattr, [obj] + attr.split('.'))
 
 
-def rsetattr(obj, attr, val):
+def rsetattr(obj: Any, attr: str, val):
     pre, _, post = attr.rpartition('.')
     return setattr(rgetattr(obj, pre) if pre else obj, post, val)
 
 
-def add_prompt_commands_from_list(list_of_names, help_prefix, attribute_prefix, group):
+def add_prompt_commands_from_list(list_of_names: list, help_prefix: str, attribute_prefix: str, group: click.Group):
     for attribute_name in list_of_names:
         new_command = create_prompt_command(
             name=attribute_name,
@@ -27,7 +29,7 @@ def add_prompt_commands_from_list(list_of_names, help_prefix, attribute_prefix, 
         group.add_command(new_command)
 
 
-def create_prompt_command(name, attribute, help_text, *, get_completer=None):
+def create_prompt_command(name: str, attribute: str, help_text: str, *, get_completer: FunctionType = None):
     def _item_prompt():
         ctx = click.get_current_context()
         completer = None

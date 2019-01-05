@@ -1,12 +1,12 @@
 import click
-from prompt_toolkit import print_formatted_text
-from prompt_toolkit.shortcuts import confirm, input_dialog
 from tinydb import Query
 
 from lilyskel.info import Composer
 from lilyskel.exceptions import MutopiaError
 from lilyskel.interface import sub_repl
 from lilyskel.interface.common import *
+from lilyskel.interface.custom_validators_completers import (InsensitiveCompleter, YNValidator, IndexValidator,
+                                                             IsNumberValidator)
 
 
 @click.group(invoke_without_command=True)
@@ -89,19 +89,6 @@ def ensemble(ctx, name, instrument):
     db_ = ctx.obj.db
     new_ens = create_ensemble(name, db_, instrument)
     print(new_ens)
-
-
-class IsNumberValidator(Validator):
-    def validate(self, document):
-        text = document.text
-        if not text:
-            return
-        if not text.isdigit():
-            raise ValidationError(message="Must be integer")
-        try:
-            int(text)
-        except ValueError as err:
-            raise ValidationError(message=err)
 
 
 def db_instrument_prompt(instruments, ins_list, db_):

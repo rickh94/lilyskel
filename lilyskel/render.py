@@ -2,8 +2,12 @@
 import re
 import os
 from pathlib import Path
+from typing import List
+
 from jinja2 import Environment, PackageLoader
 
+from lilyskel.info import Piece, Movement
+from lilyskel.lynames import LyName, Instrument
 
 ENV = Environment(loader=PackageLoader('lilyskel', 'templates'))
 FLAGS = {
@@ -12,7 +16,7 @@ FLAGS = {
 }
 
 
-def make_global(lyglobal, piece, location=Path('.')):
+def make_global(lyglobal: LyName, piece: Piece, location=Path('.')):
     # global_template = ENV.get_template('global.ily')
 
     # name_prefix = make_name_prefix(piece)
@@ -40,8 +44,8 @@ def make_global(lyglobal, piece, location=Path('.')):
     return include_paths
 
 
-def make_instrument(instrument, lyglobal, piece, flags=FLAGS,
-                    location=Path('.')):
+def make_instrument(instrument: Instrument, lyglobal: LyName, piece: Piece, flags=FLAGS,
+                    location: Path = Path('.')):
     """
     Create all the files related to an instrument.
 
@@ -89,7 +93,7 @@ def make_instrument(instrument, lyglobal, piece, flags=FLAGS,
     return include_paths
 
 
-def _render_notes(dirpath, piece, instrument, movement):
+def _render_notes(dirpath: Path, piece: Piece, instrument: Instrument, movement: Movement):
     notestemplate = ENV.get_template('notes.ily')
     render = notestemplate.render(piece=piece, instrument=instrument,
                                   movement=movement)
@@ -100,8 +104,8 @@ def _render_notes(dirpath, piece, instrument, movement):
     return filepath
 
 
-def render_includes(includepaths, piece, extra_includes=[],
-                    location=Path('.')):
+def render_includes(includepaths: List[str], piece: Piece, extra_includes: List[str] = [],
+                    location: Path = Path('.')):
     """
     Renders the includes file for the piece.
 
@@ -124,7 +128,7 @@ def render_includes(includepaths, piece, extra_includes=[],
     os.chdir(old_dir)
 
 
-def render_defs(piece, location=Path('.')):
+def render_defs(piece: Piece, location: Path = Path('.')):
     """Renders the defs file."""
     template = ENV.get_template('defs.ily')
     defspath = Path(location, 'defs.ily')

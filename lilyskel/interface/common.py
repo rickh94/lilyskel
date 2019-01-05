@@ -1,17 +1,18 @@
 import tempfile
 from pathlib import Path
 from types import FunctionType
+from typing import List
 
 from click import Context
 from prompt_toolkit import prompt, print_formatted_text
-from prompt_toolkit.completion import Completer, Completion
-from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.completion import WordCompleter, Completer
 from prompt_toolkit.shortcuts import confirm
-from prompt_toolkit.validation import Validator, ValidationError
+from tinydb import TinyDB
 from titlecase import titlecase
 
-from lilyskel import lynames, db_interface, info, yaml_interface, mutopia
-from lilyskel.info import Piece
+from lilyskel import lynames, db_interface, yaml_interface
+from lilyskel.info import Piece, MutopiaHeaders
+from lilyskel.interface.custom_validators_completers import InsensitiveCompleter, YNValidator, IndexValidator
 from lilyskel.lynames import VALID_CLEFS, normalize_name, Instrument, Ensemble
 
 
@@ -21,39 +22,13 @@ def instruments_with_indexes(instrumentlist):
         print(f"{idx}: {instrument.part_name()}")
 
 
-class InsensitiveCompleter(Completer):
-    """Complete without caring about case."""
-
-    def __init__(self, word_list):
-
-        self._word_list = set(word_list)
-
-    def get_completions(self, document, complete_event):
-        start = - len(document.text)
-        for word in self._word_list:
-            if document.text.lower() in word.lower():
-                yield Completion(word, start_position=start)
-
-
-class YNValidator(Validator):
-    """Validates Yes/No responses in prompt_toolkit"""
-
-    def validate(self, document):
-        text = document.text
-        if not text:
-            raise ValidationError(message="Response Required", cursor_position=0)
-        if text.lower()[0] not in 'yn':
-            raise ValidationError(message="Response must be [y]es or [n]o",
-                                  cursor_position=0)
-
-
-def answered_yes(answer):
+def answered_yes(answer) -> bool:
     if answer.lower()[0] == 'y':
         return True
     return False
 
 
-def manual_instrument(name, number, db=None):
+def manual_instrument(name: str, number: int, db=None) -> lynames.Instrument:
     """
     Manually create an instrument by entering all the information.
 
@@ -88,7 +63,7 @@ def manual_instrument(name, number, db=None):
     return new_ins
 
 
-def reorder_instruments(curr_instruments):
+def reorder_instruments(curr_instruments) -> List[Instrument]:
     """
     Dialog to remove and add instruments at certain indexes.
     :param curr_instruments: initial list of instruments
@@ -114,7 +89,7 @@ def reorder_instruments(curr_instruments):
     return curr_instruments
 
 
-def create_ensemble(name, db, instruments_to_add=[]):
+def create_ensemble(name: str, db: TinyDB, instruments_to_add: List[lynames.Instrument] = []) -> Ensemble:
     """
     Create an ensemble from new or old instruments
 
@@ -190,28 +165,7 @@ def create_ensemble(name, db, instruments_to_add=[]):
     return new_ens
 
 
-class IndexValidator(Validator):
-    """Validates indexes of lists."""
-
-    def __init__(self, max_len, allow_empty=True):
-        self.max = max_len
-        self.allow_empty = allow_empty
-
-    def validate(self, document):
-        text = document.text
-        if not text and self.allow_empty:
-            return
-        try:
-            idx = int(text)
-        except ValueError:
-            raise ValidationError(message="Input must be number",
-                                  cursor_position=0)
-        if idx > self.max:
-            raise ValidationError(message="Index out of range",
-                                  cursor_position=0)
-
-
-def create_instrument(instruments, db, instrument_names_standardized):
+def create_instrument(instruments: list, db: TinyDB, instrument_names_standardized: List[str]) -> lynames.Instrument:
     """
     Dialog for creating instruments
     :param instruments: instrument names for completion
@@ -262,54 +216,14 @@ TEMP = tempfile.gettempdir()
 PATHSAVE = Path(TEMP, "lilyskel_path")
 
 
-def save_config(piece, config_path, mutopia_headers):
+def save_config(piece: Piece, config_path: Path, mutopia_headers: MutopiaHeaders):
     if mutopia_headers:
-        piece.hedaers.add_mutopia_headers(mutopia_headers,
+        piece.headers.add_mutopia_headers(mutopia_headers,
                                           instruments=piece.instruments)
     yaml_interface.write_config(config_path, piece)
 
 
-class LanguageValidator(Validator):
-    def validate(self, document):
-        if not document.text:
-            raise ValidationError(message="Response Required", cursor_position=0)
-        if document.text not in info.get_valid_languages():
-            raise ValidationError(message="Invalid language", cursor_position=0)
-
-
-class LicenseValidator(Validator):
-    def validate(self, document):
-        if not document.text:
-            raise ValidationError(message="Response Required", cursor_position=0)
-        if document.text not in mutopia.get_licenses():
-            raise ValidationError(message="Invalid license", cursor_position=0)
-
-
-class StyleValidator(Validator):
-    def validate(self, document):
-        if not document.text:
-            raise ValidationError(message="Response Required", cursor_position=0)
-        if document.text not in mutopia.get_styles():
-            raise ValidationError(message="Invalid style", cursor_position=0)
-
-
-class ModeValidator(Validator):
-    def validate(self, document):
-        if not document.text:
-            raise ValidationError(message="Response Required", cursor_position=0)
-        if document.text not in info.get_allowed_modes():
-            raise ValidationError(message="Invalid mode", cursor_position=0)
-
-
-class NoteValidator(Validator):
-    def validate(self, document):
-        if not document.text:
-            raise ValidationError(message="Response Required", cursor_position=0)
-        if document.text not in info.get_allowed_notes():
-            raise ValidationError(message="Invalid note", cursor_position=0)
-
-
-def save_non_interactive(ctx):
+def save_non_interactive(ctx: Context):
     if not ctx.obj.is_repl:
         print_formatted_text(ctx.obj.piece.html())
         _ask_to_save(ctx)
@@ -327,7 +241,7 @@ def save_piece(obj: AppState):
     save_config(piece, config_path, mutopia_headers)
 
 
-def generate_completer(name: str, obj: AppState, get_completer: FunctionType):
+def generate_completer(name: str, obj: AppState, get_completer: FunctionType) -> Completer:
     new_completer = get_completer(obj.db)
     obj.completers[name] = new_completer
     return new_completer

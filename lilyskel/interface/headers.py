@@ -5,7 +5,8 @@ from prompt_toolkit.shortcuts import confirm, radiolist_dialog
 
 from lilyskel import info, db_interface
 from lilyskel.interface import sub_repl
-from lilyskel.interface.common import InsensitiveCompleter, generate_completer, save_non_interactive
+from lilyskel.interface.common import generate_completer, save_non_interactive
+from lilyskel.interface.custom_validators_completers import InsensitiveCompleter
 from lilyskel.interface.create_commands import create_prompt_command, add_prompt_commands_from_list
 
 

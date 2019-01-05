@@ -8,8 +8,9 @@ from prompt_toolkit.shortcuts import confirm
 from lilyskel import yaml_interface, db_interface, info
 from lilyskel.info import Piece
 from lilyskel.interface import sub_repl
-from lilyskel.interface.common import (PATHSAVE, LanguageValidator, save_non_interactive, _ask_to_save,
+from lilyskel.interface.common import (PATHSAVE, save_non_interactive, _ask_to_save,
                                        save_piece)
+from lilyskel.interface.custom_validators_completers import LanguageValidator
 from lilyskel.interface.create_commands import create_prompt_command
 from lilyskel.interface.headers import header
 

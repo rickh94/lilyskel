@@ -1,3 +1,5 @@
+from types import FunctionType
+
 import click
 from click_repl import ExitReplException, repl
 from prompt_toolkit import print_formatted_text
@@ -9,7 +11,8 @@ def _do_nothing(*args):
     pass
 
 
-def create(group, prompt_kwargs, *, before_done_callback=_do_nothing):
+def create(group: click.Group, prompt_kwargs: dict = {}, *,
+           before_done_callback: FunctionType = _do_nothing) -> FunctionType:
     """
     Creates a repl for any subcommand, with associated useful commands
     :param group:  the command group to add the function to
@@ -23,14 +26,14 @@ def create(group, prompt_kwargs, *, before_done_callback=_do_nothing):
     group.help += " Run with no commands for interactive console."
     _repl_function = _add_repl_function(group, prompt_kwargs)
 
-    def _run_repl(ctx):
+    def _run_repl(ctx: click.Context):
         if ctx.invoked_subcommand is None:
             ctx.invoke(_repl_function)
 
     return _run_repl
 
 
-def _add_done(group, before_done):
+def _add_done(group: click.Group, before_done: FunctionType):
     def _repl_done():
         before_done(click.get_current_context())
         raise ExitReplException
@@ -43,7 +46,7 @@ def _add_done(group, before_done):
     group.add_command(exit_cmd)
 
 
-def _add_save(group):
+def _add_save(group: click.Group):
     def _save():
         ctx = click.get_current_context()
         save_piece(ctx.obj)
@@ -52,23 +55,24 @@ def _add_save(group):
     group.add_command(save_cmd)
 
 
-def _add_help_function(group):
+def _add_help_function(group: click.Group):
     def _generic_help_function():
         ctx = click.get_current_context()
         help_text_lines = group.get_help(ctx).splitlines()
         command_index = help_text_lines.index('Commands:')
         for line in help_text_lines[command_index:]:
             print_formatted_text(line)
+
     help_cmd = click.Command('help', callback=_generic_help_function, help='Show this message and exit')
     group.add_command(help_cmd)
 
 
-def _add_repl_function(group, prompt_kwargs):
+def _add_repl_function(group: click.Group, prompt_kwargs: dict = {}) -> click.Command:
     def _repl():
         ctx = click.get_current_context()
         ctx.obj.is_repl = True
         repl(ctx, prompt_kwargs=prompt_kwargs)
+
     repl_cmd = click.Command(f'_{group}_repl', callback=_repl, hidden=True)
     group.add_command(repl_cmd)
     return repl_cmd
-

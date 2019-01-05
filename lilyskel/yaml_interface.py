@@ -11,7 +11,7 @@ def write_config(filepath: Path, piece: Piece):
     yaml.dump(piece_data, filepath)
 
 
-def read_config(filepath: Path):
+def read_config(filepath: Path) -> Piece:
     piece_data = yaml.load(filepath)
     if not piece_data:
         raise ValueError("No data in file.")

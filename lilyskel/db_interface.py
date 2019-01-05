@@ -9,7 +9,7 @@ here = Path(__file__).parents[0]
 def_path = Path(os.path.expanduser('~'), '.local', 'share', 'lilyskel', 'db.json')
 
 
-def init_db(path=None):
+def init_db(path=None) -> TinyDB:
     """
     Initializes the database.
     :param path: (optional) the path of the database.
@@ -36,7 +36,7 @@ def bootstrap_db(path=None):
     shutil.copy2(default, path)
 
 
-def explore_db(db):
+def explore_db(db: TinyDB) -> list:
     """
     Explore what tables are available in the database.
     :param db: a TinyDB instance.
@@ -49,7 +49,7 @@ def explore_db(db):
     return list(tables)
 
 
-def explore_table(table, search=None):
+def explore_table(table, search=None) -> list:
     """
     Explore a table in the database.
 
@@ -80,13 +80,13 @@ def explore_table(table, search=None):
     return founditems
 
 
-def load_name_from_table(name, db, tablename, extra_searches=None):
+def load_name_from_table(name: str, db: TinyDB, table_name: str, extra_searches=None) -> dict:
     """
     Load data with specified 'name' from the specified 'db' table.
 
     :param: name: the name of the item to be retrieved.
     :param: db: a TinyDB object
-    :param: tablename: the name of the table to search
+    :param: table_name: the name of the table to search
     :param: extra_searches: an additional filter in case of
         multiple of the same name
 
@@ -94,11 +94,8 @@ def load_name_from_table(name, db, tablename, extra_searches=None):
     """
     q = Query()
     # get an object matching name from the db.
-    dbtable = db.table(tablename)
-    data = dbtable.get(q.name == name)
+    db_table = db.table(table_name)
+    data = db_table.get(q.name == name)
     if data is None:
-        raise exceptions.DataNotFoundError(
-            "'{name}' is not in the '{table}' table.".format(name=name,
-                                                             table=tablename)
-        )
+        raise exceptions.DataNotFoundError(f"'{name}' is not in the '{table_name}' table.")
     return data

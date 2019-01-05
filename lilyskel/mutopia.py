@@ -21,7 +21,7 @@ def _scrape_mutopia():
     return site_html.table.find_all('td')
 
 
-def _get_mutopia_table_data(field):
+def _get_mutopia_table_data(field: str):
     """Get data out of the mutopia contributing table."""
     table = _scrape_mutopia()
     for index, item in enumerate(table):
@@ -31,15 +31,12 @@ def _get_mutopia_table_data(field):
         field=field))
 
 
-def validate_mutopia(field, data):
+def validate_mutopia(field: str, data: str):
     """Validates mutopia fields against accepted mutopia input."""
     # special case for licenses
     if field == 'license':
-        licenses = get_licenses()
-        if data not in licenses:
-            raise exceptions.MutopiaError(
-                '{data} was not found in {field}'.format(data=data,
-                                                         field=field))
+        if data not in get_licenses():
+            raise exceptions.MutopiaError(f'{data} was not found in {field}')
         else:
             return
 

@@ -7,7 +7,8 @@ import os
 
 from lilyskel import yaml_interface, info, lynames, render
 from lilyskel.interface import sub_repl
-from lilyskel.interface.common import YNValidator, answered_yes, AppState, PATHSAVE
+from lilyskel.interface.common import answered_yes, AppState, PATHSAVE
+from lilyskel.interface.custom_validators_completers import YNValidator
 from lilyskel.interface.edit_commands import edit
 from .db_commands import db
 
