@@ -11,8 +11,12 @@ def _do_nothing(*args):
     pass
 
 
-def create(group: click.Group, prompt_kwargs: dict = {}, *,
-           before_done_callback: FunctionType = _do_nothing) -> FunctionType:
+def create(
+    group: click.Group,
+    prompt_kwargs: dict = None,
+    *,
+    before_done_callback: FunctionType = _do_nothing,
+) -> FunctionType:
     """
     Creates a repl for any subcommand, with associated useful commands
     :param group:  the command group to add the function to
@@ -20,6 +24,7 @@ def create(group: click.Group, prompt_kwargs: dict = {}, *,
     :param before_done_callback: function to execute before exiting repl
     :return:
     """
+    prompt_kwargs = prompt_kwargs or {}
     _add_done(group, before_done_callback)
     _add_help_function(group)
     _add_save(group)
@@ -38,9 +43,11 @@ def _add_done(group: click.Group, before_done: FunctionType):
         before_done(click.get_current_context())
         raise ExitReplException
 
-    done_cmd = click.Command('done', callback=_repl_done, help=f'Exit interactive console')
-    quit_cmd = click.Command('quit', callback=_repl_done, hidden=True)
-    exit_cmd = click.Command('exit', callback=_repl_done, hidden=True)
+    done_cmd = click.Command(
+        "done", callback=_repl_done, help=f"Exit interactive console"
+    )
+    quit_cmd = click.Command("quit", callback=_repl_done, hidden=True)
+    exit_cmd = click.Command("exit", callback=_repl_done, hidden=True)
     group.add_command(done_cmd)
     group.add_command(quit_cmd)
     group.add_command(exit_cmd)
@@ -51,7 +58,9 @@ def _add_save(group: click.Group):
         ctx = click.get_current_context()
         save_piece(ctx.obj)
 
-    save_cmd = click.Command('save', callback=_save, help=f'Save current options to file')
+    save_cmd = click.Command(
+        "save", callback=_save, help=f"Save current options to file"
+    )
     group.add_command(save_cmd)
 
 
@@ -59,11 +68,13 @@ def _add_help_function(group: click.Group):
     def _generic_help_function():
         ctx = click.get_current_context()
         help_text_lines = group.get_help(ctx).splitlines()
-        command_index = help_text_lines.index('Commands:')
+        command_index = help_text_lines.index("Commands:")
         for line in help_text_lines[command_index:]:
             print_formatted_text(line)
 
-    help_cmd = click.Command('help', callback=_generic_help_function, help='Show this message and exit')
+    help_cmd = click.Command(
+        "help", callback=_generic_help_function, help="Show this message and exit"
+    )
     group.add_command(help_cmd)
 
 
@@ -73,6 +84,6 @@ def _add_repl_function(group: click.Group, prompt_kwargs: dict = {}) -> click.Co
         ctx.obj.is_repl = True
         repl(ctx, prompt_kwargs=prompt_kwargs)
 
-    repl_cmd = click.Command(f'_{group}_repl', callback=_repl, hidden=True)
+    repl_cmd = click.Command(f"_{group}_repl", callback=_repl, hidden=True)
     group.add_command(repl_cmd)
     return repl_cmd

@@ -1,42 +1,36 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+
 from lilyskel import __version__
 
-with open('README.rst') as f:
+with open("README.rst") as f:
     long_description = f.read()
 
 setup(
-    name='lilyskel',
+    name="lilyskel",
     version=__version__,
-
-    description='Generate a file/directory skeleton for lilypond projects',
+    description="Generate a file/directory skeleton for lilypond projects",
     long_description=long_description,
-    url='https://github.com/rickh94/lililyskel',
-
-    author='Rick Henry',
-    author_email='fredericmhenry@gmail.com',
-
-    license='MIT',
-    python_requires='>=3.6',
-    setup_requires=['pytest-runner'],
+    url="https://github.com/rickh94/lililyskel",
+    author="Rick Henry",
+    author_email="fredericmhenry@gmail.com",
+    license="MIT",
+    python_requires=">=3.6",
+    setup_requires=["pytest-runner"],
     install_requires=[
-        'num2words',
-        'tinydb',
-        'attrs',
-        'titlecase',
-        'bs4',
-        'requests>=2.20',
-        'fuzzywuzzy[speedup]',
-        'jinja2',
-        'ruamel.yaml',
-        'click',
-        'prompt-toolkit>=2.0.1',
-        'better_exceptions'
+        "num2words",
+        "tinydb",
+        "attrs",
+        "titlecase",
+        "bs4",
+        "requests>=2.20",
+        "fuzzywuzzy[speedup]",
+        "jinja2",
+        "ruamel.yaml",
+        "click",
+        "prompt-toolkit>=2.0.1",
+        "better_exceptions",
     ],
-    tests_require=['pytest', 'pytest-cov'],
+    tests_require=["pytest", "pytest-cov"],
     package=find_packages(),
-    entry_points={
-        'console_scripts': [
-                       'lilyskel=lilyskel.interface.cli:cli',
-        ],
-    },
+    entry_points={"console_scripts": ["lilyskel=lilyskel.interface.cli:cli"]},
 )

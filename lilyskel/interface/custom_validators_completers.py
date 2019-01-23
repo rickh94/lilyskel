@@ -1,8 +1,7 @@
 from prompt_toolkit.completion import Completer, Completion
-from prompt_toolkit.validation import Validator, ValidationError
+from prompt_toolkit.validation import ValidationError, Validator
 
 from lilyskel import info, mutopia
-from lilyskel.interface import common
 from lilyskel.lynames import VALID_CLEFS
 
 
@@ -13,7 +12,7 @@ class InsensitiveCompleter(Completer):
         self._word_list = set(word_list)
 
     def get_completions(self, document, complete_event):
-        start = - len(document.text)
+        start = -len(document.text)
         for word in self._word_list:
             if document.text.lower() in word.lower():
                 yield Completion(word, start_position=start)
@@ -26,9 +25,10 @@ class YNValidator(Validator):
         text = document.text
         if not text:
             raise ValidationError(message="Response Required", cursor_position=0)
-        if text.lower()[0] not in 'yn':
-            raise ValidationError(message="Response must be [y]es or [n]o",
-                                  cursor_position=0)
+        if text.lower()[0] not in "yn":
+            raise ValidationError(
+                message="Response must be [y]es or [n]o", cursor_position=0
+            )
 
 
 class IndexValidator(Validator):
@@ -45,11 +45,9 @@ class IndexValidator(Validator):
         try:
             idx = int(text)
         except ValueError:
-            raise ValidationError(message="Input must be number",
-                                  cursor_position=0)
+            raise ValidationError(message="Input must be number", cursor_position=0)
         if idx > self.max:
-            raise ValidationError(message="Index out of range",
-                                  cursor_position=0)
+            raise ValidationError(message="Index out of range", cursor_position=0)
 
 
 class LanguageValidator(Validator):

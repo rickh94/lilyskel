@@ -1,12 +1,14 @@
 """Methods for dealing with tinydb database."""
-from pathlib import Path
 import os
 import shutil
-from tinydb import TinyDB, Query
+from pathlib import Path
+
+from tinydb import Query, TinyDB
+
 from . import exceptions
 
 here = Path(__file__).parents[0]
-def_path = Path(os.path.expanduser('~'), '.local', 'share', 'lilyskel', 'db.json')
+def_path = Path(os.path.expanduser("~"), ".local", "share", "lilyskel", "db.json")
 
 
 def init_db(path=None) -> TinyDB:
@@ -32,7 +34,7 @@ def bootstrap_db(path=None):
     path = Path(path)
     os.makedirs(path.parents[0], exist_ok=True)
     # grab the included default database
-    default = Path(here, 'default_db.json')
+    default = Path(here, "default_db.json")
     shutil.copy2(default, path)
 
 
@@ -44,8 +46,8 @@ def explore_db(db: TinyDB) -> list:
     if not isinstance(db, TinyDB):
         raise ValueError("'db' must be a TinyDB instance.")
     tables = db.tables()
-    if '_default' in tables:
-        tables.remove('_default')
+    if "_default" in tables:
+        tables.remove("_default")
     return list(tables)
 
 
@@ -63,7 +65,7 @@ def explore_table(table, search=None) -> list:
         items = table.all()
     else:
         if not isinstance(search, tuple):
-            raise TypeError('search must be a tuple (field, value)')
+            raise TypeError("search must be a tuple (field, value)")
         field, term = search
         q = Query()
         # Search[field]: look specified field, lambda val: return the value
@@ -74,13 +76,15 @@ def explore_table(table, search=None) -> list:
             raise TypeError("table may not be a tinydb table ", err)
     for item in items:
         if "name" in item:
-            founditems.append(item['name'])
+            founditems.append(item["name"])
         elif "word" in item:
-            founditems.append(item['word'])
+            founditems.append(item["word"])
     return founditems
 
 
-def load_name_from_table(name: str, db: TinyDB, table_name: str, extra_searches=None) -> dict:
+def load_name_from_table(
+    name: str, db: TinyDB, table_name: str, extra_searches=None
+) -> dict:
     """
     Load data with specified 'name' from the specified 'db' table.
 
@@ -97,5 +101,7 @@ def load_name_from_table(name: str, db: TinyDB, table_name: str, extra_searches=
     db_table = db.table(table_name)
     data = db_table.get(q.name == name)
     if data is None:
-        raise exceptions.DataNotFoundError(f"'{name}' is not in the '{table_name}' table.")
+        raise exceptions.DataNotFoundError(
+            f"'{name}' is not in the '{table_name}' table."
+        )
     return data

@@ -1,6 +1,7 @@
 """Functions for scraping mutopia_ info."""
 import requests
 from bs4 import BeautifulSoup
+
 from lilyskel import exceptions
 
 SITE = None
@@ -17,8 +18,8 @@ def _scrape_mutopia():
     global SITE
     if not SITE:
         SITE = requests.get("http://www.mutopiaproject.org/contribute.html")
-    site_html = BeautifulSoup(SITE.content, 'html.parser')
-    return site_html.table.find_all('td')
+    site_html = BeautifulSoup(SITE.content, "html.parser")
+    return site_html.table.find_all("td")
 
 
 def _get_mutopia_table_data(field: str):
@@ -27,26 +28,25 @@ def _get_mutopia_table_data(field: str):
     for index, item in enumerate(table):
         if field in item.get_text():
             return table[index + 1]
-    raise exceptions.MutopiaError("'{field}' was not found".format(
-        field=field))
+    raise exceptions.MutopiaError("'{field}' was not found".format(field=field))
 
 
 def validate_mutopia(field: str, data: str):
     """Validates mutopia_ fields against accepted mutopia_ input."""
     # special case for licenses
-    if field == 'license':
+    if field == "license":
         if data not in get_licenses():
-            raise exceptions.MutopiaError(f'{data} was not found in {field}')
+            raise exceptions.MutopiaError(f"{data} was not found in {field}")
         else:
             return
 
     text = _get_mutopia_table_data(field=field)
     # this will clean out some preceding text
-    breaktext = text.get_text().split(':\n')
+    breaktext = text.get_text().split(":\n")
     cleantext = breaktext[1]
-    data_list = [item.strip() for item in cleantext.split(', ')]
+    data_list = [item.strip() for item in cleantext.split(", ")]
     if data not in data_list:
-        raise exceptions.MutopiaError(f'{data} was not found in {field}')
+        raise exceptions.MutopiaError(f"{data} was not found in {field}")
 
 
 def get_licenses():
@@ -54,10 +54,10 @@ def get_licenses():
     global LICENSES
     if LICENSES:
         return LICENSES
-    text = _get_mutopia_table_data(field='license')
-    licenses = text.find_all('li')
+    text = _get_mutopia_table_data(field="license")
+    licenses = text.find_all("li")
     # some text cleaning
-    LICENSES = [license.text.replace('"', '') for license in licenses]
+    LICENSES = [license.text.replace('"', "") for license in licenses]
     return LICENSES
 
 
@@ -65,10 +65,10 @@ def get_styles():
     global STYLES
     if STYLES:
         return STYLES
-    text = _get_mutopia_table_data('style')
-    breaktext = text.text.split(':\n')
+    text = _get_mutopia_table_data("style")
+    breaktext = text.text.split(":\n")
     cleantext = breaktext[1]
-    STYLES = [item.strip() for item in cleantext.split(', ')]
+    STYLES = [item.strip() for item in cleantext.split(", ")]
     return STYLES
 
 
@@ -77,10 +77,10 @@ def get_composers():
     global COMPOSERS
     if COMPOSERS:
         return COMPOSERS
-    text = _get_mutopia_table_data(field='mutopiacomposer')
-    breaktext = text.get_text().split(':\n')
+    text = _get_mutopia_table_data(field="mutopiacomposer")
+    breaktext = text.get_text().split(":\n")
     cleantext = breaktext[1]
-    COMPOSERS = [item.strip() for item in cleantext.split(', ')]
+    COMPOSERS = [item.strip() for item in cleantext.split(", ")]
     # some text cleaning
     return COMPOSERS
 
@@ -93,9 +93,9 @@ def get_instruments():
     global SITE2
     if not SITE2:
         SITE2 = requests.get("http://www.mutopiaproject.org/advsearch.html")
-    html = BeautifulSoup(SITE2.content, 'html.parser')
-    inst_elements = html.find(id='adv-instr-sel')
+    html = BeautifulSoup(SITE2.content, "html.parser")
+    inst_elements = html.find(id="adv-instr-sel")
     INSTRUMENTS = []
-    for item in inst_elements.find_all('option'):
-        INSTRUMENTS.append(item['value'])
+    for item in inst_elements.find_all("option"):
+        INSTRUMENTS.append(item["value"])
     return INSTRUMENTS

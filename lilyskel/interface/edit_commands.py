@@ -1,15 +1,14 @@
 from pathlib import Path
 
 import click
-from prompt_toolkit import prompt, print_formatted_text, HTML
+from prompt_toolkit import print_formatted_text, prompt
 from prompt_toolkit.completion import PathCompleter, WordCompleter
 from prompt_toolkit.shortcuts import confirm
 
-from lilyskel import yaml_interface, db_interface, info
+from lilyskel import db_interface, info, yaml_interface
 from lilyskel.info import Piece
 from lilyskel.interface import sub_repl
-from lilyskel.interface.common import (PATHSAVE, save_non_interactive, ask_to_save,
-                                       save_piece)
+from lilyskel.interface.common import PATHSAVE, ask_to_save
 # from lilyskel.interface.custom_validators_completers import LanguageValidator
 from lilyskel.interface.create_commands import create_prompt_command
 from lilyskel.interface.header_commands import headers
@@ -19,10 +18,10 @@ from lilyskel.interface.mutopia_commands import mutopia_
 
 
 @click.group(invoke_without_command=True)
-@click.option("-f", "--file-path", required=False,
-              help="Path to yaml config file for project.")
-@click.option("-d", "--db-path", required=False, default=None,
-              help="Path to tinydb.")
+@click.option(
+    "-f", "--file-path", required=False, help="Path to yaml config file for project."
+)
+@click.option("-d", "--db-path", required=False, default=None, help="Path to tinydb.")
 @click.pass_context
 def edit(ctx, file_path, db_path):
     """Create and edit piece information"""
@@ -35,11 +34,15 @@ def edit(ctx, file_path, db_path):
     if not ctx.obj.db:
         db_ = db_interface.init_db(db_path)
         tables = db_interface.explore_db(db_)
-        bootstrap_message = ("Lilyskel supports a small database to help with "
-                             "commonly used items (such as instruments and "
-                             "composers). You do not appear to have one. "
-                             "Would you like to copy the included one? ")
-        if ("composers" not in tables or "instruments" not in tables) and confirm(bootstrap_message):
+        bootstrap_message = (
+            "Lilyskel supports a small database to help with "
+            "commonly used items (such as instruments and "
+            "composers). You do not appear to have one. "
+            "Would you like to copy the included one? "
+        )
+        if ("composers" not in tables or "instruments" not in tables) and confirm(
+            bootstrap_message
+        ):
             db_interface.bootstrap_db(db_path)
         ctx.obj.db = db_
     if not ctx.obj.pathsave:
@@ -54,8 +57,10 @@ def get_file_path(file_path):
         with open(PATHSAVE, "r") as savepath:
             return Path(savepath.read())
     except FileNotFoundError:
-        return prompt("No path specified or saved. Please enter the path "
-                      "to the config file. ", completer=PathCompleter())
+        return prompt(
+            "No path specified or saved. Please enter the path " "to the config file. ",
+            completer=PathCompleter(),
+        )
 
 
 def get_piece(file_path):
@@ -65,7 +70,7 @@ def get_piece(file_path):
         return Piece()
 
 
-@edit.command(name='print')
+@edit.command(name="print")
 @click.pass_obj
 def print_(obj):
     """Print the current Piece"""
@@ -78,12 +83,14 @@ def _make_language_completer(_):
 
 # add commands and repls from metacode
 language = create_prompt_command(
-    name=f'language',
-    help_text=f'Change the note input language',
-    attribute=f'language',
-    get_completer=_make_language_completer
+    name=f"language",
+    help_text=f"Change the note input language",
+    attribute=f"piece.language",
+    get_completer=_make_language_completer,
 )
-_edit_repl = sub_repl.create(edit, {'message': 'lilyskel:edit> '}, before_done_callback=ask_to_save)
+_edit_repl = sub_repl.create(
+    edit, {"message": "lilyskel:edit> "}, before_done_callback=ask_to_save
+)
 edit.add_command(headers)
 edit.add_command(language)
 edit.add_command(instruments)

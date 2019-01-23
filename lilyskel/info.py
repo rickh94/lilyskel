@@ -1,26 +1,24 @@
 """Classes for files and file info."""
 import itertools
-from collections import namedtuple
-
-import bs4
 import re
-import requests
 import subprocess
-from pathlib import Path
 import sys
+from collections import namedtuple
+from pathlib import Path
+
 import attr
+import bs4
+import requests
 from fuzzywuzzy import process
 from prompt_toolkit import HTML
 from tinydb import TinyDB
 from titlecase import titlecase
 
-from lilyskel.lynames import Instrument, Ensemble
-from lilyskel import mutopia
-from lilyskel import exceptions
-from lilyskel import db_interface
+from lilyskel import db_interface, exceptions, mutopia
+from lilyskel.lynames import Ensemble, Instrument
 
 ENCODING = sys.stdout.encoding
-KeySignature = namedtuple('KeySignature', ['note', 'mode'])
+KeySignature = namedtuple("KeySignature", ["note", "mode"])
 ALLOWED_NOTES = None
 ALLOWED_MODES = None
 LANGUAGES = None
@@ -29,6 +27,7 @@ LANGUAGES = None
 @attr.s
 class Composer:
     """Stores and formats information about a composer."""
+
     name = attr.ib(validator=attr.validators.instance_of(str))
     mutopianame = attr.ib(default=None)
     shortname = attr.ib(default=None)
@@ -37,15 +36,15 @@ class Composer:
         """Returns shortened composer name. Generates if not present."""
         if self.shortname is not None:
             return self.shortname
-        sname = ''
+        sname = ""
         name_parts = self.name.split()
         lname = name_parts.pop()
         for part in name_parts:
-            sname += part[0] + '.'
+            sname += part[0] + "."
 
         # This prevents leading spaces on single name composers
         if sname:
-            sname += ' '
+            sname += " "
         sname += lname
         self.shortname = sname
         return sname
@@ -78,23 +77,24 @@ class Composer:
         :param name: part or all of a composer's name
         :param db: the database to load from
         """
-        table = db.table('composers')
-        name_parts = name.split(' ')
+        table = db.table("composers")
+        name_parts = name.split(" ")
         lname = name_parts.pop()
-        comps = db_interface.explore_table(table=table, search=('name', lname))
+        comps = db_interface.explore_table(table=table, search=("name", lname))
         if not isinstance(comps, list):
             comps = [comps]
         for item in comps:
             if name_parts[0] in item:
-                data = db_interface.load_name_from_table(item, db=db,
-                                                         table_name='composers')
-                name = data['name']
+                data = db_interface.load_name_from_table(
+                    item, db=db, table_name="composers"
+                )
+                name = data["name"]
                 try:
-                    mutopianame = data['mutopianame']
+                    mutopianame = data["mutopianame"]
                 except KeyError:
                     mutopianame = None
                 try:
-                    shortname = data['shortname']
+                    shortname = data["shortname"]
                 except KeyError:
                     shortname = None
 
@@ -109,14 +109,14 @@ class Composer:
 
         :param db: the db to add into
         """
-        comp_table = db.table('composers')
+        comp_table = db.table("composers")
         data = attr.asdict(self)
         comp_table.insert(data)
 
     @classmethod
     def load(cls, datadict: dict):
         """Load info from dict."""
-        new_composer = cls(name=datadict.pop('name'))
+        new_composer = cls(name=datadict.pop("name"))
         for key, value in datadict.items():
             setattr(new_composer, key, value)
         return new_composer
@@ -128,16 +128,17 @@ class Composer:
 
 def _validate_mutopia_headers(headers):
     if headers is not None and not isinstance(headers, MutopiaHeaders):
-        raise TypeError("mutopiaheaders is defined but not a MutopiaHeaders"
-                        " object.")
+        raise TypeError("mutopiaheaders is defined but not a MutopiaHeaders" " object.")
 
 
 @attr.s
 class Headers(object):
     """Class for storing header info."""
+
     title = attr.ib(default="Untitled")
-    composer = attr.ib(default=Composer('Anonymous'),
-                       validator=attr.validators.instance_of(Composer))
+    composer = attr.ib(
+        default=Composer("Anonymous"), validator=attr.validators.instance_of(Composer)
+    )
     dedication = attr.ib(default=None)
     subtitle = attr.ib(default=None)
     subsubtitle = attr.ib(default=None)
@@ -148,8 +149,7 @@ class Headers(object):
     copyright = attr.ib(default=None)
     mutopiaheaders = attr.ib(default=None)
 
-    def add_mutopia_headers(self, mu_headers, guess_composer=False,
-                            instruments=None):
+    def add_mutopia_headers(self, mu_headers, guess_composer=False, instruments=None):
         """
         Add mutopia_ headers.
         :param mu_headers: a MutopiaHeaders object
@@ -158,20 +158,19 @@ class Headers(object):
         Note: This will overwrite the copyright to match the license.
         """
         # pylint: disable=no-member
-        mu_headers.composer = self.composer.get_mutopia_name(
-            guess=guess_composer)
+        mu_headers.composer = self.composer.get_mutopia_name(guess=guess_composer)
         # pylint: enable=no-member
         if instruments is None:
             instruments = mu_headers.instrument_list
 
         # converts list of instruments to mutopia_ friendly string
         # instruments.sort()
-        mutopia_instrument_names = \
-            set([instrument.get_mutopia_name() for
-                 instrument in instruments])
+        mutopia_instrument_names = set(
+            [instrument.get_mutopia_name() for instrument in instruments]
+        )
         mutopia_names_list = list(mutopia_instrument_names)
         mutopia_names_list.sort()
-        instruments = ', '.join(mutopia_names_list)
+        instruments = ", ".join(mutopia_names_list)
         mu_headers.instruments = instruments
         self.copyright = mu_headers.license
         self.mutopiaheaders = mu_headers
@@ -180,16 +179,14 @@ class Headers(object):
     def load(cls, datadict: dict, instruments: list = None):
         """Load info from dict."""
         mutopiaheaders = None
-        comp = Composer.load(datadict.pop('composer'))
-        if datadict.get('mutopiaheaders', None):
-            mutopiaheaders = MutopiaHeaders.load(
-                datadict.pop('mutopiaheaders'))
-        newheaders = cls(title=datadict.pop('title'), composer=comp)
+        comp = Composer.load(datadict.pop("composer"))
+        if datadict.get("mutopiaheaders", None):
+            mutopiaheaders = MutopiaHeaders.load(datadict.pop("mutopiaheaders"))
+        newheaders = cls(title=datadict.pop("title"), composer=comp)
         for key, value in datadict.items():
             setattr(newheaders, key, value)
         if mutopiaheaders:
-            newheaders.add_mutopia_headers(mutopiaheaders,
-                                           instruments=instruments)
+            newheaders.add_mutopia_headers(mutopiaheaders, instruments=instruments)
         return newheaders
 
     def dump(self):
@@ -214,10 +211,11 @@ class MutopiaHeaders:
     The headers available for Mutopia project submissions. See www.mutopia_.org
     for more details.
     """
+
     source = attr.ib(validator=attr.validators.instance_of(str))
     style = attr.ib()
     instrument_list = attr.ib(convert=convert_ensemble, default=[])
-    license = attr.ib(default='Public Domain')
+    license = attr.ib(default="Public Domain")
     composer = attr.ib(init=False)
     maintainer = attr.ib(default="Anonymous")
     maintainerEmail = attr.ib(default=None)
@@ -227,8 +225,7 @@ class MutopiaHeaders:
     mutopiaopus = attr.ib(default=None)
     date = attr.ib(default=None)
     moreinfo = attr.ib(default=None)
-    instruments = attr.ib(init=False,
-                          validator=attr.validators.instance_of(str))
+    instruments = attr.ib(init=False, validator=attr.validators.instance_of(str))
 
     @instrument_list.validator
     def validate_instruments(self, attribute, value):
@@ -244,22 +241,23 @@ class MutopiaHeaders:
     @style.validator
     def _validate_style(self, attribute, value):
         """Calls validate_mutopia with field 'style'"""
-        mutopia.validate_mutopia(data=value, field='style')
+        mutopia.validate_mutopia(data=value, field="style")
 
     @composer.validator
     def _validate_composer(self, attribute, value):
         """Calls validate_mutopia with field 'mutopiacomposer'"""
-        mutopia.validate_mutopia(data=value, field='mutopiacomposer')
+        mutopia.validate_mutopia(data=value, field="mutopiacomposer")
 
     @license.validator
     def _validate_license(self, attribute, value):
         """Calls validate_mutopia with field 'license'"""
-        mutopia.validate_mutopia(data=value, field='license')
+        mutopia.validate_mutopia(data=value, field="license")
 
     @classmethod
     def load(cls, datadict: dict):
-        new_mutopia_headers = cls(source=datadict.pop('source'),
-                       style=datadict.pop('style'))
+        new_mutopia_headers = cls(
+            source=datadict.pop("source"), style=datadict.pop("style")
+        )
         for key, value in datadict.items():
             setattr(new_mutopia_headers, key, value)
         return new_mutopia_headers
@@ -276,18 +274,20 @@ def get_allowed_notes():
     global ALLOWED_NOTES
     if ALLOWED_NOTES:
         return ALLOWED_NOTES
-    docpage = requests.get('http://lilypond.org/doc/v2.18/Documentation/notation/writing-pitches')
-    soup = bs4.BeautifulSoup(docpage.text, 'html.parser')
-    tables = soup.find_all('table')
+    docpage = requests.get(
+        "http://lilypond.org/doc/v2.18/Documentation/notation/writing-pitches"
+    )
+    soup = bs4.BeautifulSoup(docpage.text, "html.parser")
+    tables = soup.find_all("table")
     note_name_table = None
     for table in tables:
         if "Note Names" in table.text:
             note_name_table = table
             break
-    note_name_p = note_name_table.find_all('p')
+    note_name_p = note_name_table.find_all("p")
     base_note_names = []
     for item in note_name_p:
-        item_as_list = item.text.strip().split(' ')
+        item_as_list = item.text.strip().split(" ")
         if len(item_as_list) == 8:
             base_note_names.extend(item_as_list)
     base_note_names = list(set(base_note_names))
@@ -295,16 +295,19 @@ def get_allowed_notes():
         if "sharp" in table.text:
             curr_table = table
             break
-    note_suffixes_p = curr_table.find_all('p')
+    note_suffixes_p = curr_table.find_all("p")
     note_suffixes_table = []
     for item in note_suffixes_p:
-        if '-' in item.text:
+        if "-" in item.text:
             # print('item found')
-            clean = item.text.strip().replace('-', '').split('/')
+            clean = item.text.strip().replace("-", "").split("/")
             note_suffixes_table.extend(clean)
     note_suffixes_table = list(set(note_suffixes_table))
-    note_suffixes_table.append('')
-    ALLOWED_NOTES = [pair[0] + pair[1] for pair in itertools.product(base_note_names, note_suffixes_table)]
+    note_suffixes_table.append("")
+    ALLOWED_NOTES = [
+        pair[0] + pair[1]
+        for pair in itertools.product(base_note_names, note_suffixes_table)
+    ]
     return ALLOWED_NOTES
 
 
@@ -312,27 +315,29 @@ def get_allowed_modes():
     global ALLOWED_MODES
     if ALLOWED_MODES:
         return ALLOWED_MODES
-    docpage2 = requests.get('http://lilypond.org/doc/v2.18/Documentation/notation/displaying-pitches')
+    docpage2 = requests.get(
+        "http://lilypond.org/doc/v2.18/Documentation/notation/displaying-pitches"
+    )
     soup = bs4.BeautifulSoup(docpage2.text, "html.parser")
-    all_ps = soup.find_all('p')
+    all_ps = soup.find_all("p")
     curr_p = None
     for a_p in all_ps:
-        if 'mode' in a_p.text and 'key signature' in a_p.text:
+        if "mode" in a_p.text and "key signature" in a_p.text:
             curr_p = a_p
             break
-    mode_ps = curr_p.find_all('code')
-    ALLOWED_MODES = [item.text.replace('\\', '') for item in mode_ps if '\\' in item.text]
+    mode_ps = curr_p.find_all("code")
+    ALLOWED_MODES = [
+        item.text.replace("\\", "") for item in mode_ps if "\\" in item.text
+    ]
     return ALLOWED_MODES
 
 
 @attr.s(slots=True)
 class Movement:
     num = attr.ib(validator=attr.validators.instance_of(int))
-    tempo = attr.ib(validator=attr.validators.instance_of(str),
-                    default='')
-    time = attr.ib(validator=attr.validators.instance_of(str),
-                   default='')
-    key = attr.ib(convert=convert_key, default=('c', 'major'))
+    tempo = attr.ib(validator=attr.validators.instance_of(str), default="")
+    time = attr.ib(validator=attr.validators.instance_of(str), default="")
+    key = attr.ib(convert=convert_key, default=("c", "major"))
 
     @key.validator
     def validate_key(self, attribute, value):
@@ -347,13 +352,16 @@ class Movement:
 
     @classmethod
     def load(cls, datadict):
-        newclass = cls(num=datadict.pop('num'), key=datadict.pop('key'))
+        newclass = cls(num=datadict.pop("num"), key=datadict.pop("key"))
         for key, value in datadict.items():
             setattr(newclass, key, value)
         return newclass
 
     def __str__(self):
-        return f'{self.num}. {self.tempo} in {titlecase(self.key.note)} {self.key.mode}, Time: {self.time}'
+        return (
+            f"{self.num}. {self.tempo} in {titlecase(self.key.note)} "
+            f"{self.key.mode}, Time: {self.time}"
+        )
 
     def dump(self):
         return attr.asdict(self)
@@ -363,21 +371,19 @@ def get_valid_languages():
     global LANGUAGES
     if LANGUAGES:
         return LANGUAGES
-    langfile = Path('/usr', 'share', 'lilypond', get_version(), 'scm',
-                    'define-note-names.scm')
-    with open(langfile, 'rb') as file_:
+    langfile = Path(
+        "/usr", "share", "lilypond", get_version(), "scm", "define-note-names.scm"
+    )
+    with open(langfile, "rb") as file_:
         content = file_.read()
-    langs = re.findall(r'Language: ([^\s]*)', content.decode(ENCODING),
-                       re.M | re.I)
+    langs = re.findall(r"Language: ([^\s]*)", content.decode(ENCODING), re.M | re.I)
     LANGUAGES = [lang.lower() for lang in langs]
     return LANGUAGES
 
 
 def get_version():
-    run_ly = subprocess.run(['lilypond', '--version'],
-                            stdout=subprocess.PIPE)
-    matchvers = re.search(r'LilyPond ([^\n]*)',
-                          run_ly.stdout.decode(ENCODING))
+    run_ly = subprocess.run(["lilypond", "--version"], stdout=subprocess.PIPE)
+    matchvers = re.search(r"LilyPond ([^\n]*)", run_ly.stdout.decode(ENCODING))
     return matchvers.group(1)
 
 
@@ -386,6 +392,7 @@ class Piece:
     """
     Info for the entire piece.
     """
+
     headers = attr.ib(validator=attr.validators.instance_of(Headers), default=Headers())
     version = attr.ib(default=get_version())
     instruments = attr.ib(default=[])
@@ -397,10 +404,12 @@ class Piece:
     def validate_version(self, _attribute, value):
         """Check that the version number makes sense."""
         try:
-            assert re.match(r'[0-9]', value)
+            assert re.match(r"[0-9]", value)
         except AssertionError:
-            raise AttributeError("Lilypond version number does not appear to "
-                                 " be valid. Check you installation.")
+            raise AttributeError(
+                "Lilypond version number does not appear to "
+                " be valid. Check you installation."
+            )
 
     @language.validator
     def validate_language(self, _attribute, value):
@@ -409,14 +418,17 @@ class Piece:
             return
         valid_languages = get_valid_languages()
         if value.lower() not in valid_languages:
-            raise AttributeError("Language is not valid. Must be one of "
-                                 "{}".format(', '.join(valid_languages)))
+            raise AttributeError(
+                "Language is not valid. Must be one of "
+                "{}".format(", ".join(valid_languages))
+            )
 
     @movements.validator
     def movements_validator(self, _attribute, value):
         """Check for valid movements."""
-        err = AttributeError("Movements are not valid, Must be a list of "
-                             "Movement objects.")
+        err = AttributeError(
+            "Movements are not valid, Must be a list of " "Movement objects."
+        )
         if not isinstance(value, list):
             raise err
         if not isinstance(value[0], Movement):
@@ -429,20 +441,30 @@ class Piece:
         if isinstance(value, Ensemble):
             return
         if not isinstance(value, list):
-            raise AttributeError(
-                'instrument_list must be a list of instruments.')
+            raise AttributeError("instrument_list must be a list of instruments.")
         if not isinstance(value[0], Instrument):
-            raise AttributeError(
-                'instrument_list must be a list of instruments.')
+            raise AttributeError("instrument_list must be a list of instruments.")
 
     @classmethod
-    def init_version(cls, headers: Headers, instruments: (list, Ensemble), language=None, opus=None,
-                     movements=None):
+    def init_version(
+        cls,
+        headers: Headers,
+        instruments: (list, Ensemble),
+        language=None,
+        opus=None,
+        movements=None,
+    ):
         """Automatically gets the version number from the system."""
         if movements is None:
             movements = [Movement(num=1)]
-        return cls(headers=headers, version=get_version(), language=language,
-                   opus=opus, movements=movements, instruments=instruments)
+        return cls(
+            headers=headers,
+            version=get_version(),
+            language=language,
+            opus=opus,
+            movements=movements,
+            instruments=instruments,
+        )
 
     def dump(self):
         """Serialize internal data for writing to config file."""
@@ -452,44 +474,47 @@ class Piece:
             "instruments": [attr.asdict(ins) for ins in self.instruments],
             "language": self.language,
             "opus": self.opus,
-            "movements": [mov.dump() for mov in self.movements]
+            "movements": [mov.dump() for mov in self.movements],
         }
 
     @classmethod
     def load(cls, datadict):
         """Load class from dict."""
-        instruments = [Instrument.load(ins)
-                       for ins in datadict.pop('instruments')]
+        instruments = [Instrument.load(ins) for ins in datadict.pop("instruments")]
         return cls(
-            headers=Headers.load(datadict.pop('headers'), instruments),
-            version=datadict.pop('version'),
+            headers=Headers.load(datadict.pop("headers"), instruments),
+            version=datadict.pop("version"),
             instruments=instruments,
-            opus=datadict.pop('opus'),
-            movements=[Movement.load(mov)
-                       for mov in datadict.pop('movements')],
-            language=datadict.pop('language')
+            opus=datadict.pop("opus"),
+            movements=[Movement.load(mov) for mov in datadict.pop("movements")],
+            language=datadict.pop("language"),
         )
 
     def html(self):
         lines = []
-        for key, value in {'Opus': self.opus, 'Lilypond Version': self.version, 'Language': self.language}.items():
+        for key, value in {
+            "Opus": self.opus,
+            "Lilypond Version": self.version,
+            "Language": self.language,
+        }.items():
             if value:
-                lines.append(f'<b>{key}:</b> {value}')
+                lines.append(f"<b>{key}:</b> {value}")
         if self.headers:
-            lines.append('<b>Headers:</b>')
+            lines.append("<b>Headers:</b>")
             for key, value in self.headers.dump().items():
-                if key == 'composer':
+                if key == "composer":
                     lines.append(f'  composer: {value["name"]}')
                     continue
-                if key == 'mutopiaheaders':
+                if key == "mutopiaheaders":
                     # skip mutopia_ headers for now
                     continue
                 if value:
-                    lines.append(f'  {key}: {value}')
-        instrument_names = ', '.join([instrument.part_name() for instrument in self.instruments])
-        lines.append(f'<b>Instruments:</b> {instrument_names}')
-        movement_names = '\n  '.join(
-            [str(movement) for movement in self.movements])
-        lines.append(f'<b>Movements:</b>\n  {movement_names}')
+                    lines.append(f"  {key}: {value}")
+        instrument_names = ", ".join(
+            [instrument.part_name() for instrument in self.instruments]
+        )
+        lines.append(f"<b>Instruments:</b> {instrument_names}")
+        movement_names = "\n  ".join([str(movement) for movement in self.movements])
+        lines.append(f"<b>Movements:</b>\n  {movement_names}")
 
-        return HTML('\n'.join(lines))
+        return HTML("\n".join(lines))

@@ -1,6 +1,7 @@
 from pathlib import Path
+
 import pytest
-from lilyskel.info import Piece
+
 from lilyskel import yaml_interface
 
 
@@ -18,10 +19,11 @@ def test_read_write_piece(piece1, piece2, tmpdir):
     piece1aread = yaml_interface.read_config(testfile1a)
     assert piece1read.dump() == piece1aread.dump(), "should be repeatable"
     yaml_interface.write_config(testfile1b, piece1read)
-    with testfile1b.open('rb') as t1b:
-        with testfile1.open('rb') as t1:
-            assert t1.read() == t1b.read(), \
-                "reading and writing should produce the same file"
+    with testfile1b.open("rb") as t1b:
+        with testfile1.open("rb") as t1:
+            assert (
+                t1.read() == t1b.read()
+            ), "reading and writing should produce the same file"
     yaml_interface.write_config(testfile2, piece2)
     piece2read = yaml_interface.read_config(testfile2)
     assert piece2read.dump() == piece2data, "other piece should work"

@@ -1,22 +1,19 @@
 """Render the templates from instrument and piece objects."""
-import re
 import os
+import re
 from pathlib import Path
 from typing import List
 
 from jinja2 import Environment, PackageLoader
 
-from lilyskel.info import Piece, Movement
-from lilyskel.lynames import LyName, Instrument
+from lilyskel.info import Movement, Piece
+from lilyskel.lynames import Instrument, LyName
 
-ENV = Environment(loader=PackageLoader('lilyskel', 'templates'))
-FLAGS = {
-    'key_in_partname': False,
-    'compress_full_bar_rests': False,
-}
+ENV = Environment(loader=PackageLoader("lilyskel", "templates"))
+FLAGS = {"key_in_partname": False, "compress_full_bar_rests": False}
 
 
-def make_global(lyglobal: LyName, piece: Piece, location=Path('.')):
+def make_global(lyglobal: LyName, piece: Piece, location=Path(".")):
     # global_template = ENV.get_template('global.ily')
 
     # name_prefix = make_name_prefix(piece)
@@ -31,12 +28,14 @@ def make_global(lyglobal: LyName, piece: Piece, location=Path('.')):
     os.makedirs(dirpath)
 
     # notes files that need to be included
-    global_template = ENV.get_template('global.ily')
+    global_template = ENV.get_template("global.ily")
     include_paths = []
     for movement in piece.movements:
-        render = global_template.render(piece=piece, lyglobal=lyglobal, movement=movement)
+        render = global_template.render(
+            piece=piece, lyglobal=lyglobal, movement=movement
+        )
         mov_path = Path(dirpath, lyglobal.mov_file_name(movement.num))
-        with open(mov_path, 'w') as outfile:
+        with open(mov_path, "w") as outfile:
             outfile.write(render)
         include_paths.append(mov_path)
 
@@ -44,8 +43,13 @@ def make_global(lyglobal: LyName, piece: Piece, location=Path('.')):
     return include_paths
 
 
-def make_instrument(instrument: Instrument, lyglobal: LyName, piece: Piece, flags=FLAGS,
-                    location: Path = Path('.')):
+def make_instrument(
+    instrument: Instrument,
+    lyglobal: LyName,
+    piece: Piece,
+    flags=FLAGS,
+    location: Path = Path("."),
+):
     """
     Create all the files related to an instrument.
 
@@ -59,7 +63,7 @@ def make_instrument(instrument: Instrument, lyglobal: LyName, piece: Piece, flag
             to current working directory. Relative paths are prefered.
    :returns: paths to include in an instrument includes file
     """
-    instemplate = ENV.get_template('ins_part.ly')
+    instemplate = ENV.get_template("ins_part.ly")
 
     name_prefix = make_name_prefix(piece)
     partfilename = instrument.part_file_name(prefix=name_prefix)
@@ -80,11 +84,15 @@ def make_instrument(instrument: Instrument, lyglobal: LyName, piece: Piece, flag
         include_paths.append(mov_path)
 
     # part rendering lilypond file
-    partrender = instemplate.render(piece=piece, instrument=instrument,
-                                    lyglobal=lyglobal, flags=flags,
-                                    filename=partfilename)
+    partrender = instemplate.render(
+        piece=piece,
+        instrument=instrument,
+        lyglobal=lyglobal,
+        flags=flags,
+        filename=partfilename,
+    )
 
-    with open(partpath, 'w') as partfile:
+    with open(partpath, "w") as partfile:
         partfile.write(partrender)
 
     # include_paths.append(partpath)
@@ -93,19 +101,24 @@ def make_instrument(instrument: Instrument, lyglobal: LyName, piece: Piece, flag
     return include_paths
 
 
-def _render_notes(dirpath: Path, piece: Piece, instrument: Instrument, movement: Movement):
-    notestemplate = ENV.get_template('notes.ily')
-    render = notestemplate.render(piece=piece, instrument=instrument,
-                                  movement=movement)
+def _render_notes(
+    dirpath: Path, piece: Piece, instrument: Instrument, movement: Movement
+):
+    notestemplate = ENV.get_template("notes.ily")
+    render = notestemplate.render(piece=piece, instrument=instrument, movement=movement)
     filepath = Path(dirpath, instrument.mov_file_name(movement.num))
-    with open(filepath, 'w') as outfile:
+    with open(filepath, "w") as outfile:
         outfile.write(render)
 
     return filepath
 
 
-def render_includes(includepaths: List[str], piece: Piece, extra_includes: List[str] = [],
-                    location: Path = Path('.')):
+def render_includes(
+    includepaths: List[str],
+    piece: Piece,
+    extra_includes: List[str] = [],
+    location: Path = Path("."),
+):
     """
     Renders the includes file for the piece.
 
@@ -118,44 +131,46 @@ def render_includes(includepaths: List[str], piece: Piece, extra_includes: List[
     """
     old_dir = os.getcwd()
     os.chdir(location)
-    template = ENV.get_template('includes.ily')
-    render = template.render(piece=piece, extra_includes=extra_includes,
-                             includepaths=includepaths)
-    includepath = Path('includes.ily')
+    template = ENV.get_template("includes.ily")
+    render = template.render(
+        piece=piece, extra_includes=extra_includes, includepaths=includepaths
+    )
+    includepath = Path("includes.ily")
 
-    with open(includepath, 'w') as includefile:
+    with open(includepath, "w") as includefile:
         includefile.write(render)
     os.chdir(old_dir)
 
 
-def render_defs(piece: Piece, location: Path = Path('.')):
+def render_defs(piece: Piece, location: Path = Path(".")):
     """Renders the defs file."""
-    template = ENV.get_template('defs.ily')
-    defspath = Path(location, 'defs.ily')
+    template = ENV.get_template("defs.ily")
+    defspath = Path(location, "defs.ily")
     render = template.render(piece=piece)
 
-    with open(defspath, 'w') as defsfile:
+    with open(defspath, "w") as defsfile:
         defsfile.write(render)
 
 
 def make_name_prefix(piece):
     """Make the correct filename prefix from the opus or title."""
     if piece.opus:
-        name_prefix = re.sub(r'[,.po ]', '', piece.opus)
+        name_prefix = re.sub(r"[,.po ]", "", piece.opus)
     else:
-        name_prefix_tmp = re.sub(r'[,.]', '', piece.headers.title).lower()
-        name_prefix = re.sub(r'\s', '_', name_prefix_tmp)
+        name_prefix_tmp = re.sub(r"[,.]", "", piece.headers.title).lower()
+        name_prefix = re.sub(r"\s", "_", name_prefix_tmp)
     return name_prefix
 
 
-def render_score(piece, instruments, lyglobal, path_prefix=Path('.')):
+def render_score(piece, instruments, lyglobal, path_prefix=Path(".")):
     """Renders the score."""
-    template = ENV.get_template('score.ly')
+    template = ENV.get_template("score.ly")
     name_prefix = make_name_prefix(piece)
-    filename = name_prefix + '_score.ly'
-    render = template.render(piece=piece, filename=filename, lyglobal=lyglobal,
-                             instruments=instruments)
+    filename = name_prefix + "_score.ly"
+    render = template.render(
+        piece=piece, filename=filename, lyglobal=lyglobal, instruments=instruments
+    )
     score_path = Path(path_prefix, filename)
 
-    with open(score_path, 'w') as scorefile:
+    with open(score_path, "w") as scorefile:
         scorefile.write(render)
