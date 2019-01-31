@@ -1,5 +1,6 @@
 """Classes for names of files and directories."""
 import re
+from typing import Optional
 
 import attr
 from fuzzywuzzy import process
@@ -35,7 +36,7 @@ def _form_num(num: int, *, form: str) -> str:
 
 def _roman_numeral(num: int) -> str:
     """
-    Take an int and return a roman numberal as standard ascii characters.
+    Take an int and return a roman numeral as standard ascii characters.
 
     :param num: a number to convert. Must be between 1 and 89 (inclusive)
     """
@@ -95,7 +96,7 @@ class LyName:
             return
         raise TypeError("number must be of type int or None")
 
-    def _movement(self, mov_num, *, form):
+    def _movement(self, mov_num: int, form: str):
         """
         Returns name and movement as number or word.
         :param mov_num: an int that is the number of the movement.
@@ -117,11 +118,11 @@ class LyName:
             num += "_mov"
         return full_name + "_" + num
 
-    def mov_file_name(self, mov_num):
+    def mov_file_name(self, mov_num: int):
         """Returns the filename form for a part + movement."""
         return self._movement(mov_num, form="num") + ".ily"
 
-    def part_file_name(self, prefix=""):
+    def part_file_name(self, prefix: str = ""):
         """Returns a plain file name with a prefix prepended."""
         if prefix:
             name = str(prefix) + "_" + self.name
@@ -138,7 +139,7 @@ class LyName:
             name += str(self.number)
         return name
 
-    def var_name(self, mov_num, slash=True):
+    def var_name(self, mov_num: int, slash: bool = True):
         """Returns the variable name for a part + movement."""
         prefix = ""
         if slash:
@@ -198,11 +199,11 @@ class Instrument(LyName):
     mutopianame = attr.ib(default=None)
 
     @clef.validator
-    def validate_clef(self, attribute, value):
+    def validate_clef(self, _attribute, value):
         if value not in VALID_CLEFS:
             raise exceptions.InvalidClef("Not a valid clef")
 
-    def part_name(self, key=False):
+    def part_name(self, key: bool = False):
         """
         Returns the name for printing on a part.
         :param key: (bool) Specifies whether to include key/transposition in name.
@@ -222,13 +223,12 @@ class Instrument(LyName):
         cls,
         name: str,
         number: int,
-        *,
         abbr: str = "",
         clef: str = "treble",
         transposition: str = None,
         keyboard: bool = False,
         midi: str = None,
-        family: str = None
+        family: str = None,
     ):
         """
         Returns a numbered Instrument class. (e.g. Violin 1, Violin 2)
@@ -324,7 +324,7 @@ class Instrument(LyName):
 class Ensemble:
     """A group of instruments."""
 
-    name = attr.ib(convert=normalize_name)
+    name = attr.ib(converter=normalize_name)
     instruments = attr.ib(default=None)
 
     def __iter__(self):
@@ -337,15 +337,14 @@ class Ensemble:
     def add_instrument(
         self,
         ins_name,
-        *,
-        db=None,
-        number=None,
-        abbr="",
-        clef="treble",
-        keyboard=False,
-        midi=None,
-        transposition=None,
-        family=None
+        db: Optional[TinyDB] = None,
+        number: Optional[int] = None,
+        abbr: str = "",
+        clef: str = "treble",
+        keyboard: bool = False,
+        midi: str = None,
+        transposition: str = None,
+        family: str = None,
     ):
         """
         Add an instrument to the ensemble.
@@ -431,8 +430,7 @@ class Ensemble:
         """
         ens_table = db.table("ensembles")
         ins_table = db.table("instruments")
-        data = dict(name=self.name)
-        data["instruments"] = []
+        data = {"name": self.name, "instruments": []}
         for instrument in self.instruments:
             # if the instrument isn't in the database
             if not explore_table(ins_table, search=("name", instrument.name)):

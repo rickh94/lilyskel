@@ -2,7 +2,7 @@
 import os
 import re
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from jinja2 import Environment, PackageLoader
 
@@ -10,10 +10,10 @@ from lilyskel.info import Movement, Piece
 from lilyskel.lynames import Instrument, LyName
 
 ENV = Environment(loader=PackageLoader("lilyskel", "templates"))
-FLAGS = {"key_in_partname": False, "compress_full_bar_rests": False}
+DEFAULT_FLAGS = {"key_in_partname": False, "compress_full_bar_rests": False}
 
 
-def make_global(lyglobal: LyName, piece: Piece, location=Path(".")):
+def make_global(lyglobal: LyName, piece: Piece, location: Path = Path(".")):
     # global_template = ENV.get_template('global.ily')
 
     # name_prefix = make_name_prefix(piece)
@@ -47,7 +47,7 @@ def make_instrument(
     instrument: Instrument,
     lyglobal: LyName,
     piece: Piece,
-    flags=FLAGS,
+    flags: Optional[dict] = None,
     location: Path = Path("."),
 ):
     """
@@ -63,6 +63,7 @@ def make_instrument(
             to current working directory. Relative paths are prefered.
    :returns: paths to include in an instrument includes file
     """
+    flags = flags or DEFAULT_FLAGS
     instemplate = ENV.get_template("ins_part.ly")
 
     name_prefix = make_name_prefix(piece)
@@ -116,7 +117,7 @@ def _render_notes(
 def render_includes(
     includepaths: List[str],
     piece: Piece,
-    extra_includes: List[str] = [],
+    extra_includes: Optional[List[str]] = None,
     location: Path = Path("."),
 ):
     """
@@ -129,6 +130,7 @@ def render_includes(
         objects
     :param optional location: the location to put the files
     """
+    extra_includes = extra_includes or []
     old_dir = os.getcwd()
     os.chdir(location)
     template = ENV.get_template("includes.ily")
@@ -152,7 +154,7 @@ def render_defs(piece: Piece, location: Path = Path(".")):
         defsfile.write(render)
 
 
-def make_name_prefix(piece):
+def make_name_prefix(piece: Piece):
     """Make the correct filename prefix from the opus or title."""
     if piece.opus:
         name_prefix = re.sub(r"[,.po ]", "", piece.opus)
@@ -162,7 +164,9 @@ def make_name_prefix(piece):
     return name_prefix
 
 
-def render_score(piece, instruments, lyglobal, path_prefix=Path(".")):
+def render_score(
+    piece: Piece, instruments: list, lyglobal: LyName, path_prefix: Path = Path(".")
+):
     """Renders the score."""
     template = ENV.get_template("score.ly")
     name_prefix = make_name_prefix(piece)

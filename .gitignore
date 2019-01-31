@@ -11,3 +11,4 @@
 # testing directory
 testdir
 pretty.json
+.mypy_cache

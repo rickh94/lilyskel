@@ -1,7 +1,7 @@
 import tempfile
 from pathlib import Path
 from types import FunctionType
-from typing import List
+from typing import List, Optional
 
 from click import Context
 from prompt_toolkit import HTML, print_formatted_text, prompt
@@ -12,9 +12,11 @@ from titlecase import titlecase
 
 from lilyskel import db_interface, lynames, yaml_interface
 from lilyskel.info import MutopiaHeaders, Piece
-from lilyskel.interface.custom_validators_completers import (InsensitiveCompleter,
-                                                             IsNumberValidator,
-                                                             YNValidator)
+from lilyskel.interface.custom_validators_completers import (
+    InsensitiveCompleter,
+    IsNumberValidator,
+    YNValidator,
+)
 from lilyskel.lynames import VALID_CLEFS, Ensemble, Instrument, normalize_name
 
 
@@ -30,7 +32,7 @@ def answered_yes(answer) -> bool:
     return False
 
 
-def manual_instrument(name: str, number: int, db=None) -> lynames.Instrument:
+def manual_instrument(name: str, number: Optional[int], db=None) -> lynames.Instrument:
     """
     Manually create an instrument by entering all the information.
 
@@ -39,15 +41,13 @@ def manual_instrument(name: str, number: int, db=None) -> lynames.Instrument:
     :param db: Optional, database to add instrument to.
     :return:
     """
-    new_instrument_info = dict()
-    new_instrument_info["number"] = number or None
-    new_instrument_info["name"] = name
-    new_instrument_info["abbr"] = prompt("Enter Abbreviation: ") or None
-    while True:
-        clef = prompt("Clef: ", completer=WordCompleter(VALID_CLEFS)).lower() or None
-        if clef in VALID_CLEFS or clef is None:
-            break
-        print("invalid clef")
+    new_instrument_info = {
+        "number": number or None,
+        "name": name,
+        "abbr": prompt("Enter Abbreviation: ") or None,
+    }
+    clef = prompt("Clef: ", completer=WordCompleter(VALID_CLEFS)).lower() or None
+    new_instrument_info["clef"] = clef or "treble"
     new_instrument_info["transposition"] = (
         prompt("Enter Transposition (or nothing): ") or None
     )
@@ -61,10 +61,13 @@ def manual_instrument(name: str, number: int, db=None) -> lynames.Instrument:
         normalize_name(prompt("Enter instrument family (or nothing): ")) or None
     )
     new_ins = lynames.Instrument.load(new_instrument_info)
-    if db and confirm(
+    if db is not None and confirm(
         "Would you like to add this instrument to the database for "
         "easy use next time?"
     ):
+        if not isinstance(db, TinyDB):
+            raise TypeError("db must be instance of TinyDB")
+
         new_ins.add_to_db(db)
     return new_ins
 

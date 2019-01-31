@@ -5,6 +5,7 @@ import subprocess
 import sys
 from collections import namedtuple
 from pathlib import Path
+from typing import Union, Optional, List
 
 import attr
 import bs4
@@ -214,7 +215,7 @@ class MutopiaHeaders:
 
     source = attr.ib(validator=attr.validators.instance_of(str))
     style = attr.ib()
-    instrument_list = attr.ib(convert=convert_ensemble, default=[])
+    instrument_list: list = attr.ib(converter=convert_ensemble, default=[])
     license = attr.ib(default="Public Domain")
     composer = attr.ib(init=False)
     maintainer = attr.ib(default="Anonymous")
@@ -337,7 +338,7 @@ class Movement:
     num = attr.ib(validator=attr.validators.instance_of(int))
     tempo = attr.ib(validator=attr.validators.instance_of(str), default="")
     time = attr.ib(validator=attr.validators.instance_of(str), default="")
-    key = attr.ib(convert=convert_key, default=("c", "major"))
+    key = attr.ib(converter=convert_key, default=("c", "major"))
 
     @key.validator
     def validate_key(self, attribute, value):
@@ -449,10 +450,10 @@ class Piece:
     def init_version(
         cls,
         headers: Headers,
-        instruments: (list, Ensemble),
-        language=None,
-        opus=None,
-        movements=None,
+        instruments: Union[list, Ensemble],
+        language: Optional[str]=None,
+        opus: Optional[str]=None,
+        movements: Optional[List[Movement]]=None,
     ):
         """Automatically gets the version number from the system."""
         if movements is None:
