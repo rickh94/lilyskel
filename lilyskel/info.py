@@ -40,12 +40,13 @@ class Composer:
         sname = ""
         name_parts = self.name.split()
         lname = name_parts.pop()
-        for part in name_parts:
-            sname += part[0] + "."
+        sname = ".".join(part[0] for part in name_parts)
+        # for part in name_parts:
+        #     sname += part[0] + "."
 
         # This prevents leading spaces on single name composers
         if sname:
-            sname += " "
+            sname += ". "
         sname += lname
         self.shortname = sname
         return sname
@@ -68,7 +69,7 @@ class Composer:
             self.mutopianame = name
             return name
         else:
-            raise AttributeError("No mutopia_ name defined.")
+            raise AttributeError("No mutopianame defined.")
 
     @classmethod
     def load_from_db(cls, name: str, db: TinyDB):
@@ -451,9 +452,9 @@ class Piece:
         cls,
         headers: Headers,
         instruments: Union[list, Ensemble],
-        language: Optional[str]=None,
-        opus: Optional[str]=None,
-        movements: Optional[List[Movement]]=None,
+        language: Optional[str] = None,
+        opus: Optional[str] = None,
+        movements: Optional[List[Movement]] = None,
     ):
         """Automatically gets the version number from the system."""
         if movements is None:
@@ -492,14 +493,12 @@ class Piece:
         )
 
     def html(self):
-        lines = []
-        for key, value in {
+        data = {
             "Opus": self.opus,
             "Lilypond Version": self.version,
             "Language": self.language,
-        }.items():
-            if value:
-                lines.append(f"<b>{key}:</b> {value}")
+        }
+        lines = [f"<b>{key}:</b> {value}" for key, value in data.items() if value]
         if self.headers:
             lines.append("<b>Headers:</b>")
             for key, value in self.headers.dump().items():
@@ -512,10 +511,10 @@ class Piece:
                 if value:
                     lines.append(f"  {key}: {value}")
         instrument_names = ", ".join(
-            [instrument.part_name() for instrument in self.instruments]
+            instrument.part_name() for instrument in self.instruments
         )
         lines.append(f"<b>Instruments:</b> {instrument_names}")
-        movement_names = "\n  ".join([str(movement) for movement in self.movements])
+        movement_names = "\n  ".join(str(movement) for movement in self.movements)
         lines.append(f"<b>Movements:</b>\n  {movement_names}")
 
         return HTML("\n".join(lines))

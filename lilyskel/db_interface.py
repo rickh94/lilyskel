@@ -19,8 +19,7 @@ def init_db(path=None) -> TinyDB:
     """
     db_path = path or def_path
     db_path = Path(db_path)
-    if not db_path.parents[0].exists():
-        os.makedirs(db_path.parents[0])
+    os.makedirs(db_path.parents[0], exist_ok=True)
     return TinyDB(db_path)
 
 
@@ -34,6 +33,7 @@ def bootstrap_db(path=None):
     path = Path(path)
     os.makedirs(path.parents[0], exist_ok=True)
     # grab the included default database
+    # TODO: refactor to use importlib.resources
     default = Path(here, "default_db.json")
     shutil.copy2(default, path)
 

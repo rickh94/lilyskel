@@ -63,7 +63,7 @@ class TestComposer:
         with pytest.raises(exceptions.MutopiaError, match=".*composer.*"):
             fakecomposer.get_mutopia_name(guess=True)
 
-        with pytest.raises(AttributeError, match=".*mutopia_ name.*"):
+        with pytest.raises(AttributeError, match=".*mutopianame.*"):
             beethoven.get_mutopia_name()
 
         # this will set the attribute so it needs to run last

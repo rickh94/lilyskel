@@ -14,13 +14,6 @@ DEFAULT_FLAGS = {"key_in_partname": False, "compress_full_bar_rests": False}
 
 
 def make_global(lyglobal: LyName, piece: Piece, location: Path = Path(".")):
-    # global_template = ENV.get_template('global.ily')
-
-    # name_prefix = make_name_prefix(piece)
-    # partfilename = instrument.part_file_name(prefix=name_prefix)
-    #
-    # if not os.path.exists(location):
-    #     os.makedirs(location)
     old_dir = os.getcwd()
     os.chdir(location)
 
@@ -93,11 +86,9 @@ def make_instrument(
         filename=partfilename,
     )
 
-    with open(partpath, "w") as partfile:
+    with partpath.open("w") as partfile:
         partfile.write(partrender)
 
-    # include_paths.append(partpath)
-    # return the paths for including in the includes.ily
     os.chdir(old_dir)
     return include_paths
 
@@ -108,7 +99,7 @@ def _render_notes(
     notestemplate = ENV.get_template("notes.ily")
     render = notestemplate.render(piece=piece, instrument=instrument, movement=movement)
     filepath = Path(dirpath, instrument.mov_file_name(movement.num))
-    with open(filepath, "w") as outfile:
+    with filepath.open("w") as outfile:
         outfile.write(render)
 
     return filepath
@@ -139,7 +130,7 @@ def render_includes(
     )
     includepath = Path("includes.ily")
 
-    with open(includepath, "w") as includefile:
+    with includepath.open("w") as includefile:
         includefile.write(render)
     os.chdir(old_dir)
 
@@ -150,7 +141,7 @@ def render_defs(piece: Piece, location: Path = Path(".")):
     defspath = Path(location, "defs.ily")
     render = template.render(piece=piece)
 
-    with open(defspath, "w") as defsfile:
+    with defspath.open("w") as defsfile:
         defsfile.write(render)
 
 
@@ -176,5 +167,5 @@ def render_score(
     )
     score_path = Path(path_prefix, filename)
 
-    with open(score_path, "w") as scorefile:
+    with score_path.open("w") as scorefile:
         scorefile.write(render)

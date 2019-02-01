@@ -8,11 +8,16 @@ from titlecase import titlecase
 
 from lilyskel import info
 from lilyskel.interface import sub_repl
-from lilyskel.interface.common import (ask_to_save, generate_completer,
-                                       save_non_interactive)
-from lilyskel.interface.custom_validators_completers import (InsensitiveCompleter,
-                                                             ModeValidator,
-                                                             NoteValidator)
+from lilyskel.interface.common import (
+    ask_to_save,
+    generate_completer,
+    save_non_interactive,
+)
+from lilyskel.interface.custom_validators_completers import (
+    InsensitiveCompleter,
+    ModeValidator,
+    NoteValidator,
+)
 
 
 @click.group(invoke_without_command=True)

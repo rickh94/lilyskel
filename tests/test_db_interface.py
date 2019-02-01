@@ -25,7 +25,9 @@ def test_init_db(mock_db, mock_exists, mock_makedirs):
     mock_db.assert_called_once_with(
         Path(home, ".local", "share", "lilyskel", "db.json")
     )
-    mock_makedirs.assert_called_once_with(Path(home, ".local", "share", "lilyskel"))
+    mock_makedirs.assert_called_once_with(
+        Path(home, ".local", "share", "lilyskel"), exist_ok=True
+    )
 
     # test without missing directories
     mock_makedirs.reset_mock()
@@ -35,7 +37,9 @@ def test_init_db(mock_db, mock_exists, mock_makedirs):
     mock_db.assert_called_once_with(
         Path(home, ".local", "share", "lilyskel", "db.json")
     )
-    mock_makedirs.assert_not_called()
+    mock_makedirs.assert_called_once_with(
+        Path(home, ".local", "share", "lilyskel"), exist_ok=True
+    )
 
     # test custom
     mock_makedirs.reset_mock()
@@ -43,13 +47,13 @@ def test_init_db(mock_db, mock_exists, mock_makedirs):
     mock_exists.return_value = False
     db_interface.init_db("/one/two/three.json"),
     mock_db.assert_called_once_with(Path("/one", "two", "three.json"))
-    mock_makedirs.assert_called_once_with(Path("/one", "two"))
+    mock_makedirs.assert_called_once_with(Path("/one", "two"), exist_ok=True)
 
 
 @mock.patch("lilyskel.db_interface.os.makedirs")
 @mock.patch("lilyskel.db_interface.shutil")
 def test_bootstrap_db(mock_shutil, mock_makedirs):
-    """Tests bootstraping the database with the default."""
+    """Tests bootstrapping the database with the default."""
     # test default db path
     db_interface.bootstrap_db()
     mock_makedirs.assert_called_once_with(
@@ -66,7 +70,7 @@ def test_explore_db(monkeypatch, mockdb):
     ret_tables = db_interface.explore_db(mockdb)
     # A list with certain values is required, but the order is unimportant.
     assert isinstance(ret_tables, list)
-    assert set(ret_tables) == set(["instruments", "ensembles"])
+    assert set(ret_tables) == {"instruments", "ensembles"}
 
     with pytest.raises(ValueError):
         db_interface.explore_db("not a db")
@@ -98,7 +102,7 @@ def test_explore_table(mocktable, livetable):
     """
     assert {"violin", "violoncello", "clarinet_in_bb"} == set(
         db_interface.explore_table(mocktable)
-    ), ("Without search terms " "it should return all " "names.")
+    ), "Without search terms it should return all names."
     assert {"violin", "viola", "violoncello"}.issubset(
         set(db_interface.explore_table(livetable, search=("name", "vio")))
     ), "With search terms it should return matching subset."
@@ -107,11 +111,11 @@ def test_explore_table(mocktable, livetable):
     ), "With search terms it should return matching subset."
     assert {"violin", "viola", "violoncello", "double_bass", "contrabass"}.issubset(
         db_interface.explore_table(livetable, search=("family", "strings"))
-    ), ("With search " "terms it should " "return matching " "subset.")
+    ), "With search terms it should return matching subset."
     assert (
         db_interface.explore_table(livetable, search=("name", "this is not the table"))
         == []
-    ), ("If nothing matches " "return empty list.")
+    ), "If nothing matches return empty list."
     assert (
         db_interface.explore_table(livetable, search=("not a field", "fail")) == []
     ), "If nothing matches return empty list."
@@ -121,7 +125,7 @@ def test_explore_table(mocktable, livetable):
     ), "A search that finds something should be implicitly true"
     assert not db_interface.explore_table(
         livetable, search=("name", "not in the database")
-    ), ("A search that returns nothing " "should be implicitly false.")
+    ), "A search that returns nothing should be implicitly false."
 
     with pytest.raises(TypeError, match=".*tuple.*"):
         db_interface.explore_table(livetable, search="hi")

@@ -1,4 +1,5 @@
 from types import FunctionType
+from typing import Optional
 
 import click
 from click_repl import ExitReplException, repl
@@ -78,7 +79,9 @@ def _add_help_function(group: click.Group):
     group.add_command(help_cmd)
 
 
-def _add_repl_function(group: click.Group, prompt_kwargs: dict = {}) -> click.Command:
+def _add_repl_function(
+    group: click.Group, prompt_kwargs: Optional[dict] = None
+) -> click.Command:
     def _repl():
         ctx = click.get_current_context()
         ctx.obj.is_repl = True
