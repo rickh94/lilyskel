@@ -18,19 +18,6 @@ class InsensitiveCompleter(Completer):
                 yield Completion(word, start_position=start)
 
 
-class YNValidator(Validator):
-    """Validates Yes/No responses in prompt_toolkit"""
-
-    def validate(self, document):
-        text = document.text
-        if not text:
-            raise ValidationError(message="Response Required", cursor_position=0)
-        if text.lower()[0] not in "yn":
-            raise ValidationError(
-                message="Response must be [y]es or [n]o", cursor_position=0
-            )
-
-
 class IndexValidator(Validator):
     """Validates indexes of lists."""
 

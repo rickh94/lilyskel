@@ -9,7 +9,6 @@ from prompt_toolkit.shortcuts import confirm
 from lilyskel import info, lynames, render, yaml_interface
 from lilyskel.interface import sub_repl
 from lilyskel.interface.common import PATHSAVE, AppState
-from lilyskel.interface.custom_validators_completers import YNValidator
 from lilyskel.interface.edit_commands import edit
 
 from .db_commands import db
@@ -37,10 +36,7 @@ def init(filename, path):
         filename = filename + ".yaml"
     filepath = Path(path, filename)
     if filepath.exists():
-        overwrite = prompt(
-            "File exists. Overwrite? ", validator=YNValidator(), default="N"
-        )
-        if overwrite.lower()[0] == "n":
+        if not confirm("File exists. Overwrite? "):
             raise SystemExit(1)
         shutil.copy2(filepath, Path(str(filepath) + ".bak"))
     yaml_interface.write_config(filepath, info.Piece())

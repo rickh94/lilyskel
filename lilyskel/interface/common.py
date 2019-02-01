@@ -1,7 +1,7 @@
 import tempfile
 from pathlib import Path
 from types import FunctionType
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from click import Context
 from prompt_toolkit import HTML, print_formatted_text, prompt
@@ -15,7 +15,6 @@ from lilyskel.info import MutopiaHeaders, Piece
 from lilyskel.interface.custom_validators_completers import (
     InsensitiveCompleter,
     IsNumberValidator,
-    YNValidator,
 )
 from lilyskel.lynames import VALID_CLEFS, Ensemble, Instrument, normalize_name
 
@@ -24,12 +23,6 @@ def instruments_with_indexes(instrumentlist):
     """Print a list of instruments numbered by their position in the list."""
     for idx, instrument in enumerate(instrumentlist):
         print(f"{idx}: {instrument.part_name()}")
-
-
-def answered_yes(answer) -> bool:
-    if answer.lower()[0] == "y":
-        return True
-    return False
 
 
 def manual_instrument(name: str, number: Optional[int], db=None) -> lynames.Instrument:
@@ -114,8 +107,8 @@ def reorder_instruments(curr_instruments) -> List[Instrument]:
 
 
 def create_ensemble(
-    name: str, db: TinyDB, instruments_to_add: List[lynames.Instrument] = []
-) -> Ensemble:
+    name: str, db: TinyDB, instruments_to_add: List[lynames.Instrument] = None
+) -> Union[Ensemble, List[Instrument]]:
     """
     Create an ensemble from new or old instruments
 
@@ -126,6 +119,8 @@ def create_ensemble(
 
     :return: ensemble object created by the dialog
     """
+    if instruments_to_add is None:
+        instruments_to_add = []
     instrument_names = db_interface.explore_table(
         db.table("instruments"), search=("name", "")
     )
@@ -193,13 +188,9 @@ def create_ensemble(
     for ins in ins_list:
         new_ens.add_instrument_from_obj(ins)
     print(new_ens)
-    good = prompt("Save? ", validator=YNValidator(), default="Y")
-    if not answered_yes(good):
+    if not confirm("Save?"):
         return ins_list
-    add_to_db = prompt(
-        "Add to database for future use? ", validator=YNValidator(), default="Y"
-    )
-    if answered_yes(add_to_db):
+    if confirm("Add to database for future use?"):
         new_ens.add_to_db(db)
     return new_ens
 

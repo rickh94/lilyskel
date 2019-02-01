@@ -1,12 +1,15 @@
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.shortcuts import confirm
 from titlecase import titlecase
 
 from lilyskel import db_interface, info, lynames
 from lilyskel.interface import common
 from lilyskel.interface.common import BOLD, END, answered_yes
-from lilyskel.interface.custom_validators_completers import (InsensitiveCompleter,
-                                                             YNValidator)
+from lilyskel.interface.custom_validators_completers import (
+    InsensitiveCompleter,
+    YNValidator,
+)
 
 TEMPO_WORDS = []
 
@@ -69,25 +72,14 @@ def ensemble_prompt(curr_instruments, db_):
         completer=InsensitiveCompleter(ensembles),
     )
     ensemble_name_normal = lynames.normalize_name(ensemble_name)
-    new_ens = None
-    if ensemble_name_normal in ensemble_names:
-        load = prompt(
-            f"{ensemble_name} is in the database, would you like to load it? " "[Y/n] ",
-            default="Y",
-            validator=YNValidator(),
-        )
-        if answered_yes(load):
-            return lynames.Ensemble.load_from_db(ensemble_name, db_)
+    if ensemble_name_normal in ensemble_names and confirm(
+        f"{ensemble_name} is in the database, would you like to load it? " "[Y/n] "
+    ):
+        return lynames.Ensemble.load_from_db(ensemble_name, db_)
     while True:
         new_ens = common.create_ensemble(ensemble_name, db_, curr_instruments)
-        if isinstance(new_ens, lynames.Ensemble):
+        if isinstance(new_ens, lynames.Ensemble) or not confirm(
+            f"No new ensemble was created. Try again? "
+        ):
             break
-        else:
-            retry = prompt(
-                f"No new ensemble was created. Try again? ",
-                validator=YNValidator(),
-                default="Y",
-            )
-            if not answered_yes(retry):
-                break
     return new_ens

@@ -7,12 +7,12 @@ from lilyskel import db_interface
 from lilyskel.exceptions import MutopiaError
 from lilyskel.info import Composer
 from lilyskel.interface import sub_repl
-from lilyskel.interface.common import (AppState, create_ensemble,
-                                       manual_instrument)
-from lilyskel.interface.custom_validators_completers import (IndexValidator,
-                                                             InsensitiveCompleter,
-                                                             IsNumberValidator,
-                                                             YNValidator)
+from lilyskel.interface.common import AppState, create_ensemble, manual_instrument
+from lilyskel.interface.custom_validators_completers import (
+    IndexValidator,
+    InsensitiveCompleter,
+    IsNumberValidator,
+)
 from lilyskel.lynames import Instrument, normalize_name
 
 
@@ -119,14 +119,9 @@ def db_instrument_prompt(instruments, ins_list, db_):
         )
         if ins_number:
             ins_number = int(ins_number)
-        load = "N"
-        if new_ins_name in instruments:
-            load = prompt(
-                f"{new_ins_name} is in the database, load it? ",
-                default="Y",
-                validator=YNValidator(),
-            )
-        if load.lower()[0] == "y":
+        if new_ins_name in instruments and confirm(
+            f"{new_ins_name} is in the database, load it? "
+        ):
             new_ins = Instrument.load_from_db(
                 normalize_name(new_ins_name), db_, number=ins_number
             )
